@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iomanip>
 
+
 namespace FastBDT {
 
   std::vector<double> EventWeights::GetSums(unsigned int nSignals) const {
@@ -15,13 +16,13 @@ namespace FastBDT {
     // Vectorizing FTW!
     std::vector<double> sums(3,0);
     for(unsigned int i = 0; i < nSignals; ++i) {
-      sums[0] += weights[i];
-      sums[2] += weights[i]*weights[i];
+      sums[0] += weights[i] * original_weights[i];
+      sums[2] += weights[i]*weights[i] * original_weights[i];
     }
 
     for(unsigned int i = nSignals; i < weights.size(); ++i) {
-      sums[1] += weights[i];
-      sums[2] += weights[i]*weights[i];
+      sums[1] += weights[i] * original_weights[i];
+      sums[2] += weights[i]*weights[i] * original_weights[i];
     }
     return sums;
 
@@ -69,15 +70,17 @@ namespace FastBDT {
       index = nEvents - 1 - nBckgrds;
       ++nBckgrds;
     }
-    weights.Set(index, weight);
+    weights.SetOriginal(index, weight);
     values.Set(index, features);
 
   }
 
   double LossFunction(double nSignal, double nBckgrd) {
-    if( nSignal == 0 or nBckgrd == 0 )
+    // Gini-Index x total number of events (needed to calculate information gain efficiently)!
+    if( nSignal <= 0 or nBckgrd <= 0 )
       return 0; 
-    return (nSignal+nBckgrd)*(nSignal*nBckgrd)/((nSignal+nBckgrd)*(nSignal+nBckgrd));
+    return (nSignal*nBckgrd)/(nSignal+nBckgrd);
+    //return (nSignal*nBckgrd)/((nSignal+nBckgrd)*(nSignal+nBckgrd));
   }
 
   CumulativeDistributions::CumulativeDistributions(const unsigned int iLayer, const EventSample &sample) {
@@ -155,15 +158,15 @@ namespace FastBDT {
 
   }
 
-  void Node::AddSignalWeight(float weight) {
+  void Node::AddSignalWeight(float weight, float original_weight) {
     signal += weight;
-    square += weight*weight;
+    square += weight*weight / original_weight;
   }
 
 
-  void Node::AddBckgrdWeight(float weight) {
+  void Node::AddBckgrdWeight(float weight, float original_weight) {
     bckgrd += weight;
-    square += weight*weight;
+    square += weight*weight / original_weight;
   }
 
   void Node::SetWeights(std::vector<double> weights) {
@@ -268,13 +271,13 @@ namespace FastBDT {
     for(unsigned int iEvent = 0; iEvent < sample.GetNSignals(); ++iEvent) {
       const int flag = flags.Get(iEvent);
       if( flag >= static_cast<int>(nNodes) ) {
-        nodes[flag-1].AddSignalWeight( weights.Get(iEvent) );
+        nodes[flag-1].AddSignalWeight( weights.Get(iEvent), weights.GetOriginal(iEvent) );
       }
     }
     for(unsigned int iEvent = sample.GetNSignals(); iEvent < sample.GetNEvents(); ++iEvent) {
       const int flag = flags.Get(iEvent);
       if( flag >= static_cast<int>(nNodes) ) {
-        nodes[flag-1].AddBckgrdWeight( weights.Get(iEvent) );
+        nodes[flag-1].AddBckgrdWeight( weights.Get(iEvent), weights.GetOriginal(iEvent) );
       }
     }
 
@@ -301,10 +304,13 @@ namespace FastBDT {
     std::cout << "Finished Printing Tree" << std::endl;
   }
 
-  ForestBuilder::ForestBuilder(EventSample &sample, unsigned int nTrees, double shrinkage, double randRatio, unsigned int nLayersPerTree) : shrinkage(shrinkage) {
+  ForestBuilder::ForestBuilder(EventSample &sample, unsigned int nTrees, double shrinkage, double randRatio, unsigned int nLayersPerTree, bool sPlot) : shrinkage(shrinkage) {
 
+    auto &weights = sample.GetWeights();
+    auto sums = weights.GetSums(sample.GetNSignals()); 
     // Calculating the initial F value from the proportion of the number of signal and background events in the sample
-    double average = (static_cast<int>(sample.GetNSignals()) - static_cast<int>(sample.GetNBckgrds()))/static_cast<double>(sample.GetNSignals() + sample.GetNBckgrds());
+    //double average = (static_cast<int>(sample.GetNSignals()) - static_cast<int>(sample.GetNBckgrds()))/static_cast<double>(sample.GetNSignals() + sample.GetNBckgrds());
+    double average = (sums[0] - sums[1])/(sums[0] + sums[1]);
     F0 = 0.5*std::log((1+average)/(1-average));
 
     // Resize the FCache to the number of events, and initalise it with the inital F value
@@ -320,7 +326,7 @@ namespace FastBDT {
       updateEventWeights(sample);
 
       // Prepare the flags of the events
-      prepareEventSample( sample, randRatio );   
+      prepareEventSample( sample, randRatio, sPlot );   
 
       // Create and train a new train on the sample
       TreeBuilder builder(nLayersPerTree, sample);
@@ -329,14 +335,22 @@ namespace FastBDT {
 
   }
 
-  void ForestBuilder::prepareEventSample(EventSample &sample, double randRatio) {
+  void ForestBuilder::prepareEventSample(EventSample &sample, double randRatio, bool sPlot) {
 
     // Draw a random sample if stochastic gradient boost is used
     // Draw random number [0,1) and compare it to the given ratio. If bigger disable this event by flagging it with -1.
     // If smaller set the flag to 1. This is important! If the flags are != 1, the DecisionTree algorithm will fail.
     const unsigned int nEvents = sample.GetNEvents();
     auto &flags = sample.GetFlags();
-    if( randRatio < 1.0) {
+    if( randRatio < 1.0 and sPlot) {
+      // For an sPlot Training it is important to take always signal and background pairs together into the training!
+      for(unsigned int iEvent = 0; iEvent < nEvents / 2 + 1; ++iEvent) {
+        int use = (static_cast<float>(rand())/static_cast<float>(RAND_MAX) > randRatio ) ? -1 : 1;
+        flags.Set(iEvent, use);
+        unsigned int jEvent = static_cast<unsigned int>(static_cast<int>(nEvents) - static_cast<int>(iEvent) - 1);
+        flags.Set(jEvent, use);
+      }
+    } else if( randRatio < 1.0) {
       for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent)
         flags.Set(iEvent, ( static_cast<float>(rand())/static_cast<float>(RAND_MAX) > randRatio ) ? -1 : 1 );
     } else {
