@@ -111,6 +111,7 @@ class EventWeightsTest : public ::testing::Test {
             eventWeights = new EventWeights(10);
             for(unsigned int i = 0; i < 10; ++i) {
                 eventWeights->Set(i, static_cast<float>(i+1));
+                eventWeights->SetOriginal(i, 2);
             }
         }
 
@@ -124,16 +125,16 @@ class EventWeightsTest : public ::testing::Test {
 TEST_F(EventWeightsTest, WeightSumsAreCorrect) {
 
     auto sums = eventWeights->GetSums(5);
-    EXPECT_DOUBLE_EQ(sums[0], 15.0);
-    EXPECT_DOUBLE_EQ(sums[1], 40.0);
-    EXPECT_DOUBLE_EQ(sums[2], 385.0);
+    EXPECT_DOUBLE_EQ(sums[0], 15.0 * 2);
+    EXPECT_DOUBLE_EQ(sums[1], 40.0 * 2);
+    EXPECT_DOUBLE_EQ(sums[2], 385.0 * 2);
 
 }
 
 TEST_F(EventWeightsTest, GetterIsCorrect) {
 
     for(unsigned int i = 0; i < 10; ++i) {
-        EXPECT_DOUBLE_EQ( eventWeights->Get(i), static_cast<float>(i+1)); 
+        EXPECT_DOUBLE_EQ( eventWeights->Get(i), static_cast<float>(i+1) * 2); 
     }
     
 }
@@ -145,12 +146,12 @@ TEST_F(EventWeightsTest, WeightSumsAndGetterAreCorrectlyUpdated) {
     }
 
     auto sums = eventWeights->GetSums(5);
-    EXPECT_DOUBLE_EQ(sums[0], 25.0);
-    EXPECT_DOUBLE_EQ(sums[1], 50.0);
-    EXPECT_DOUBLE_EQ(sums[2], 645.0);
+    EXPECT_DOUBLE_EQ(sums[0], 25.0 * 2);
+    EXPECT_DOUBLE_EQ(sums[1], 50.0 * 2);
+    EXPECT_DOUBLE_EQ(sums[2], 645.0 * 2);
     
     for(unsigned int i = 0; i < 10; ++i) {
-        EXPECT_DOUBLE_EQ( eventWeights->Get(i), static_cast<float>(i+3)); 
+        EXPECT_DOUBLE_EQ( eventWeights->Get(i), static_cast<float>(i+3) * 2); 
     }
 
 }
@@ -439,9 +440,9 @@ TEST_F(NodeTest, BoostWeightCalculation) {
     node.SetWeights({2.0, 2.0, 4.0});
     EXPECT_DOUBLE_EQ(node.GetBoostWeight(), 0.0); 
     node.SetWeights({0.0, 0.0, 0.0});
-    node.AddSignalWeight(1.0);
-    node.AddSignalWeight(3.0);
-    node.AddBckgrdWeight(2.0);
+    node.AddSignalWeight(1.0, 1.0);
+    node.AddSignalWeight(3.0, 1.0);
+    node.AddBckgrdWeight(2.0, 1.0);
     EXPECT_DOUBLE_EQ(node.GetBoostWeight(), -1.0);
 
 }
@@ -452,9 +453,9 @@ TEST_F(NodeTest, PurityCalculation) {
     node.SetWeights({2.0, 2.0, 4.0});
     EXPECT_DOUBLE_EQ(node.GetPurity(), 0.5); 
     node.SetWeights({0.0, 0.0, 0.0});
-    node.AddSignalWeight(2.0);
-    node.AddSignalWeight(4.0);
-    node.AddBckgrdWeight(4.0);
+    node.AddSignalWeight(2.0, 1.0);
+    node.AddSignalWeight(4.0, 1.0);
+    node.AddBckgrdWeight(4.0, 1.0);
     EXPECT_DOUBLE_EQ(node.GetPurity(), 0.6);
 
 }
@@ -509,14 +510,24 @@ class TreeBuilderTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
             eventSample = new EventSample(8, 2, 1);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 4.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 1.0, true);
             eventSample->AddEvent( std::vector<unsigned int>({ 0, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 4.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 3.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 2.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 1.0, true);
             eventSample->AddEvent( std::vector<unsigned int>({ 0, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 3.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 2.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
+
+            auto &weights = eventSample->GetWeights();
+            weights.Set(0, 4.0);
+            weights.Set(1, 1.0);
+            weights.Set(2, 2.0);
+            weights.Set(3, 3.0);
+            weights.Set(4, 2.0);
+            weights.Set(5, 1.0);
+            weights.Set(6, 3.0);
+            weights.Set(7, 4.0);
         }
 
         virtual void TearDown() {

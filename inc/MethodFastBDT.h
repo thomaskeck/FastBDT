@@ -105,9 +105,7 @@ namespace TMVA {
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0);
 
       /**
-       * FIXME
        * Creates an importance ranking of the variables
-       * This is currently not supported.
        */
       const Ranking* CreateRanking();
 
@@ -172,6 +170,11 @@ namespace TMVA {
        * Ratio for stochastic gradient boost
        */
       Double_t fRandRatio;   
+      
+      /**
+       * sPlot flag, needed for stochastic bagging when we perform an sPlot training
+       */
+      bool fsPlot;   
 
       /**
        * Binning levels used, determines cuts applied in node splitting

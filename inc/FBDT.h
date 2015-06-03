@@ -87,10 +87,13 @@ namespace FastBDT {
   class EventWeights {
 
     public:
-      EventWeights(unsigned int nEvents) : weights(nEvents, 0) { }
+      EventWeights(unsigned int nEvents) : weights(nEvents, 1), original_weights(nEvents, 0) { }
 
-      inline const float& Get(unsigned int iEvent) const { return weights[iEvent]; }
+      inline float Get(unsigned int iEvent) const { return weights[iEvent] * original_weights[iEvent]; }
       void Set(unsigned int iEvent, const float& weight) {  weights[iEvent] = weight; } 
+      
+      inline const float& GetOriginal(unsigned int iEvent) const { return original_weights[iEvent]; }
+      void SetOriginal(unsigned int iEvent, const float& weight) {  original_weights[iEvent] = weight; } 
 
       /**
        * Returns the sum of all weights. 0: SignalSum, 1: BckgrdSum, 2: SquareSum
@@ -100,6 +103,7 @@ namespace FastBDT {
 
     private:
       std::vector<float> weights;
+      std::vector<float> original_weights;
   };
 
   /**
@@ -275,8 +279,8 @@ namespace FastBDT {
        */
       Cut CalculateBestCut(const CumulativeDistributions &CDFs) const;
 
-      void AddSignalWeight(float weight);
-      void AddBckgrdWeight(float weight);
+      void AddSignalWeight(float weight, float original_weight);
+      void AddBckgrdWeight(float weight, float original_weight);
       void SetWeights(std::vector<double> weights);
 
       bool IsInLayer(unsigned int iLayer) const { return this->iLayer == iLayer; }
@@ -406,7 +410,7 @@ namespace FastBDT {
   class ForestBuilder {
 
     public:
-      ForestBuilder(EventSample &eventSample, unsigned int nTrees, double shrinkage, double randRatio, unsigned int nLayersPerTree);
+      ForestBuilder(EventSample &eventSample, unsigned int nTrees, double shrinkage, double randRatio, unsigned int nLayersPerTree, bool sPlot=false);
       void print();
 
       const std::vector<Tree>& GetForest() const { return forest; }
@@ -416,7 +420,7 @@ namespace FastBDT {
     private:
       void calculateBoostWeights(EventSample &eventSample);
       void updateEventWeights(EventSample &eventSample);
-      void prepareEventSample(EventSample &eventSample, double randRatio);
+      void prepareEventSample(EventSample &eventSample, double randRatio, bool sPlot);
 
     private:
       double shrinkage; /**< The config struct for this DecisionForest*/

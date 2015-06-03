@@ -30,6 +30,7 @@ TMVA::MethodFastBDT::MethodFastBDT( const TString& jobName,
    , fNTrees(0)
    , fShrinkage(0)
    , fRandRatio(0)
+   , fsPlot(false)
    , fNCutLevel(0)
    , fNTreeLayers(0)
    , fForest(NULL)
@@ -43,6 +44,7 @@ TMVA::MethodFastBDT::MethodFastBDT( DataSetInfo& theData,
    , fNTrees(0)
    , fShrinkage(0)
    , fRandRatio(0)
+   , fsPlot(false)
    , fNCutLevel(0)
    , fNTreeLayers(0)
    , fForest(NULL)
@@ -69,6 +71,7 @@ void TMVA::MethodFastBDT::DeclareOptions()
    DeclareOptionRef(fNCutLevel=8, "NCutLevel", "Number of binning level. Determines number of bins in variable range used in finding optimal cut in node splitting.");
    DeclareOptionRef(fShrinkage=1.0, "Shrinkage", "Learning rate for Gradient Boost algorithm");
    DeclareOptionRef(fRandRatio=1.0, "RandRatio", "Ratio for Stochastic Gradient Boost algorithm");
+   DeclareOptionRef(fsPlot=false, "sPlot", "Keep signal and background event pairs together during stochastic bagging, should improve an sPlot training, but frankly said: There was no difference in my tests");
 }
 
 void TMVA::MethodFastBDT::ProcessOptions()
@@ -85,6 +88,7 @@ void TMVA::MethodFastBDT::Init()
    fNCutLevel          = 100;
    fShrinkage       = 1.0;
    fRandRatio       = 1.0;
+   fsPlot           = false;
 }
 
 
@@ -129,7 +133,7 @@ void TMVA::MethodFastBDT::Train()
   }
  
   // Create the forest, this also trains the whole forest immediatly
-  ForestBuilder builder(eventSample, fNTrees, fShrinkage, fRandRatio, fNTreeLayers);
+  ForestBuilder builder(eventSample, fNTrees, fShrinkage, fRandRatio, fNTreeLayers, fsPlot);
   fForest = new Forest( builder.GetShrinkage(), builder.GetF0());
   for( auto tree : builder.GetForest() )
       fForest->AddTree(tree);
@@ -204,6 +208,7 @@ void TMVA::MethodFastBDT::AddWeightsXMLTo( void* parent ) const
    TMVA::gTools().AddAttr( wght, "NCuts", fNCutLevel );
    TMVA::gTools().AddAttr( wght, "NLevels", fNTreeLayers );
    TMVA::gTools().AddAttr( wght, "RandRatio", fRandRatio );
+   TMVA::gTools().AddAttr( wght, "sPlot", fsPlot );
    TMVA::gTools().AddAttr( wght, "F0", fForest->GetF0() );
 
    auto &forest = fForest->GetForest();
@@ -257,6 +262,7 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
    TMVA::gTools().ReadAttr( parent, "NCuts", fNCutLevel );
    TMVA::gTools().ReadAttr( parent, "NLevels", fNTreeLayers );
    TMVA::gTools().ReadAttr( parent, "RandRatio", fRandRatio );
+   TMVA::gTools().ReadAttr( parent, "sPlot", fsPlot );
 
    double F0;
    TMVA::gTools().ReadAttr( parent, "F0", F0 );
