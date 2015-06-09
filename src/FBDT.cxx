@@ -398,7 +398,7 @@ namespace FastBDT {
         if( cut.valid ) {
           if ( ranking.find( cut.feature ) != ranking.end() )
             ranking[ cut.feature ] = 0;
-          ranking[ cut.feature ] += cut.gain*tree.GetBoostWeight(iNode);
+          ranking[ cut.feature ] += cut.gain*std::abs(tree.GetBoostWeight(iNode));
         }
       }
     }
