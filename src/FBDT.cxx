@@ -56,6 +56,10 @@ namespace FastBDT {
       throw std::runtime_error("Promised maximum number of events exceeded.");
     }
 
+    if(weight == 0) {
+      throw std::runtime_error("Events with 0 weight are not supported");
+    }
+
 
     // Now add the weight and the features at the right position of the arrays.
     // To do so, we calculate the correct index of this event. If it's a signal

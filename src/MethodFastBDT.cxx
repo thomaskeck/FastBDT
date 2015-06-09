@@ -122,10 +122,23 @@ void TMVA::MethodFastBDT::Train()
       featureBinnings.push_back( FeatureBinning<double>(fNCutLevel, feature.begin(), feature.end() ) );
   }
 
-  EventSample eventSample(nEvents, nFeatures, fNCutLevel);
+  unsigned int nEventsPruned = 0;
+  for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
+     if(std::abs(GetTrainingEvent(iEvent)->GetWeight()) < 1e-7) {
+       std::cerr << "Removed event with extremly small value" << std::endl;
+       continue;
+     }
+     nEventsPruned++;
+  }
+
+  EventSample eventSample(nEventsPruned, nFeatures, fNCutLevel);
+
   for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
       std::vector<unsigned int> bins(nFeatures);
       auto *event = GetTrainingEvent(iEvent);
+      if(std::abs(event->GetWeight()) < 1e-7) {
+        continue;
+      }
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
           bins[iFeature] = featureBinnings[iFeature].ValueToBin( event->GetValue(iFeature) );
       }
