@@ -264,6 +264,9 @@ TEST_F(EventSampleTest, AddingEventsWorksCorrectly) {
     sums = eventWeights.GetSums(5);
     EXPECT_DOUBLE_EQ(sums[0], 10.0);
     EXPECT_DOUBLE_EQ(sums[1], 10.0);
+    
+    // Test throw if event with 0 weight is added
+    EXPECT_THROW( eventSample->AddEvent( std::vector<unsigned int>({1,2,3}), 0.0, true ), std::runtime_error);
 
     // Test some of the values, if they're correct
     // Remember that the events are NOT in the same order as they were added,
@@ -759,7 +762,7 @@ TEST_F(ForestTest, VariableRankingIsCorrect) {
     forest->AddTree(*tree);
     auto map = forest->GetVariableRanking();
     EXPECT_FLOAT_EQ(map[0], 2.0);
-    EXPECT_FLOAT_EQ(map[1], 1.0);
+    EXPECT_FLOAT_EQ(map[1], 2.0);
 
 } 
 
