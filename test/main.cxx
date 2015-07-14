@@ -4,6 +4,7 @@
 #include <sstream>
 
 #include "FBDT.h"
+#include "IO.h"
 using namespace FastBDT;
 
 int main(int argc, char *argv[]) {
@@ -69,13 +70,6 @@ int main(int argc, char *argv[]) {
         eventSample.AddEvent(bins, 1.0, _class == 1);
     }
 
-   
-   /* 
-    TreeBuilder dt(2, eventSample);
-    dt.Print();
-
-    Tree tree(dt.GetCuts(), dt.GetPurities(), dt.GetBoostWeights());
-    */
     
     /**
      * Now the aglorithm is trained via the ForestBuilder,
@@ -87,9 +81,9 @@ int main(int argc, char *argv[]) {
      * To apply the trained method again we create a Forest using the trees
      * from the ForestBuilder
      */
-    Forest tree( dt.GetShrinkage(), dt.GetF0());
+    Forest forest( dt.GetShrinkage(), dt.GetF0());
     for( auto t : dt.GetForest() )
-        tree.AddTree(t);
+        forest.AddTree(t);
 
     /*
      * Again we use the feature binning to bin the data
@@ -104,8 +98,8 @@ int main(int argc, char *argv[]) {
         for(unsigned int iFeature = 0; iFeature < 4; ++iFeature) {
             bins[iFeature] = featureBinnings[iFeature].ValueToBin( event[iFeature] );
         }
-        //std::cout << std::fixed << std::setprecision(2) << tree.GetPurity( tree.ValueToNode(bins) ) << " ";
-        std::cout << std::fixed << std::setprecision(2) << tree.Analyse(bins) << " ";
+        //std::cout << std::fixed << std::setprecision(2) << forest.GetPurity( forest.ValueToNode(bins) ) << " ";
+        std::cout << std::fixed << std::setprecision(2) << forest.Analyse(bins) << " ";
         if( i % 50 == 0)
             std::cout << std::endl;
     }
@@ -113,12 +107,37 @@ int main(int argc, char *argv[]) {
     fs.close();
 
     /**
-     * Saving and loading a forest is not directly implemented yet,
-     * have a look into TMVA::MethodFastBDT::ReadWeightsFromXML
-     * and TMVA::MethodFastBDT::AddWeightsXMLTo to see howto serialize the trees
-     * and read them in again.
+     * Saving featureBinnings and forest into a file:
      */
+    std::fstream file("iris.weight", std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+    file << featureBinnings << std::endl;
+    file << forest << std::endl; 
+    file.close();
 
+    /**
+     * And load both again from the file
+     */
+    file.open("iris.weight", std::ios_base::in);
+    std::vector<FeatureBinning<double>> saved_featureBinnings;
+    file >> saved_featureBinnings;
+    auto saved_forest = readForestFromStream(file);
+    file.close();
+
+    // Apply it again
+    std::cout << "Analyse Data with saved classifier" << std::endl;
+    i = 0;
+    for(auto &event : data) {
+        i++;
+        std::vector<unsigned int> bins(4);
+        for(unsigned int iFeature = 0; iFeature < 4; ++iFeature) {
+            bins[iFeature] = saved_featureBinnings[iFeature].ValueToBin( event[iFeature] );
+        }
+        //std::cout << std::fixed << std::setprecision(2) << forest.GetPurity( forest.ValueToNode(bins) ) << " ";
+        std::cout << std::fixed << std::setprecision(2) << saved_forest.Analyse(bins) << " ";
+        if( i % 50 == 0)
+            std::cout << std::endl;
+    }
+    std::cout << std::endl;
     return 0;
 
 }
