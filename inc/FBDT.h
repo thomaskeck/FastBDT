@@ -287,7 +287,7 @@ namespace FastBDT {
       unsigned int GetLayer() const { return iLayer; }
       unsigned int GetPosition() const { return (iNode + (1 << iLayer)) - 1; }
 
-      double GetPurity() const { return signal/(signal + bckgrd); }
+      double GetPurity() const { return (signal + bckgrd == 0) ? -1 : signal/(signal + bckgrd); }
       double GetBoostWeight() const;
 
       void Print() const;
@@ -437,6 +437,7 @@ namespace FastBDT {
       void AddTree(const Tree &tree) { forest.push_back(tree); }
       const std::vector<Tree>& GetForest() const { return forest; }
       double GetF0() const { return F0; }
+      double GetShrinkage() const { return shrinkage; }
 
       /**
        * Returns the F value calculated from the DecisionForest for a given event.
