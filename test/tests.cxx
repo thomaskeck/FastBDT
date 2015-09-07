@@ -49,47 +49,55 @@ TEST_F(FeatureBinningTest, NumberOfLevelsAndBinsIsCorrectlyIdentified) {
 
     EXPECT_EQ( calculatedBinning->GetNLevels(), 2 );
     EXPECT_EQ( predefinedBinning->GetNLevels(), 2 );
-    EXPECT_EQ( calculatedBinning->GetNBins(), 4 );
-    EXPECT_EQ( predefinedBinning->GetNBins(), 4 );
+    // 5 bins, 2^2 ordinary bins + 1 NaN bin
+    EXPECT_EQ( calculatedBinning->GetNBins(), 5 );
+    EXPECT_EQ( predefinedBinning->GetNBins(), 5 );
 
 }
 
 TEST_F(FeatureBinningTest, ValueToBinMapsNormalValuesCorrectly) {
 
-    EXPECT_EQ( calculatedBinning->ValueToBin(1.0f), 0);
-    EXPECT_EQ( calculatedBinning->ValueToBin(2.0f), 0);
-    EXPECT_EQ( calculatedBinning->ValueToBin(3.0f), 0);
-    EXPECT_EQ( calculatedBinning->ValueToBin(4.0f), 1);
-    EXPECT_EQ( calculatedBinning->ValueToBin(5.0f), 1);
-    EXPECT_EQ( calculatedBinning->ValueToBin(6.0f), 1);
-    EXPECT_EQ( calculatedBinning->ValueToBin(7.0f), 2);
-    EXPECT_EQ( calculatedBinning->ValueToBin(8.0f), 2);
-    EXPECT_EQ( calculatedBinning->ValueToBin(9.0f), 2);
-    EXPECT_EQ( calculatedBinning->ValueToBin(10.0f), 3);
-    EXPECT_EQ( calculatedBinning->ValueToBin(11.0f), 3);
-    EXPECT_EQ( calculatedBinning->ValueToBin(12.0f), 3);
+    EXPECT_EQ( calculatedBinning->ValueToBin(1.0f), 1);
+    EXPECT_EQ( calculatedBinning->ValueToBin(2.0f), 1);
+    EXPECT_EQ( calculatedBinning->ValueToBin(3.0f), 1);
+    EXPECT_EQ( calculatedBinning->ValueToBin(4.0f), 2);
+    EXPECT_EQ( calculatedBinning->ValueToBin(5.0f), 2);
+    EXPECT_EQ( calculatedBinning->ValueToBin(6.0f), 2);
+    EXPECT_EQ( calculatedBinning->ValueToBin(7.0f), 3);
+    EXPECT_EQ( calculatedBinning->ValueToBin(8.0f), 3);
+    EXPECT_EQ( calculatedBinning->ValueToBin(9.0f), 3);
+    EXPECT_EQ( calculatedBinning->ValueToBin(10.0f), 4);
+    EXPECT_EQ( calculatedBinning->ValueToBin(11.0f), 4);
+    EXPECT_EQ( calculatedBinning->ValueToBin(12.0f), 4);
     
-    EXPECT_EQ( predefinedBinning->ValueToBin(1.0f), 0);
-    EXPECT_EQ( predefinedBinning->ValueToBin(2.0f), 0);
-    EXPECT_EQ( predefinedBinning->ValueToBin(3.0f), 0);
-    EXPECT_EQ( predefinedBinning->ValueToBin(4.0f), 1);
-    EXPECT_EQ( predefinedBinning->ValueToBin(5.0f), 1);
-    EXPECT_EQ( predefinedBinning->ValueToBin(6.0f), 1);
-    EXPECT_EQ( predefinedBinning->ValueToBin(7.0f), 2);
-    EXPECT_EQ( predefinedBinning->ValueToBin(8.0f), 2);
-    EXPECT_EQ( predefinedBinning->ValueToBin(9.0f), 2);
-    EXPECT_EQ( predefinedBinning->ValueToBin(10.0f), 3);
-    EXPECT_EQ( predefinedBinning->ValueToBin(11.0f), 3);
-    EXPECT_EQ( predefinedBinning->ValueToBin(12.0f), 3);
+    EXPECT_EQ( predefinedBinning->ValueToBin(1.0f), 1);
+    EXPECT_EQ( predefinedBinning->ValueToBin(2.0f), 1);
+    EXPECT_EQ( predefinedBinning->ValueToBin(3.0f), 1);
+    EXPECT_EQ( predefinedBinning->ValueToBin(4.0f), 2);
+    EXPECT_EQ( predefinedBinning->ValueToBin(5.0f), 2);
+    EXPECT_EQ( predefinedBinning->ValueToBin(6.0f), 2);
+    EXPECT_EQ( predefinedBinning->ValueToBin(7.0f), 3);
+    EXPECT_EQ( predefinedBinning->ValueToBin(8.0f), 3);
+    EXPECT_EQ( predefinedBinning->ValueToBin(9.0f), 3);
+    EXPECT_EQ( predefinedBinning->ValueToBin(10.0f), 4);
+    EXPECT_EQ( predefinedBinning->ValueToBin(11.0f), 4);
+    EXPECT_EQ( predefinedBinning->ValueToBin(12.0f), 4);
+
+}
+
+TEST_F(FeatureBinningTest, NaNGivesZeroBin) {
+
+    EXPECT_EQ( predefinedBinning->ValueToBin(NAN), 0);
+    EXPECT_EQ( predefinedBinning->ValueToBin(NAN), 0);
 
 }
 
 TEST_F(FeatureBinningTest, OverflowAndUnderflowGivesLastAndFirstBin) {
 
-    EXPECT_EQ( calculatedBinning->ValueToBin(100.0f), 3);
-    EXPECT_EQ( calculatedBinning->ValueToBin(-100.0f), 0);
-    EXPECT_EQ( predefinedBinning->ValueToBin(100.0f), 3);
-    EXPECT_EQ( predefinedBinning->ValueToBin(-100.0f), 0);
+    EXPECT_EQ( calculatedBinning->ValueToBin(100.0f), 4);
+    EXPECT_EQ( calculatedBinning->ValueToBin(-100.0f), 1);
+    EXPECT_EQ( predefinedBinning->ValueToBin(100.0f), 4);
+    EXPECT_EQ( predefinedBinning->ValueToBin(-100.0f), 1);
 
 }
 
@@ -227,7 +235,7 @@ TEST_F(EventValuesTest, SetterAndGetterWorkCorrectly) {
 TEST_F(EventValuesTest, GetSizesWorkCorrectly) {
 
     EXPECT_EQ( eventValues->GetNFeatures(), 3);
-    EXPECT_EQ( eventValues->GetNBins(), 8);
+    EXPECT_EQ( eventValues->GetNBins(), 9);
 
 }
 
@@ -297,7 +305,7 @@ class CumulativeDistributionsTest : public ::testing::Test {
             eventSample = new EventSample(numberOfEvents, 2, 2);
             for(unsigned int i = 0; i < numberOfEvents; ++i) {
                 bool isSignal = i < (numberOfEvents/2);
-                eventSample->AddEvent( std::vector<unsigned int>({i % 4, (numberOfEvents-i) % 4 }), static_cast<float>(i+1), isSignal);
+                eventSample->AddEvent( std::vector<unsigned int>({i % 4 + 1, (numberOfEvents-i) % 4 + 1}), static_cast<float>(i+1), isSignal);
             }
         }
 
@@ -312,23 +320,23 @@ TEST_F(CumulativeDistributionsTest, CheckIfLayer0IsCorrect) {
 
     CumulativeDistributions CDFsForLayer0(0, *eventSample);
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 0), 325.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 1), 663.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 2), 963.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 3), 1275.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 0), 325.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 1), 637.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 2), 937.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 3), 1275.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 1), 325.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 2), 663.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 3), 963.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 4), 1275.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 1), 325.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 2), 637.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 3), 937.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 4), 1275.0); 
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 0), 900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 1), 1812.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 2), 2787.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 3), 3775.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 0), 900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 1), 1888.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 2), 2863.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 3), 3775.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 1), 900.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 2), 1812.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 3), 2787.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 4), 3775.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 1), 900.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 2), 1888.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 3), 2863.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 4), 3775.0); 
 
 }
 
@@ -344,41 +352,41 @@ TEST_F(CumulativeDistributionsTest, CheckIfLayer1IsCorrect) {
 
     CumulativeDistributions CDFsForLayer1(1, *eventSample);
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 0, 0), 325.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 0, 1), 325.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 0, 2), 625.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 0, 2), 325.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 0, 3), 625.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 1, 0), 325.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 0, 4), 625.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 1, 1), 325.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 1, 2), 625.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 1, 2), 325.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 1, 3), 625.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 1, 4), 625.0); 
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 0, 0), 900.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 0, 1), 900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 0, 2), 1875.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 0, 2), 900.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 0, 3), 1875.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 1, 0), 900.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 0, 4), 1875.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 1, 1), 900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 1, 2), 1875.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 1, 2), 900.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 1, 3), 1875.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 1, 4), 1875.0); 
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 1), 338.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 1), 0.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 2), 338.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 3), 650.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 1), 312.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 3), 338.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 4), 650.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 1), 0.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 2), 312.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 3), 650.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 3), 312.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 4), 650.0); 
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 1), 912.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 1), 0.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 2), 912.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 3), 1900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 1), 988.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 3), 912.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 4), 1900.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 1), 0.0); 
     EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 2), 988.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 3), 1900.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 3), 988.0); 
+    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 4), 1900.0); 
 
 }
 
@@ -398,14 +406,14 @@ class NodeTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
             eventSample = new EventSample(8, 2, 1);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 4.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 4.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 3.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 2.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 3.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 2.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 4.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 4.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 3.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 2.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 3.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 2.0, false);
             
         }
 
@@ -474,7 +482,7 @@ TEST_F(NodeTest, BestCut0Layer) {
 
     Cut bestCut = node.CalculateBestCut(CDFs);
     EXPECT_EQ( bestCut.feature, 0 );
-    EXPECT_EQ( bestCut.index, 1 );
+    EXPECT_EQ( bestCut.index, 2 );
     EXPECT_DOUBLE_EQ( bestCut.gain, 1.875 );
     EXPECT_TRUE( bestCut.valid );
 
@@ -498,7 +506,7 @@ TEST_F(NodeTest, BestCut1Layer) {
     right_node.SetWeights({7.0, 1.0, 22.0});
     Cut right_bestCut = right_node.CalculateBestCut(CDFs);
     EXPECT_EQ( right_bestCut.feature, 1 );
-    EXPECT_EQ( right_bestCut.index, 1 );
+    EXPECT_EQ( right_bestCut.index, 2 );
     EXPECT_DOUBLE_EQ( right_bestCut.gain, 0.375);
     EXPECT_TRUE( right_bestCut.valid );
     
@@ -506,7 +514,7 @@ TEST_F(NodeTest, BestCut1Layer) {
     left_node.SetWeights({3.0, 9.0, 38.0});
     Cut left_bestCut = left_node.CalculateBestCut(CDFs);
     EXPECT_EQ( left_bestCut.feature, 1 );
-    EXPECT_EQ( left_bestCut.index, 1 );
+    EXPECT_EQ( left_bestCut.index, 2 );
     EXPECT_DOUBLE_EQ( left_bestCut.gain, 0.53571428571428581);
     EXPECT_TRUE( left_bestCut.valid );
 
@@ -516,14 +524,14 @@ class TreeBuilderTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
             eventSample = new EventSample(8, 2, 1);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
 
             auto &weights = eventSample->GetWeights();
             weights.Set(0, 4.0);
@@ -548,17 +556,17 @@ TEST_F(TreeBuilderTest, DeterminedCutsAreCorrect) {
     TreeBuilder dt(2, *eventSample);
     const auto &cuts = dt.GetCuts();
     EXPECT_EQ( cuts[0].feature, 0 );
-    EXPECT_EQ( cuts[0].index, 1 );
+    EXPECT_EQ( cuts[0].index, 2 );
     EXPECT_DOUBLE_EQ( cuts[0].gain, 1.875 );
     EXPECT_TRUE( cuts[0].valid );
     
     EXPECT_EQ( cuts[1].feature, 1 );
-    EXPECT_EQ( cuts[1].index, 1 );
+    EXPECT_EQ( cuts[1].index, 2 );
     EXPECT_DOUBLE_EQ( cuts[1].gain, 0.375 );
     EXPECT_TRUE( cuts[1].valid );
     
     EXPECT_EQ( cuts[2].feature, 1 );
-    EXPECT_EQ( cuts[2].index, 1 );
+    EXPECT_EQ( cuts[2].index, 2 );
     EXPECT_DOUBLE_EQ( cuts[2].gain, 0.53571428571428581 );
     EXPECT_TRUE( cuts[2].valid );
 
@@ -615,10 +623,10 @@ class TreeTest : public ::testing::Test {
 
             Cut cut1, cut2, cut3;
             cut1.feature = 0;
-            cut1.index = 4;
+            cut1.index = 5;
             cut1.valid = true;
             cut2.feature = 1;
-            cut2.index = 8;
+            cut2.index = 9;
             cut2.valid = true;
             cut3.valid = false;
             
@@ -638,12 +646,12 @@ class TreeTest : public ::testing::Test {
 
 TEST_F(TreeTest, ValueToNode) {
 
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({1,2,30}) ), 3 );
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({1,8,3}) ), 4 );
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({3,8,30}) ), 4 );
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({3,7,3}) ), 3 );
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({4,7,30}) ), 2 );
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({4,8,3}) ), 2 );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({2,3,31}) ), 3 );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({2,9,4}) ), 4 );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({4,9,31}) ), 4 );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({4,8,4}) ), 3 );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({5,8,31}) ), 2 );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({5,9,4}) ), 2 );
 
 }
 
@@ -663,26 +671,26 @@ class ForestBuilderTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
             eventSample = new EventSample(20, 2, 1);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 0, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 0 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
         }
 
         virtual void TearDown() {
@@ -721,11 +729,11 @@ class ForestTest : public ::testing::Test {
 
             Cut cut1, cut2, cut3;
             cut1.feature = 0;
-            cut1.index = 4;
+            cut1.index = 5;
             cut1.valid = true;
             cut1.gain = 2.0;
             cut2.feature = 1;
-            cut2.index = 8;
+            cut2.index = 9;
             cut2.valid = true;
             cut2.gain = 1.0;
             cut3.valid = false;
@@ -750,7 +758,7 @@ class ForestTest : public ::testing::Test {
 
 TEST_F(ForestTest, GetF) {
 
-    std::vector<unsigned int> values = {0,0};
+    std::vector<unsigned int> values = {1,1};
     EXPECT_FLOAT_EQ(forest->GetF(values), 1.0);
     forest->AddTree(*tree);
     EXPECT_FLOAT_EQ(forest->GetF(values), 1.4);
@@ -846,7 +854,7 @@ TEST_F(IOTest, IOCut) {
     Cut before;
     before.feature = 1;
     before.gain = 3.4;
-    before.index = 4;
+    before.index = 5;
     before.valid = true;
 
     std::stringstream stream;
@@ -866,15 +874,15 @@ TEST_F(IOTest, IOTree) {
 
     Cut cut1, cut2, cut3;
     cut1.feature = 0;
-    cut1.index = 4;
+    cut1.index = 5;
     cut1.valid = true;
     cut1.gain = -3.0;
     cut2.feature = 1;
-    cut2.index = 8;
+    cut2.index = 9;
     cut2.gain = 1.0;
     cut2.valid = true;
     cut3.feature = 0;
-    cut3.index = 0;
+    cut3.index = 1;
     cut3.gain = 0.0;
     cut3.valid = false;
     
@@ -913,19 +921,19 @@ TEST_F(IOTest, IOForest) {
 
     Cut cut1, cut2, cut3, cut4;
     cut1.feature = 0;
-    cut1.index = 4;
+    cut1.index = 5;
     cut1.valid = true;
     cut1.gain = -3.0;
     cut2.feature = 1;
-    cut2.index = 8;
+    cut2.index = 9;
     cut2.gain = 1.0;
     cut2.valid = true;
     cut3.feature = 0;
-    cut3.index = 0;
+    cut3.index = 1;
     cut3.gain = 0.0;
     cut3.valid = false;
     cut4.feature = 2;
-    cut4.index = 2;
+    cut4.index = 3;
     cut4.valid = true;
     cut4.gain = 1.61;
     
