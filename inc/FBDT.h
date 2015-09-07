@@ -9,8 +9,22 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <cmath>
 
 namespace FastBDT {
+
+  /**
+   * Compare function which sorts all NaN values to the left
+   */
+  template<class Value>
+  bool compareIncludingNaN (Value i, Value j) {
+      if( std::isnan(i) ) {
+          return true;
+      }
+      // If j is NaN the following line will return false,
+      // which is fine in our case.
+      return i < j;
+  }
 
   /**
    * Since a decision tree operates only on the order of the feature values, a feature binning
@@ -32,10 +46,17 @@ namespace FastBDT {
         template<class RandomAccessIterator>
           FeatureBinning(unsigned int nLevels, RandomAccessIterator first, RandomAccessIterator last) : nLevels(nLevels) {
 
-            std::sort(first, last);
+            std::sort(first, last, compareIncludingNaN<Value>);
+
+            // Wind iterator forward until first finite value
+            while( std::isnan(*first) ) {
+                first++;
+            }
 
             unsigned int size = last - first;
-            binning.resize(GetNBins() + 1, 0);
+            // Need only Nbins, altough we store upper and lower boundary as well,
+            // however GetNBins counts also the NaN bin, so it really is GetNBins() - 1 + 1
+            binning.resize(GetNBins(), 0);
             binning.front() = first[0];
             binning.back()  = first[size-1];
 
@@ -53,6 +74,9 @@ namespace FastBDT {
 
         unsigned int ValueToBin(const Value &value) const {
 
+          if( std::isnan(value) )
+              return 0;
+
           unsigned int bin = 0;
           unsigned int index = 1;
           for(unsigned int iLevel = 0; iLevel < nLevels; ++iLevel) {
@@ -64,14 +88,20 @@ namespace FastBDT {
               index = 2*index;
             }
           }
-          return bin;
+          // +1 because 0 bin is reserved for NaN values
+          return bin+1;
 
         }
 
         const Value& GetMin() const { return binning.front(); }
         const Value& GetMax() const { return binning.back(); }
         unsigned int GetNLevels() const { return nLevels; }
-        unsigned int GetNBins() const { return (1 << nLevels); }
+
+        /**
+         * Return number of bins == 2^nLevels + 1 (NaN bin)
+         */
+        unsigned int GetNBins() const { return (1 << nLevels)+1; }
+
         std::vector<Value> GetBinning() const { return binning; }
 
       private:
@@ -109,7 +139,9 @@ namespace FastBDT {
   /**
    * Stores the flags of the events.
    * The flag is used by the decision tree algorithm to store the number of the node, to which
-   * this event belings. If the flag is set to -1, the event is ignored during the build of the tree
+   * this event belings. If the flag is set to <= 0, the event is ignored during the build of the tree
+   * flag == 0 means the event is ignored due to stochastic bagging
+   * flag < 0 indicates a missing value in this event, where -flag is the last valid node the event belongs to
    */
   class EventFlags {
 
@@ -127,7 +159,7 @@ namespace FastBDT {
   class EventValues {
 
     public:
-      EventValues(unsigned int nEvents, unsigned int nFeatures, unsigned int nLevels) : values(nEvents*nFeatures, 0), nFeatures(nFeatures), nBins( 1 << nLevels ) { };
+      EventValues(unsigned int nEvents, unsigned int nFeatures, unsigned int nLevels) : values(nEvents*nFeatures, 0), nFeatures(nFeatures), nBins( (1 << nLevels)+1 ) { };
 
       /**
        * Returns a reference to the iFeature feature of the event at position iEvent. The features of one
@@ -149,7 +181,7 @@ namespace FastBDT {
        */
       std::vector<unsigned int> values;
       unsigned int nFeatures; /* <* Amount of features per event*/
-      unsigned int nBins; /**< Number of bins, therefore maximum numerical value of a feature*/
+      unsigned int nBins; /**< Number of bins, therefore maximum numerical value of a feature, 0 bin is reserved for NaN values */
 
   };
 
@@ -378,7 +410,7 @@ namespace FastBDT {
   template<class Iterator>
     unsigned int Tree::ValueToNode(const Iterator &values) const {
 
-      // Start with a node 1. The flag contains the position of the node
+      // Start with a node 1. The node contains the position of the node
       // the event belongs to.
       unsigned int node = 1;
 
@@ -388,10 +420,15 @@ namespace FastBDT {
         if(not cut.valid)
           break;
 
-        // Perform the cut of the given node and update the flag.
+        // Return current node if NaN
+        if( values[ cut.feature ] == 0 )
+          break;
+
+        // Perform the cut of the given node and update the node.
         // Either the event is passed to the left child node (which has
-        // the position 2*flag in the next layer) or to the right
-        // (which has the position 2*flag + 1 in the next layer)
+        // the position 2*node in the next layer) or to the right
+        // (which has the position 2*node + 1 in the next layer)
+        // TODO Do index calculatio instead of jump here
         if( values[ cut.feature ] < cut.index ) {
           node = (node << 1);
         } else {
@@ -400,7 +437,7 @@ namespace FastBDT {
       }
 
       // If we're arrived at the bottom of the tree, this event belongs to the node
-      // with the position flag in the last layer.
+      // with the position node in the last layer.
       return node - 1;
     }
 

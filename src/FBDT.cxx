@@ -37,7 +37,7 @@ namespace FastBDT {
 
     // Check if the feature values are in the correct range
     for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
-      if( features[iFeature] >= nBins )
+      if( features[iFeature] > nBins )
         throw std::runtime_error("Promised number of bins is violated.");
     }
 
@@ -121,7 +121,8 @@ namespace FastBDT {
     // Sum up Cut-PDFs to culumative Cut-PDFs
     for(unsigned int iNode = 0; iNode < nNodes; ++iNode) {
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
-        for(unsigned int iBin = 1; iBin < nBins; ++iBin) {
+        // Start at 2, this ignore the NaN bin at 0!
+        for(unsigned int iBin = 2; iBin < nBins; ++iBin) {
           unsigned int index = iNode*nFeatures*nBins + iFeature*nBins + iBin;
           bins[index] += bins[index-1];
         }
@@ -144,7 +145,8 @@ namespace FastBDT {
 
     // Loop over all features and cuts and sum up signal and background histograms to cumulative histograms
     for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
-      for(unsigned int iCut = 1; iCut < nBins; ++iCut) {
+      // Start at 2, this ignores the NaN bin at 0
+      for(unsigned int iCut = 2; iCut < nBins; ++iCut) {
         double s = CDFs.GetSignal(iNode, iFeature, iCut-1);
         double b = CDFs.GetBckgrd(iNode, iFeature, iCut-1);
         double currentGain = currentLoss - LossFunction( signal-s, bckgrd-b ) - LossFunction( s, b );
@@ -211,7 +213,9 @@ namespace FastBDT {
     // The flag of every event is used for two things:
     // Firstly, a flag > 0, determines the node which holds this event at the moment
     // the trees are enumerated from top to bottom from left to right, starting at 1.
-    // Secondly, a flag < 0, disables this event, so it isn't used.
+    // Secondly, a flag <= 0, disables this event, so it isn't used.
+    // flag == 0 means disabled by stochastic bagging
+    // flag < 0 means disabled due to missing value, where -flag is the node the event belongs to
     // Initially all events which are not disabled get the flag 1.
     //
     // All the flags of the enabled events are set to 1 by the DecisionForest
@@ -252,13 +256,18 @@ namespace FastBDT {
     for(unsigned int iEvent = 0; iEvent < sample.GetNEvents(); ++iEvent) {
 
       const int flag = flags.Get(iEvent);
-      if( flag < 0)
+      if( flag <= 0)
         continue;
       auto &cut = cuts[flag-1];
       if( not cut.valid )
         continue;
 
-      if( values.Get(iEvent, cut.feature ) < cut.index ) {
+      const unsigned int index = values.Get(iEvent, cut.feature );
+      // TODO Do index calculation int(index < cut.index) = [0,1] instead of jump here
+      // If NaN value we throw out the event, but remeber its current node using the a negative flag!
+      if( index == 0 ) {
+        flags.Set(iEvent, -flag);
+      } else if( index < cut.index ) {
         flags.Set(iEvent, flag * 2);
       } else {
         flags.Set(iEvent, flag * 2 + 1);
@@ -342,21 +351,21 @@ namespace FastBDT {
   void ForestBuilder::prepareEventSample(EventSample &sample, double randRatio, bool sPlot) {
 
     // Draw a random sample if stochastic gradient boost is used
-    // Draw random number [0,1) and compare it to the given ratio. If bigger disable this event by flagging it with -1.
+    // Draw random number [0,1) and compare it to the given ratio. If bigger disable this event by flagging it with 0.
     // If smaller set the flag to 1. This is important! If the flags are != 1, the DecisionTree algorithm will fail.
     const unsigned int nEvents = sample.GetNEvents();
     auto &flags = sample.GetFlags();
     if( randRatio < 1.0 and sPlot) {
       // For an sPlot Training it is important to take always signal and background pairs together into the training!
       for(unsigned int iEvent = 0; iEvent < nEvents / 2 + 1; ++iEvent) {
-        int use = (static_cast<float>(rand())/static_cast<float>(RAND_MAX) > randRatio ) ? -1 : 1;
+        int use = (static_cast<float>(rand())/static_cast<float>(RAND_MAX) > randRatio ) ? 0 : 1;
         flags.Set(iEvent, use);
         unsigned int jEvent = static_cast<unsigned int>(static_cast<int>(nEvents) - static_cast<int>(iEvent) - 1);
         flags.Set(jEvent, use);
       }
     } else if( randRatio < 1.0) {
       for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent)
-        flags.Set(iEvent, ( static_cast<float>(rand())/static_cast<float>(RAND_MAX) > randRatio ) ? -1 : 1 );
+        flags.Set(iEvent, ( static_cast<float>(rand())/static_cast<float>(RAND_MAX) > randRatio ) ? 0 : 1 );
     } else {
       for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent)
         flags.Set(iEvent, 1);
@@ -378,8 +387,8 @@ namespace FastBDT {
     // If not we have to calculate the node to which this event belongs
     if( forest.size() > 0 ) {
       for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
-        if( flags.Get(iEvent) >= 0)
-          FCache[iEvent] += shrinkage*forest.back().GetBoostWeight( flags.Get(iEvent) - 1);
+        if( flags.Get(iEvent) != 0)
+          FCache[iEvent] += shrinkage*forest.back().GetBoostWeight( std::abs(flags.Get(iEvent)) - 1);
         else
           FCache[iEvent] += shrinkage*forest.back().GetBoostWeight( forest.back().ValueToNode(&values.Get(iEvent)) );
       }
