@@ -475,6 +475,7 @@ namespace FastBDT {
       Forest() = default;
       Forest(const Forest&) = default;
       Forest& operator=(const Forest &) = default;
+
       Forest(double shrinkage, double F0) : shrinkage(shrinkage), F0(F0) { }
 
       void AddTree(const Tree &tree) { forest.push_back(tree); }
