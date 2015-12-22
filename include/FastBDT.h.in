@@ -4,6 +4,9 @@
 
 #pragma once
 
+#define FastBDT_VERSION_MAJOR @FastBDT_VERSION_MAJOR@
+#define FastBDT_VERSION_MINOR @FastBDT_VERSION_MINOR@
+
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -428,7 +431,7 @@ namespace FastBDT {
         // Either the event is passed to the left child node (which has
         // the position 2*node in the next layer) or to the right
         // (which has the position 2*node + 1 in the next layer)
-        // TODO Do index calculatio instead of jump here
+        // TODO Do index calculation instead of jump here
         if( values[ cut.feature ] < cut.index ) {
           node = (node << 1);
         } else {

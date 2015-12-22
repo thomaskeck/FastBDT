@@ -57,7 +57,7 @@ TMVA::MethodFastBDT::~MethodFastBDT( void )
      delete fForest;
 }
 
-Bool_t TMVA::MethodFastBDT::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets )
+Bool_t TMVA::MethodFastBDT::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t)
 {
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    return kFALSE;
@@ -326,12 +326,12 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
 
 }
 
-void  TMVA::MethodFastBDT::ReadWeightsFromStream( std::istream& istr )
+void  TMVA::MethodFastBDT::ReadWeightsFromStream( std::istream&)
 {
       Log() << kFATAL << "Reading Weights From Stream is currently not supported" << Endl;
 }
 
-Double_t TMVA::MethodFastBDT::GetMvaValue( Double_t* err, Double_t* errUpper ){
+Double_t TMVA::MethodFastBDT::GetMvaValue( Double_t*, Double_t*){
  
   // First get the current event and store it in a vector 
   std::vector<unsigned int> bins(GetNvar(),0);

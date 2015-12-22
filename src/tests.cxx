@@ -2,7 +2,7 @@
  * Thomas Keck 2014
  */
 
-#include "FBDT.h"
+#include "FastBDT.h"
 #include "IO.h"
 
 #include <gtest/gtest.h>
@@ -47,57 +47,57 @@ TEST_F(FeatureBinningTest, MaximumAndMinimumValueAreCorrectlyIdentified) {
 
 TEST_F(FeatureBinningTest, NumberOfLevelsAndBinsIsCorrectlyIdentified) {
 
-    EXPECT_EQ( calculatedBinning->GetNLevels(), 2 );
-    EXPECT_EQ( predefinedBinning->GetNLevels(), 2 );
+    EXPECT_EQ( calculatedBinning->GetNLevels(), 2u );
+    EXPECT_EQ( predefinedBinning->GetNLevels(), 2u );
     // 5 bins, 2^2 ordinary bins + 1 NaN bin
-    EXPECT_EQ( calculatedBinning->GetNBins(), 5 );
-    EXPECT_EQ( predefinedBinning->GetNBins(), 5 );
+    EXPECT_EQ( calculatedBinning->GetNBins(), 5u );
+    EXPECT_EQ( predefinedBinning->GetNBins(), 5u );
 
 }
 
 TEST_F(FeatureBinningTest, ValueToBinMapsNormalValuesCorrectly) {
 
-    EXPECT_EQ( calculatedBinning->ValueToBin(1.0f), 1);
-    EXPECT_EQ( calculatedBinning->ValueToBin(2.0f), 1);
-    EXPECT_EQ( calculatedBinning->ValueToBin(3.0f), 1);
-    EXPECT_EQ( calculatedBinning->ValueToBin(4.0f), 2);
-    EXPECT_EQ( calculatedBinning->ValueToBin(5.0f), 2);
-    EXPECT_EQ( calculatedBinning->ValueToBin(6.0f), 2);
-    EXPECT_EQ( calculatedBinning->ValueToBin(7.0f), 3);
-    EXPECT_EQ( calculatedBinning->ValueToBin(8.0f), 3);
-    EXPECT_EQ( calculatedBinning->ValueToBin(9.0f), 3);
-    EXPECT_EQ( calculatedBinning->ValueToBin(10.0f), 4);
-    EXPECT_EQ( calculatedBinning->ValueToBin(11.0f), 4);
-    EXPECT_EQ( calculatedBinning->ValueToBin(12.0f), 4);
+    EXPECT_EQ( calculatedBinning->ValueToBin(1.0f), 1u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(2.0f), 1u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(3.0f), 1u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(4.0f), 2u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(5.0f), 2u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(6.0f), 2u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(7.0f), 3u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(8.0f), 3u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(9.0f), 3u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(10.0f), 4u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(11.0f), 4u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(12.0f), 4u);
     
-    EXPECT_EQ( predefinedBinning->ValueToBin(1.0f), 1);
-    EXPECT_EQ( predefinedBinning->ValueToBin(2.0f), 1);
-    EXPECT_EQ( predefinedBinning->ValueToBin(3.0f), 1);
-    EXPECT_EQ( predefinedBinning->ValueToBin(4.0f), 2);
-    EXPECT_EQ( predefinedBinning->ValueToBin(5.0f), 2);
-    EXPECT_EQ( predefinedBinning->ValueToBin(6.0f), 2);
-    EXPECT_EQ( predefinedBinning->ValueToBin(7.0f), 3);
-    EXPECT_EQ( predefinedBinning->ValueToBin(8.0f), 3);
-    EXPECT_EQ( predefinedBinning->ValueToBin(9.0f), 3);
-    EXPECT_EQ( predefinedBinning->ValueToBin(10.0f), 4);
-    EXPECT_EQ( predefinedBinning->ValueToBin(11.0f), 4);
-    EXPECT_EQ( predefinedBinning->ValueToBin(12.0f), 4);
+    EXPECT_EQ( predefinedBinning->ValueToBin(1.0f), 1u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(2.0f), 1u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(3.0f), 1u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(4.0f), 2u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(5.0f), 2u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(6.0f), 2u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(7.0f), 3u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(8.0f), 3u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(9.0f), 3u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(10.0f), 4u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(11.0f), 4u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(12.0f), 4u);
 
 }
 
 TEST_F(FeatureBinningTest, NaNGivesZeroBin) {
 
-    EXPECT_EQ( predefinedBinning->ValueToBin(NAN), 0);
-    EXPECT_EQ( predefinedBinning->ValueToBin(NAN), 0);
+    EXPECT_EQ( predefinedBinning->ValueToBin(NAN), 0u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(NAN), 0u);
 
 }
 
 TEST_F(FeatureBinningTest, OverflowAndUnderflowGivesLastAndFirstBin) {
 
-    EXPECT_EQ( calculatedBinning->ValueToBin(100.0f), 4);
-    EXPECT_EQ( calculatedBinning->ValueToBin(-100.0f), 1);
-    EXPECT_EQ( predefinedBinning->ValueToBin(100.0f), 4);
-    EXPECT_EQ( predefinedBinning->ValueToBin(-100.0f), 1);
+    EXPECT_EQ( calculatedBinning->ValueToBin(100.0f), 4u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(-100.0f), 1u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(100.0f), 4u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(-100.0f), 1u);
 
 }
 
@@ -194,7 +194,7 @@ TEST_F(EventFlagsTest, SetterAndGetterWorkCorrectly) {
         eventFlags->Set(i, i-5 );
 
     for(unsigned int i = 0; i < 10; ++i)
-        EXPECT_EQ( eventFlags->Get(i), i-5);
+        EXPECT_EQ( eventFlags->Get(i), static_cast<int>(i)-5);
 
 }
 
@@ -234,8 +234,8 @@ TEST_F(EventValuesTest, SetterAndGetterWorkCorrectly) {
 
 TEST_F(EventValuesTest, GetSizesWorkCorrectly) {
 
-    EXPECT_EQ( eventValues->GetNFeatures(), 3);
-    EXPECT_EQ( eventValues->GetNBins(), 9);
+    EXPECT_EQ( eventValues->GetNFeatures(), 3u);
+    EXPECT_EQ( eventValues->GetNBins(), 9u);
 
 }
 
@@ -256,8 +256,8 @@ class EventSampleTest : public ::testing::Test {
 TEST_F(EventSampleTest, AddingEventsWorksCorrectly) {
 
     eventSample->AddEvent( std::vector<unsigned int>({1,2,3}), 2.0, true );
-    EXPECT_EQ( eventSample->GetNSignals(), 1);
-    EXPECT_EQ( eventSample->GetNBckgrds(), 0);
+    EXPECT_EQ( eventSample->GetNSignals(), 1u);
+    EXPECT_EQ( eventSample->GetNBckgrds(), 0u);
    
     const auto &eventWeights = eventSample->GetWeights();
     auto sums = eventWeights.GetSums(5);
@@ -269,8 +269,8 @@ TEST_F(EventSampleTest, AddingEventsWorksCorrectly) {
     for(unsigned int i = 1; i < 10; ++i) { 
         eventSample->AddEvent( std::vector<unsigned int>({2*i,3*i,5*i}), 2.0, i % 2 == 0 );
     }
-    EXPECT_EQ( eventSample->GetNSignals(), 5);
-    EXPECT_EQ( eventSample->GetNBckgrds(), 5);
+    EXPECT_EQ( eventSample->GetNSignals(), 5u);
+    EXPECT_EQ( eventSample->GetNBckgrds(), 5u);
     
     sums = eventWeights.GetSums(5);
     EXPECT_DOUBLE_EQ(sums[0], 10.0);
@@ -283,9 +283,9 @@ TEST_F(EventSampleTest, AddingEventsWorksCorrectly) {
     // Remember that the events are NOT in the same order as they were added,
     // instead the signal events are added starting from 0, and the background events
     // are added reversed starting from the last event.
-    EXPECT_EQ( eventSample->GetValues().Get(1,2), 10); 
-    EXPECT_EQ( eventSample->GetValues().Get(3,1), 18); 
-    EXPECT_EQ( eventSample->GetValues().Get(9,0), 2); 
+    EXPECT_EQ( eventSample->GetValues().Get(1,2), 10u); 
+    EXPECT_EQ( eventSample->GetValues().Get(3,1), 18u); 
+    EXPECT_EQ( eventSample->GetValues().Get(9,0), 2u); 
 
     // Test if signal and background labels are correctly assigned
     for(unsigned int i = 0; i < 5; ++i) {
@@ -436,15 +436,15 @@ TEST_F(NodeTest, IsInLayerIsCorrect) {
 
 TEST_F(NodeTest, PositionIsCorrectlyDetermined) {
 
-    EXPECT_EQ( Node(0,0).GetPosition(), 0 );
-    EXPECT_EQ( Node(1,0).GetPosition(), 1 );
-    EXPECT_EQ( Node(1,1).GetPosition(), 2 );
-    EXPECT_EQ( Node(2,0).GetPosition(), 3 );
-    EXPECT_EQ( Node(2,1).GetPosition(), 4 );
-    EXPECT_EQ( Node(2,2).GetPosition(), 5 );
-    EXPECT_EQ( Node(2,3).GetPosition(), 6 );
-    EXPECT_EQ( Node(3,0).GetPosition(), 7 );
-    EXPECT_EQ( Node(3,7).GetPosition(), 14 );
+    EXPECT_EQ( Node(0,0).GetPosition(), 0u );
+    EXPECT_EQ( Node(1,0).GetPosition(), 1u );
+    EXPECT_EQ( Node(1,1).GetPosition(), 2u );
+    EXPECT_EQ( Node(2,0).GetPosition(), 3u );
+    EXPECT_EQ( Node(2,1).GetPosition(), 4u );
+    EXPECT_EQ( Node(2,2).GetPosition(), 5u );
+    EXPECT_EQ( Node(2,3).GetPosition(), 6u );
+    EXPECT_EQ( Node(3,0).GetPosition(), 7u );
+    EXPECT_EQ( Node(3,7).GetPosition(), 14u );
 
 }
 
@@ -481,8 +481,8 @@ TEST_F(NodeTest, BestCut0Layer) {
     node.SetWeights({10.0, 10.0, 68.0});
 
     Cut bestCut = node.CalculateBestCut(CDFs);
-    EXPECT_EQ( bestCut.feature, 0 );
-    EXPECT_EQ( bestCut.index, 2 );
+    EXPECT_EQ( bestCut.feature, 0u );
+    EXPECT_EQ( bestCut.index, 2u );
     EXPECT_DOUBLE_EQ( bestCut.gain, 1.875 );
     EXPECT_TRUE( bestCut.valid );
 
@@ -505,16 +505,16 @@ TEST_F(NodeTest, BestCut1Layer) {
     Node right_node(1,0);
     right_node.SetWeights({7.0, 1.0, 22.0});
     Cut right_bestCut = right_node.CalculateBestCut(CDFs);
-    EXPECT_EQ( right_bestCut.feature, 1 );
-    EXPECT_EQ( right_bestCut.index, 2 );
+    EXPECT_EQ( right_bestCut.feature, 1u );
+    EXPECT_EQ( right_bestCut.index, 2u );
     EXPECT_DOUBLE_EQ( right_bestCut.gain, 0.375);
     EXPECT_TRUE( right_bestCut.valid );
     
     Node left_node(1,1);
     left_node.SetWeights({3.0, 9.0, 38.0});
     Cut left_bestCut = left_node.CalculateBestCut(CDFs);
-    EXPECT_EQ( left_bestCut.feature, 1 );
-    EXPECT_EQ( left_bestCut.index, 2 );
+    EXPECT_EQ( left_bestCut.feature, 1u );
+    EXPECT_EQ( left_bestCut.index, 2u );
     EXPECT_DOUBLE_EQ( left_bestCut.gain, 0.53571428571428581);
     EXPECT_TRUE( left_bestCut.valid );
 
@@ -555,18 +555,18 @@ TEST_F(TreeBuilderTest, DeterminedCutsAreCorrect) {
     
     TreeBuilder dt(2, *eventSample);
     const auto &cuts = dt.GetCuts();
-    EXPECT_EQ( cuts[0].feature, 0 );
-    EXPECT_EQ( cuts[0].index, 2 );
+    EXPECT_EQ( cuts[0].feature, 0u );
+    EXPECT_EQ( cuts[0].index, 2u );
     EXPECT_DOUBLE_EQ( cuts[0].gain, 1.875 );
     EXPECT_TRUE( cuts[0].valid );
     
-    EXPECT_EQ( cuts[1].feature, 1 );
-    EXPECT_EQ( cuts[1].index, 2 );
+    EXPECT_EQ( cuts[1].feature, 1u );
+    EXPECT_EQ( cuts[1].index, 2u );
     EXPECT_DOUBLE_EQ( cuts[1].gain, 0.375 );
     EXPECT_TRUE( cuts[1].valid );
     
-    EXPECT_EQ( cuts[2].feature, 1 );
-    EXPECT_EQ( cuts[2].index, 2 );
+    EXPECT_EQ( cuts[2].feature, 1u );
+    EXPECT_EQ( cuts[2].index, 2u );
     EXPECT_DOUBLE_EQ( cuts[2].gain, 0.53571428571428581 );
     EXPECT_TRUE( cuts[2].valid );
 
@@ -646,12 +646,12 @@ class TreeTest : public ::testing::Test {
 
 TEST_F(TreeTest, ValueToNode) {
 
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({2,3,31}) ), 3 );
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({2,9,4}) ), 4 );
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({4,9,31}) ), 4 );
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({4,8,4}) ), 3 );
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({5,8,31}) ), 2 );
-    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({5,9,4}) ), 2 );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({2,3,31}) ), 3u );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({2,9,4}) ), 4u );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({4,9,31}) ), 4u );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({4,8,4}) ), 3u );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({5,8,31}) ), 2u );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({5,9,4}) ), 2u );
 
 }
 
@@ -715,11 +715,11 @@ TEST_F(ForestBuilderTest, ForestIsCorrect) {
     // Train without randomness and only with one layer per tree
     ForestBuilder forest(*eventSample, 5, 0.1, 1.0, 1); 
     auto trees = forest.GetForest();
-    EXPECT_FLOAT_EQ(trees[0].GetCut(0).feature, 0);
-    EXPECT_FLOAT_EQ(trees[1].GetCut(0).feature, 0);
-    EXPECT_FLOAT_EQ(trees[2].GetCut(0).feature, 1);
-    EXPECT_FLOAT_EQ(trees[3].GetCut(0).feature, 0);
-    EXPECT_FLOAT_EQ(trees[4].GetCut(0).feature, 1);
+    EXPECT_EQ(trees[0].GetCut(0).feature, 0u);
+    EXPECT_EQ(trees[1].GetCut(0).feature, 0u);
+    EXPECT_EQ(trees[2].GetCut(0).feature, 1u);
+    EXPECT_EQ(trees[3].GetCut(0).feature, 0u);
+    EXPECT_EQ(trees[4].GetCut(0).feature, 1u);
 
 }
 
