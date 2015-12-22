@@ -9,7 +9,7 @@
 #endif
 
 
-#include "FBDT.h"
+#include "FastBDT.h"
 
 namespace TMVA {
 

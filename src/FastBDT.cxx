@@ -2,12 +2,11 @@
  * Thomas Keck 2014
  */
 
-#include "FBDT.h"
+#include "FastBDT.h"
+#include "IO.h"
 
 #include <iostream>
 #include <algorithm>
-#include <iomanip>
-
 
 namespace FastBDT {
 
@@ -419,3 +418,4 @@ namespace FastBDT {
     return ranking;
   }
 }
+
