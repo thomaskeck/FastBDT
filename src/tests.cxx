@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <sstream>
+#include <limits>
 
 using namespace FastBDT;
 
@@ -101,6 +102,25 @@ TEST_F(FeatureBinningTest, OverflowAndUnderflowGivesLastAndFirstBin) {
 
 }
 
+TEST_F(FeatureBinningTest, UsingMaximumOfDoubleIsSafe) {
+
+    EXPECT_EQ( calculatedBinning->ValueToBin(std::numeric_limits<float>::max()), 4u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(std::numeric_limits<float>::lowest()), 1u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(std::numeric_limits<float>::max()), 4u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(std::numeric_limits<float>::lowest()), 1u);
+
+}
+
+
+TEST_F(FeatureBinningTest, UsingInfinityIsSafe) {
+
+    EXPECT_EQ( calculatedBinning->ValueToBin(std::numeric_limits<float>::infinity()), 4u);
+    EXPECT_EQ( calculatedBinning->ValueToBin(-std::numeric_limits<float>::infinity()), 1u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(std::numeric_limits<float>::infinity()), 4u);
+    EXPECT_EQ( predefinedBinning->ValueToBin(-std::numeric_limits<float>::infinity()), 1u);
+
+}
+
 TEST_F(FeatureBinningTest, GetBinningIsCorrect) {
 
     EXPECT_EQ( calculatedBinning->GetBinning(), binning);
@@ -139,6 +159,27 @@ TEST_F(EventWeightsTest, WeightSumsAreCorrect) {
     EXPECT_DOUBLE_EQ(sums[0], 15.0 * 2);
     EXPECT_DOUBLE_EQ(sums[1], 40.0 * 2);
     EXPECT_DOUBLE_EQ(sums[2], 385.0 * 2);
+
+}
+
+TEST_F(EventWeightsTest, WeightSumsAreNotInfluencedByZeroWeights) {
+
+    auto sums = eventWeights->GetSums(5);
+            
+    EventWeights *newEventWeights = new EventWeights(20);
+    for(unsigned int i = 0; i < 10; ++i) {
+        // Get delivers the weight*original weight, therefore we need to divide by the original weight afterwards
+        newEventWeights->Set(i*2, eventWeights->Get(i) / eventWeights->GetOriginal(i));
+        newEventWeights->SetOriginal(i*2, eventWeights->GetOriginal(i));
+        newEventWeights->Set(i*2 + 1, 0.0);
+        newEventWeights->SetOriginal(i*2 + 1, 0.0);
+    }
+    auto newSums = newEventWeights->GetSums(10);
+    delete newEventWeights;
+
+    EXPECT_DOUBLE_EQ(sums[0], newSums[0]);
+    EXPECT_DOUBLE_EQ(sums[1], newSums[1]);
+    EXPECT_DOUBLE_EQ(sums[2], newSums[2]);
 
 }
 
@@ -340,6 +381,40 @@ TEST_F(CumulativeDistributionsTest, CheckIfLayer0IsCorrect) {
 
 }
 
+TEST_F(CumulativeDistributionsTest, NaNShouldBeIgnored) {
+
+    CumulativeDistributions CDFsForLayer0(0, *eventSample);
+            
+    std::vector<unsigned int> v(2);
+    EventSample *newEventSample = new EventSample(200, 2, 2);
+    for(unsigned int i = 0; i < 100; ++i) {
+        v[0] = eventSample->GetValues().Get(i, 0);
+        v[1] = eventSample->GetValues().Get(i, 1);
+        newEventSample->AddEvent(v, eventSample->GetWeights().GetOriginal(i), eventSample->IsSignal(i));
+        newEventSample->AddEvent(std::vector<unsigned int>({0, 0}), 1.0, i < 50);
+    }
+    CumulativeDistributions newCDFsForLayer0(0, *newEventSample);
+    delete newEventSample;
+
+    for(unsigned int iBin = 1; iBin < 5; ++iBin) {
+      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, iBin), newCDFsForLayer0.GetSignal(0, 0, iBin)); 
+      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, iBin), newCDFsForLayer0.GetBckgrd(0, 0, iBin)); 
+      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, iBin), newCDFsForLayer0.GetSignal(0, 1, iBin)); 
+      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, iBin), newCDFsForLayer0.GetBckgrd(0, 1, iBin)); 
+    }
+
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 0), 0.0);
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 0), 0.0);
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 0), 0.0);
+    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 0), 0.0);
+    
+    EXPECT_DOUBLE_EQ( newCDFsForLayer0.GetSignal(0, 0, 0), 50.0);
+    EXPECT_DOUBLE_EQ( newCDFsForLayer0.GetBckgrd(0, 0, 0), 50.0);
+    EXPECT_DOUBLE_EQ( newCDFsForLayer0.GetSignal(0, 1, 0), 50.0);
+    EXPECT_DOUBLE_EQ( newCDFsForLayer0.GetBckgrd(0, 1, 0), 50.0);
+
+}
+
 TEST_F(CumulativeDistributionsTest, CheckIfLayer1IsCorrect) {
     
     auto &eventFlags = eventSample->GetFlags();
@@ -485,6 +560,34 @@ TEST_F(NodeTest, BestCut0Layer) {
     EXPECT_EQ( bestCut.index, 2u );
     EXPECT_DOUBLE_EQ( bestCut.gain, 1.875 );
     EXPECT_TRUE( bestCut.valid );
+
+}
+
+TEST_F(NodeTest, NaNIsIgnored) {
+
+    CumulativeDistributions CDFs(0, *eventSample);
+    Node node(0,0);
+    node.SetWeights({10.0, 10.0, 68.0});
+    Cut bestCut = node.CalculateBestCut(CDFs);
+    
+    EXPECT_DOUBLE_EQ(CDFs.GetSignal(0, 0, 0), 0.0);
+    EXPECT_DOUBLE_EQ(CDFs.GetBckgrd(0, 0, 0), 0.0);
+    EXPECT_DOUBLE_EQ(CDFs.GetSignal(0, 1, 0), 0.0);
+    EXPECT_DOUBLE_EQ(CDFs.GetBckgrd(0, 1, 0), 0.0);
+    // I violate constness here because it's the simplest way to test the influence
+    // of the 0th bin, which contains the weights for the NaN values.
+    // Signal and Background are chosen extremly asymmetric for both features, so
+    // this should change the cut if the 0th bin is considered.
+    const_cast<float&>(CDFs.GetSignal(0, 0, 0)) = 100.0;
+    const_cast<float&>(CDFs.GetBckgrd(0, 0, 0)) = 1.0;
+    const_cast<float&>(CDFs.GetSignal(0, 1, 0)) = 10.0;
+    const_cast<float&>(CDFs.GetBckgrd(0, 1, 0)) = 800.0;
+    Cut newBestCut = node.CalculateBestCut(CDFs);
+
+    EXPECT_EQ( bestCut.feature, newBestCut.feature );
+    EXPECT_EQ( bestCut.index, newBestCut.index );
+    EXPECT_DOUBLE_EQ( bestCut.gain, newBestCut.gain );
+    EXPECT_EQ( bestCut.valid, newBestCut.valid );
 
 }
 
@@ -654,6 +757,18 @@ TEST_F(TreeTest, ValueToNode) {
     EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({5,9,4}) ), 2u );
 
 }
+
+TEST_F(TreeTest, NaNToNode) {
+
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({0,3,31}) ), 0u );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({2,3,0}) ), 3u );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({2,0,4}) ), 1u );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({2,9,4}) ), 4u );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({5,0,31}) ), 2u );
+    EXPECT_EQ(tree->ValueToNode( std::vector<unsigned int>({5,9,0}) ), 2u );
+
+}
+
 
 TEST_F(TreeTest, Purities) {
     for(unsigned int i = 0; i < 7; ++i) {
