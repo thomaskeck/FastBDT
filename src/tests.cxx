@@ -15,7 +15,7 @@ using namespace FastBDT;
 class FeatureBinningTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            std::vector<float> data = {10.0f,8.0f,2.0f,7.0f,5.0f,6.0f,9.0f,4.0f,3.0f,11.0f,12.0f,1.0f};
+            std::vector<float> data = {10.0f,8.0f,2.0f,NAN,NAN,NAN,NAN,7.0f,5.0f,6.0f,9.0f,NAN,4.0f,3.0f,11.0f,12.0f,1.0f,NAN};
             calculatedBinning = new FeatureBinning<float>(2, data.begin(), data.end());
 
             binning = { 1.0f, 7.0f, 4.0f, 10.0f, 12.0f }; 
@@ -128,12 +128,69 @@ TEST_F(FeatureBinningTest, GetBinningIsCorrect) {
 
 }
 
-TEST_F(FeatureBinningTest, ThrowIfTooManyLevelsForGivenData) {
+TEST_F(FeatureBinningTest, ConstantFeatureIsHandledCorrectly) {
 
-    std::vector<float> data = { 1.0f, 4.0f, 7.0f, 10.0f, 12.0f }; 
-    EXPECT_THROW( FeatureBinning<float>(3, data.begin(), data.end()), std::runtime_error );
+    std::vector<float> data = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }; 
+    FeatureBinning<float> featureBinning(3, data.begin(), data.end());
+
+    std::vector<float> binning = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }; 
+    EXPECT_EQ( featureBinning.GetNBins(), 9u);
+    EXPECT_EQ( featureBinning.GetBinning(), binning);
+    EXPECT_EQ( featureBinning.ValueToBin(100.0f), 8u);
+    EXPECT_EQ( featureBinning.ValueToBin(-100.0f), 1u);
+    EXPECT_EQ( featureBinning.ValueToBin(1.0f), 8u);
 
 }
+
+TEST_F(FeatureBinningTest, LowStatisticIsHandledCorrectly) {
+
+    std::vector<float> data = { 1.0f, 4.0f, 4.0f, 7.0f, 10.0f, 11.0f, 12.0f }; 
+    FeatureBinning<float> featureBinning(3, data.begin(), data.end());
+
+    std::vector<float> binning = { 1.0f, 7.0f, 4.0f, 10.0f, 1.0f, 4.0f, 7.0f, 11.0f, 12.0f }; 
+    EXPECT_EQ( featureBinning.GetNBins(), 9u);
+    EXPECT_EQ( featureBinning.GetBinning(), binning);
+    
+    EXPECT_EQ( featureBinning.ValueToBin(100.0f), 8u);
+    EXPECT_EQ( featureBinning.ValueToBin(-100.0f), 1u);
+    
+    EXPECT_EQ( featureBinning.ValueToBin(1.0f), 2u);
+    EXPECT_EQ( featureBinning.ValueToBin(2.0f), 2u);
+    EXPECT_EQ( featureBinning.ValueToBin(3.0f), 2u);
+    EXPECT_EQ( featureBinning.ValueToBin(4.0f), 4u);
+    EXPECT_EQ( featureBinning.ValueToBin(5.0f), 4u);
+    EXPECT_EQ( featureBinning.ValueToBin(6.0f), 4u);
+    EXPECT_EQ( featureBinning.ValueToBin(7.0f), 6u);
+    EXPECT_EQ( featureBinning.ValueToBin(8.0f), 6u);
+    EXPECT_EQ( featureBinning.ValueToBin(9.0f), 6u);
+    EXPECT_EQ( featureBinning.ValueToBin(10.0f), 7u);
+    EXPECT_EQ( featureBinning.ValueToBin(11.0f), 8u);
+    EXPECT_EQ( featureBinning.ValueToBin(12.0f), 8u);
+    
+    FeatureBinning<float> featureBinning2(4, data.begin(), data.end());
+
+    std::vector<float> binning2 = { 1.0f, 7.0f, 4.0f, 10.0f, 1.0f, 4.0f, 7.0f, 11.0f, 1.0f, 1.0f, 4.0f, 4.0f, 7.0f, 10.0f, 11.0f, 12.0f, 12.0f }; 
+    EXPECT_EQ( featureBinning2.GetNBins(), 17u);
+    EXPECT_EQ( featureBinning2.GetBinning(), binning2);
+    
+    EXPECT_EQ( featureBinning2.ValueToBin(100.0f), 16u);
+    EXPECT_EQ( featureBinning2.ValueToBin(-100.0f), 1u);
+    
+    EXPECT_EQ( featureBinning2.ValueToBin(1.0f), 4u);
+    EXPECT_EQ( featureBinning2.ValueToBin(2.0f), 4u);
+    EXPECT_EQ( featureBinning2.ValueToBin(3.0f), 4u);
+    EXPECT_EQ( featureBinning2.ValueToBin(4.0f), 8u);
+    EXPECT_EQ( featureBinning2.ValueToBin(5.0f), 8u);
+    EXPECT_EQ( featureBinning2.ValueToBin(6.0f), 8u);
+    EXPECT_EQ( featureBinning2.ValueToBin(7.0f), 11u);
+    EXPECT_EQ( featureBinning2.ValueToBin(8.0f), 11u);
+    EXPECT_EQ( featureBinning2.ValueToBin(9.0f), 11u);
+    EXPECT_EQ( featureBinning2.ValueToBin(10.0f), 13u);
+    EXPECT_EQ( featureBinning2.ValueToBin(11.0f), 15u);
+    EXPECT_EQ( featureBinning2.ValueToBin(12.0f), 16u);
+    
+}
+
 
 class EventWeightsTest : public ::testing::Test {
 
