@@ -35,6 +35,9 @@ namespace FastBDT {
    * The given values of the feature are sorted and binned into 2^nLevels bins.
    * After this transformation the decision tree operates on the bin-index of the values, instead
    * of the value itself. The number of bins determines the number of cuts performed in a traditional decision tree.
+   *
+   * For an ordered class with distinct values (in contrast to an continueous feature) one should add only
+   * the unique values into the feature binning, to ensure that each value gets its own bin.
    */
   template<class Value>
     class FeatureBinning {
@@ -65,7 +68,10 @@ namespace FastBDT {
             }
 
             // TODO Use numberOfDistinctValues to calculate nLevels automatically
+            // TODO Uniquefy the data if there are only a "few" (< 1024?) unique values,
+            // to ensure that each feature gets its own bin.
             if(nLevels == 0) {
+
               // Choose nLevels automatically
               // Same for nTrees
             }
@@ -80,11 +86,7 @@ namespace FastBDT {
             for(unsigned int iLevel = 0; iLevel < nLevels; ++iLevel) {
               const unsigned int nBins = (1 << iLevel);
               for(unsigned int iBin = 0; iBin < nBins; ++iBin) {
-                unsigned int range_index = size/(2 << iLevel) + (iBin*size)/(1 << iLevel);
-                // TODO Get rid of this limitations, if too few data choose same value multiple times as boundary
-                if( range_index == 0)
-                  throw std::runtime_error("Number of binning levels to too big for the amount of data you've provided");
-                binning[++bin_index] = first[ range_index ];
+                binning[++bin_index] = first[ (size >> (iLevel+1)) + ((iBin*size) >> iLevel) ];
               }
             }
           }
