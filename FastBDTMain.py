@@ -23,7 +23,7 @@ import numpy as np
 
 
 def readDataFile(datafile):
-    data = np.loadtxt(datafile, skiprows=0, dtype=np.float64)
+    data = np.loadtxt(datafile, skiprows=1, dtype=np.float64)
     X = data[:, :-1].astype(np.float64)
     y = data[:, -1].astype(np.uint32)
     return X, y

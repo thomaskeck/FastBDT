@@ -22,7 +22,12 @@ std::vector<std::vector<double>> readDataFile(std::string datafile) {
 	std::string line;
 	std::vector< std::vector<double> > data;
 	unsigned int numberOfFeatures = 0;
+  bool skippedHeader = false;
 	while(std::getline(fs, line)) {
+    if (not skippedHeader) {
+      skippedHeader = true;
+      continue;
+    }
 		std::istringstream sin(line);
 		double value = 0;
 		std::vector<double> row;
