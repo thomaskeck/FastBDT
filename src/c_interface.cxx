@@ -66,15 +66,17 @@ extern "C" {
       double *data = reinterpret_cast<double*>(data_ptr);
       unsigned int *target = reinterpret_cast<unsigned int*>(target_ptr);
 
+      std::vector<unsigned int> nLevels;
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
         std::vector<double> feature(nEvents);
         for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
           feature[iEvent] = *(data + iEvent*nFeatures + iFeature);
         }
         expertise->featureBinnings.push_back(FeatureBinning<double>(expertise->nBinningLevels, feature.begin(), feature.end()));
+        nLevels.push_back(expertise->nBinningLevels);
       }
 
-      EventSample eventSample(nEvents, nFeatures, expertise->nBinningLevels);
+      EventSample eventSample(nEvents, nFeatures, nLevels);
       std::vector<unsigned int> bins(nFeatures);
       for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
         for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {

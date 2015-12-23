@@ -57,6 +57,19 @@ namespace FastBDT {
             }
 
             unsigned int size = last - first;
+            
+            unsigned long int numberOfDistinctValues = 1;
+            for(unsigned int iEvent = 1; iEvent < size; ++iEvent) {
+              if(first[iEvent] != first[iEvent-1])
+                numberOfDistinctValues++;
+            }
+
+            // TODO Use numberOfDistinctValues to calculate nLevels automatically
+            if(nLevels == 0) {
+              // Choose nLevels automatically
+              // Same for nTrees
+            }
+
             // Need only Nbins, altough we store upper and lower boundary as well,
             // however GetNBins counts also the NaN bin, so it really is GetNBins() - 1 + 1
             binning.resize(GetNBins(), 0);
@@ -68,6 +81,7 @@ namespace FastBDT {
               const unsigned int nBins = (1 << iLevel);
               for(unsigned int iBin = 0; iBin < nBins; ++iBin) {
                 unsigned int range_index = size/(2 << iLevel) + (iBin*size)/(1 << iLevel);
+                // TODO Get rid of this limitations, if too few data choose same value multiple times as boundary
                 if( range_index == 0)
                   throw std::runtime_error("Number of binning levels to too big for the amount of data you've provided");
                 binning[++bin_index] = first[ range_index ];
@@ -162,7 +176,7 @@ namespace FastBDT {
   class EventValues {
 
     public:
-      EventValues(unsigned int nEvents, unsigned int nFeatures, unsigned int nLevels) : values(nEvents*nFeatures, 0), nFeatures(nFeatures), nBins( (1 << nLevels)+1 ) { };
+      EventValues(unsigned int nEvents, unsigned int nFeatures, const std::vector<unsigned int> &nLevels);
 
       /**
        * Returns a reference to the iFeature feature of the event at position iEvent. The features of one
@@ -174,8 +188,10 @@ namespace FastBDT {
       inline const unsigned int& Get(unsigned int iEvent, unsigned int iFeature=0) const { return values[iEvent*nFeatures + iFeature]; }
       void Set(unsigned int iEvent, const std::vector<unsigned int> &features); 
 
-      inline unsigned int GetNFeatures() const { return nFeatures; } 
-      inline unsigned int GetNBins() const { return nBins; }
+      inline unsigned int GetNFeatures() const { return nFeatures; }
+
+      inline const std::vector<unsigned int>& GetNBins() const { return nBins; }
+      inline const std::vector<unsigned int>& GetNBinSums() const { return nBinSums; }
 
     private:
       /**
@@ -184,7 +200,8 @@ namespace FastBDT {
        */
       std::vector<unsigned int> values;
       unsigned int nFeatures; /* <* Amount of features per event*/
-      unsigned int nBins; /**< Number of bins, therefore maximum numerical value of a feature, 0 bin is reserved for NaN values */
+      std::vector<unsigned int> nBins; /**< Number of bins for each feature, therefore maximum numerical value of a feature, 0 bin is reserved for NaN values */
+      std::vector<unsigned int> nBinSums; /**< Total number of bins up to this feature, including all bins of previous features, excluding first feature  */
 
   };
 
@@ -211,7 +228,7 @@ namespace FastBDT {
        * @param nFeatures number of features per event
        * @param nLevels number of bin levels
        */
-      EventSample(unsigned int nEvents, unsigned int nFeatures, unsigned int nLevels) : nEvents(nEvents), nSignals(0), nBckgrds(0),
+      EventSample(unsigned int nEvents, unsigned int nFeatures, const std::vector<unsigned int> &nLevels) : nEvents(nEvents), nSignals(0), nBckgrds(0),
       weights(nEvents), flags(nEvents), values(nEvents,nFeatures,nLevels) { }
 
       void AddEvent(const std::vector<unsigned int> &features, float weight, bool isSignal);
@@ -254,13 +271,13 @@ namespace FastBDT {
     public:
       CumulativeDistributions(unsigned int iLayer, const EventSample& sample);
 
-
-      inline const float& GetSignal(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return signalCDFs[iNode*nBins*nFeatures + iFeature*nBins + iBin]; }
-      inline const float& GetBckgrd(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return bckgrdCDFs[iNode*nBins*nFeatures + iFeature*nBins + iBin]; }
+      inline const float& GetSignal(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return signalCDFs[iNode*nBinSums.back() + nBinSums[iFeature] + iBin]; }
+      inline const float& GetBckgrd(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return bckgrdCDFs[iNode*nBinSums.back() + nBinSums[iFeature] + iBin]; }
 
       unsigned int GetNFeatures() const { return nFeatures; } 
-      unsigned int GetNBins() const { return nBins; } 
       unsigned int GetNNodes() const { return nNodes; }
+      
+      inline const std::vector<unsigned int>& GetNBins() const { return nBins; }
 
     private:
       /**
@@ -274,7 +291,8 @@ namespace FastBDT {
 
     private:
       unsigned int nFeatures;
-      unsigned int nBins;
+      std::vector<unsigned int> nBins; /**< Number of bins for each feature, therefore maximum numerical value of a feature, 0 bin is reserved for NaN values */
+      std::vector<unsigned int> nBinSums; /**< Total number of bins up to this feature, including all bins of previous features, excluding first feature  */
       unsigned int nNodes;
       std::vector<float> signalCDFs;
       std::vector<float> bckgrdCDFs;

@@ -147,6 +147,7 @@ int train(int argc, char *argv[]) {
      *  Second and third arguments are STL RandomAccess iterators (raw pointers should work also I guess)
      */
     std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
+    std::vector<unsigned int> nBinningLevels;
     for(unsigned int iFeature = 0; iFeature < numberOfFeatures; ++iFeature) {
         std::vector<double> feature;
         feature.reserve(numberOfEvents);
@@ -154,6 +155,7 @@ int train(int argc, char *argv[]) {
             feature.push_back( event[iFeature] );
         }
         featureBinnings.push_back(FastBDT::FeatureBinning<double>(nCuts, feature.begin(), feature.end()));
+        nBinningLevels.push_back(nCuts);
     }
 
     /**
@@ -165,7 +167,7 @@ int train(int argc, char *argv[]) {
      * In the example below the data is now binned using the FeatureBinning's ValueToBin method
      * and afterwards added (each row seperatly) into the EventSample using its AddEvent method.
      */
-    FastBDT::EventSample eventSample(data.size(), numberOfFeatures, nCuts);
+    FastBDT::EventSample eventSample(data.size(), numberOfFeatures, nBinningLevels);
     for(auto &event : data) {
         int _class = int(event.back());
         std::vector<unsigned int> bins(numberOfFeatures);

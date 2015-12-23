@@ -26,6 +26,23 @@ namespace FastBDT {
     return sums;
 
   }
+  
+  EventValues::EventValues(unsigned int nEvents, unsigned int nFeatures, const std::vector<unsigned int> &nLevels) : values(nEvents*nFeatures, 0), nFeatures(nFeatures) {
+
+    if(nFeatures != nLevels.size()) {
+      throw std::runtime_error("Number of features must be the same as the number of provided binning levels!");
+    }
+
+    nBins.reserve(nLevels.size());
+    for(auto& nLevel : nLevels) 
+      nBins.push_back((1 << nLevel)+1);
+    
+    nBinSums.reserve(nLevels.size()+1);
+    nBinSums.push_back(0);
+    for(auto &nBin : nBins) 
+      nBinSums.push_back(nBinSums.back() + nBin);
+
+  }
 
   void EventValues::Set(unsigned int iEvent, const std::vector<unsigned int> &features) {
 
@@ -36,7 +53,7 @@ namespace FastBDT {
 
     // Check if the feature values are in the correct range
     for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
-      if( features[iFeature] > nBins )
+      if( features[iFeature] > nBins[iFeature] )
         throw std::runtime_error("Promised number of bins is violated.");
     }
 
@@ -54,11 +71,6 @@ namespace FastBDT {
     if(nSignals + nBckgrds == nEvents) {
       throw std::runtime_error("Promised maximum number of events exceeded.");
     }
-
-    if(weight == 0) {
-      throw std::runtime_error("Events with 0 weight are not supported");
-    }
-
 
     // Now add the weight and the features at the right position of the arrays.
     // To do so, we calculate the correct index of this event. If it's a signal
@@ -90,8 +102,9 @@ namespace FastBDT {
 
     const auto &values = sample.GetValues();
     nFeatures = values.GetNFeatures();
-    nBins = values.GetNBins();
     nNodes = (1 << iLayer);
+    nBins = values.GetNBins();
+    nBinSums = values.GetNBinSums();
 
     signalCDFs = CalculateCDFs(sample, 0, sample.GetNSignals());
     bckgrdCDFs = CalculateCDFs(sample, sample.GetNSignals(), sample.GetNEvents());
@@ -104,15 +117,15 @@ namespace FastBDT {
     const auto &flags = sample.GetFlags();
     const auto &weights = sample.GetWeights();
 
-    std::vector<float> bins( nNodes*nFeatures*nBins );
+    std::vector<float> bins( nNodes*nFeatures*nBinSums.back() );
 
     // Fill Cut-PDFs for all nodes in this layer and for every feature
     for(unsigned int iEvent = firstEvent; iEvent < lastEvent; ++iEvent) {
       if( flags.Get(iEvent) < static_cast<int>(nNodes) )
         continue;
-      const unsigned int index = (flags.Get(iEvent)-nNodes)*nFeatures*nBins;
+      const unsigned int index = (flags.Get(iEvent)-nNodes)*nBinSums.back();
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature ) {
-        const unsigned int subindex = iFeature*nBins + values.Get(iEvent,iFeature);
+        const unsigned int subindex = nBinSums[iFeature] + values.Get(iEvent,iFeature);
         bins[index+subindex] += weights.Get(iEvent);
       }
     }
@@ -121,8 +134,8 @@ namespace FastBDT {
     for(unsigned int iNode = 0; iNode < nNodes; ++iNode) {
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
         // Start at 2, this ignore the NaN bin at 0!
-        for(unsigned int iBin = 2; iBin < nBins; ++iBin) {
-          unsigned int index = iNode*nFeatures*nBins + iFeature*nBins + iBin;
+        for(unsigned int iBin = 2; iBin < nBins[iFeature]; ++iBin) {
+          unsigned int index = iNode*nBinSums.back() + nBinSums[iFeature] + iBin;
           bins[index] += bins[index-1];
         }
       }
@@ -136,7 +149,7 @@ namespace FastBDT {
     Cut cut;
 
     const unsigned int nFeatures = CDFs.GetNFeatures();
-    const unsigned int nBins = CDFs.GetNBins();
+    const auto& nBins = CDFs.GetNBins();
 
     double currentLoss = LossFunction(signal, bckgrd);
     if( currentLoss == 0 )
@@ -145,7 +158,7 @@ namespace FastBDT {
     // Loop over all features and cuts and sum up signal and background histograms to cumulative histograms
     for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
       // Start at 2, this ignores the NaN bin at 0
-      for(unsigned int iCut = 2; iCut < nBins; ++iCut) {
+      for(unsigned int iCut = 2; iCut < nBins[iFeature]; ++iCut) {
         double s = CDFs.GetSignal(iNode, iFeature, iCut-1);
         double b = CDFs.GetBckgrd(iNode, iFeature, iCut-1);
         double currentGain = currentLoss - LossFunction( signal-s, bckgrd-b ) - LossFunction( s, b );
@@ -164,12 +177,16 @@ namespace FastBDT {
   }
 
   void Node::AddSignalWeight(float weight, float original_weight) {
+    if(original_weight == 0)
+      return;
     signal += weight;
     square += weight*weight / original_weight;
   }
 
 
   void Node::AddBckgrdWeight(float weight, float original_weight) {
+    if(original_weight == 0)
+      return;
     bckgrd += weight;
     square += weight*weight / original_weight;
   }

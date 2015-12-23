@@ -9,7 +9,7 @@ set (FastBDT_VERSION_MINOR 2)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "cmake")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -std=c++11 -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -std=c++11 -Wall -Wextra -g")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ggdb3 -g -std=c++11 -Wall -Wextra")
 
 configure_file (
@@ -59,13 +59,15 @@ endif()
 
 find_package(ROOT)
 if(ROOT_FOUND)
+  include(RootNewMacros)
   separate_arguments(ROOT_CXX_FLAGS)
   if (ROOT_VERSION_MAJOR GREATER 5)
-    ROOT_GENERATE_DICTIONARY(TMVA_FastBDT_Dict ${FastBDT_HEADERS} "${PROJECT_SOURCE_DIR}/include/LinkDef.h" "${PROJECT_SOURCE_DIR}/include/MethodFastBDT.h")
+    ROOT_GENERATE_DICTIONARY(TMVAFastBDT_Dict ${FastBDT_HEADERS} "${PROJECT_SOURCE_DIR}/include/MethodFastBDT.h" LINKDEF "${PROJECT_SOURCE_DIR}/include/LinkDef.h")
     add_library(TMVAFastBDT SHARED ${FastBDT_SOURCES} "${PROJECT_SOURCE_DIR}/include/MethodFastBDT.h" "${PROJECT_SOURCE_DIR}/src/MethodFastBDT.cxx" ${FastBDT_HEADERS})
     target_compile_options(TMVAFastBDT PUBLIC ${ROOT_CXX_FLAGS})
     target_include_directories(TMVAFastBDT PUBLIC ${ROOT_INCLUDE_DIR}) 
     target_link_libraries(TMVAFastBDT ${ROOT_LIBRARIES})
+    install(TARGETS TMVAFastBDT DESTINATION ${ROOT_LIBRARY_DIR})
   else()
     message(STATUS "Found ROOT installation " ${ROOT_VERSION_MAJOR})
     message(STATUS "Could not find ROOT 6 installation, skip building TMVA interface.")

@@ -112,14 +112,15 @@ void TMVA::MethodFastBDT::Train()
   
   // First thing is to read out the training data from Data()
   // into an EventSample object.
-  // TODO fNCutLevel is not used at the moment, we choose 8 Levels hardcoded!
   featureBinnings.clear();
+  std::vector<unsigned int> nBinningLevels;
   for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
       std::vector<double> feature(nEvents,0);
       for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
          feature[iEvent] = GetTrainingEvent(iEvent)->GetValue(iFeature);
       }
       featureBinnings.push_back( FeatureBinning<double>(fNCutLevel, feature.begin(), feature.end() ) );
+      nBinningLevels.push_back(fNCutLevel);
   }
 
   unsigned int nEventsPruned = 0;
@@ -131,7 +132,7 @@ void TMVA::MethodFastBDT::Train()
      nEventsPruned++;
   }
 
-  EventSample eventSample(nEventsPruned, nFeatures, fNCutLevel);
+  EventSample eventSample(nEventsPruned, nFeatures, nBinningLevels);
 
   for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
       std::vector<unsigned int> bins(nFeatures);
