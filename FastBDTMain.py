@@ -84,7 +84,7 @@ def analyse(forest, X, y):
 
 def apply():
     if len(sys.argv) < 4:
-        print("Usage: ", sys.argv[0], " train datafile weightfile")
+        print("Usage: ", sys.argv[0], " apply datafile weightfile")
         return 1
 
     datafile = sys.argv[2]
@@ -99,18 +99,38 @@ def apply():
     return 0
 
 
+def output():
+    if len(sys.argv) < 4:
+        print("Usage: ", sys.argv[0], " output datafile weightfile")
+        return 1
+
+    datafile = sys.argv[2]
+    weightfile = sys.argv[3]
+
+    X, y = readDataFile(datafile)
+
+    forest = FastBDT.Create()
+    FastBDT.Load(forest, bytes(weightfile, 'utf-8'))
+    for i, row in enumerate(X):
+        print(int(y[i] == 1), FastBDT.Analyse(forest, row.ctypes.data_as(c_double_p)))
+    FastBDT.Delete(forest)
+    return 0
+
+
 if __name__ == '__main__':
 
     FastBDT.PrintVersion()
 
     if len(sys.argv) <= 1:
-        print("Usage ", sys.argv[0], " [train|apply]")
+        print("Usage ", sys.argv[0], " [train|apply|output]")
         sys.exit(1)
 
     if sys.argv[1] == 'train':
         ret = train()
     elif sys.argv[1] == 'apply':
         ret = apply()
+    elif sys.argv[1] == 'output':
+        ret = output()
     else:
         print("Unkown option", sys.argv[1]) 
         ret = 1
