@@ -79,27 +79,6 @@ rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
 
-# Special rule for the target list_install_components
-list_install_components:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
-.PHONY : list_install_components
-
-# Special rule for the target list_install_components
-list_install_components/fast: list_install_components
-
-.PHONY : list_install_components/fast
-
-# Special rule for the target install/strip
-install/strip: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/local/ssd-scratch/tkeck/externals/v01-01-01/Linux_x86_64/common/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip
-
-# Special rule for the target install/strip
-install/strip/fast: install/strip
-
-.PHONY : install/strip/fast
-
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
@@ -121,6 +100,27 @@ edit_cache:
 edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
+
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/local/ssd-scratch/tkeck/externals/v01-01-01/Linux_x86_64/common/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: install/strip
+
+.PHONY : install/strip/fast
+
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+
+.PHONY : list_install_components/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -207,19 +207,6 @@ TMVAFastBDT/fast:
 .PHONY : TMVAFastBDT/fast
 
 #=============================================================================
-# Target rules for targets named TMVAFastBDT_Dict
-
-# Build rule for target.
-TMVAFastBDT_Dict: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 TMVAFastBDT_Dict
-.PHONY : TMVAFastBDT_Dict
-
-# fast build rule for target.
-TMVAFastBDT_Dict/fast:
-	$(MAKE) -f CMakeFiles/TMVAFastBDT_Dict.dir/build.make CMakeFiles/TMVAFastBDT_Dict.dir/build
-.PHONY : TMVAFastBDT_Dict/fast
-
-#=============================================================================
 # Target rules for targets named unittests
 
 # Build rule for target.
@@ -231,6 +218,33 @@ unittests: cmake_check_build_system
 unittests/fast:
 	$(MAKE) -f CMakeFiles/unittests.dir/build.make CMakeFiles/unittests.dir/build
 .PHONY : unittests/fast
+
+TMVA_FastBDT_Dict.o: TMVA_FastBDT_Dict.cxx.o
+
+.PHONY : TMVA_FastBDT_Dict.o
+
+# target to build an object file
+TMVA_FastBDT_Dict.cxx.o:
+	$(MAKE) -f CMakeFiles/TMVAFastBDT.dir/build.make CMakeFiles/TMVAFastBDT.dir/TMVA_FastBDT_Dict.cxx.o
+.PHONY : TMVA_FastBDT_Dict.cxx.o
+
+TMVA_FastBDT_Dict.i: TMVA_FastBDT_Dict.cxx.i
+
+.PHONY : TMVA_FastBDT_Dict.i
+
+# target to preprocess a source file
+TMVA_FastBDT_Dict.cxx.i:
+	$(MAKE) -f CMakeFiles/TMVAFastBDT.dir/build.make CMakeFiles/TMVAFastBDT.dir/TMVA_FastBDT_Dict.cxx.i
+.PHONY : TMVA_FastBDT_Dict.cxx.i
+
+TMVA_FastBDT_Dict.s: TMVA_FastBDT_Dict.cxx.s
+
+.PHONY : TMVA_FastBDT_Dict.s
+
+# target to generate assembly for a file
+TMVA_FastBDT_Dict.cxx.s:
+	$(MAKE) -f CMakeFiles/TMVAFastBDT.dir/build.make CMakeFiles/TMVAFastBDT.dir/TMVA_FastBDT_Dict.cxx.s
+.PHONY : TMVA_FastBDT_Dict.cxx.s
 
 src/FastBDT.o: src/FastBDT.cxx.o
 
@@ -417,13 +431,15 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... unittests"
 	@echo "... FastBDT"
-	@echo "... TMVAFastBDT_Dict"
 	@echo "... FastBDTMain"
 	@echo "... TMVAFastBDT"
-	@echo "... list_install_components"
-	@echo "... install/strip"
 	@echo "... install/local"
 	@echo "... edit_cache"
+	@echo "... install/strip"
+	@echo "... list_install_components"
+	@echo "... TMVA_FastBDT_Dict.o"
+	@echo "... TMVA_FastBDT_Dict.i"
+	@echo "... TMVA_FastBDT_Dict.s"
 	@echo "... src/FastBDT.o"
 	@echo "... src/FastBDT.i"
 	@echo "... src/FastBDT.s"
