@@ -71,7 +71,6 @@ namespace FastBDT {
             // TODO Uniquefy the data if there are only a "few" (< 1024?) unique values,
             // to ensure that each feature gets its own bin.
             if(nLevels == 0) {
-
               // Choose nLevels automatically
               // Same for nTrees
             }
@@ -451,7 +450,6 @@ namespace FastBDT {
         // Either the event is passed to the left child node (which has
         // the position 2*node in the next layer) or to the right
         // (which has the position 2*node + 1 in the next layer)
-        // TODO Do index calculation instead of jump here
         if( values[ cut.feature ] < cut.index ) {
           node = (node << 1);
         } else {
