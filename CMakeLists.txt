@@ -30,12 +30,18 @@ set(FastBDT_HEADERS
 )
 
 add_library(FastBDT STATIC ${FastBDT_SOURCES} ${FastBDT_HEADERS})
-
 add_executable(FastBDTMain "${PROJECT_SOURCE_DIR}/src/main.cxx" ${FastBDT_HEADERS})
 target_link_libraries(FastBDTMain FastBDT)
-
 add_library(FastBDT_CInterface SHARED "${PROJECT_SOURCE_DIR}/src/c_interface.cxx" ${FastBDT_SOURCES} ${FastBDT_HEADERS})
 target_link_libraries(FastBDT_CInterface)
+
+install(TARGETS FastBDT FastBDTMain FastBDT_CInterface
+   LIBRARY DESTINATION lib
+   ARCHIVE DESTINATION lib
+   RUNTIME DESTINATION bin   
+)
+
+install(FILES ${FastBDT_HEADERS} DESTINATION include)
 
 find_package(GTest)
 if(GTEST_FOUND)
