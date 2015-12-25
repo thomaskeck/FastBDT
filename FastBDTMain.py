@@ -3,10 +3,13 @@
 import sys
 
 import ctypes
+import ctypes.util
 c_double_p = ctypes.POINTER(ctypes.c_double)
 c_uint_p = ctypes.POINTER(ctypes.c_uint)
 
-FastBDT = ctypes.cdll.LoadLibrary('./libFastBDT_CInterface.so')
+FastBDT_library_path = ctypes.util.find_library('FastBDT_CInterface')
+FastBDT = ctypes.cdll.LoadLibrary(FastBDT_library_path)
+
 FastBDT.Create.restype = ctypes.c_void_p
 FastBDT.Delete.argtypes = [ctypes.c_void_p]
 FastBDT.Load.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
