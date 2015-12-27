@@ -22,7 +22,14 @@ FastBDT.SetNTrees.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT.SetNBinningLevels.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT.SetNLayersPerTree.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 
+
 import numpy as np
+
+def XArray(a):
+    return numpy.ascontiguousarray(a.astype(np.float64)).ctypes.data_as(c_double_p)
+
+def YArray(a):
+    return numpy.ascontiguousarray(a.astype(np.uint32)).ctypes.data_as(c_uint_p)
 
 
 def readDataFile(datafile):
