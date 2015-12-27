@@ -24,6 +24,12 @@ set(FastBDT_SOURCES
   "${PROJECT_SOURCE_DIR}/src/IO.cxx"
 )
 
+set(FastBDT_TESTS
+  "${PROJECT_SOURCE_DIR}/src/test_all.cxx"
+  "${PROJECT_SOURCE_DIR}/src/test_FastBDT.cxx"
+  "${PROJECT_SOURCE_DIR}/src/test_IO.cxx"
+)
+
 set(FastBDT_HEADERS
   "${PROJECT_BINARY_DIR}/include/FastBDT.h"
   "${PROJECT_SOURCE_DIR}/include/IO.h"
@@ -45,7 +51,7 @@ install(FILES ${FastBDT_HEADERS} DESTINATION include)
 
 find_package(GTest)
 if(GTEST_FOUND)
-  add_executable(unittests "${PROJECT_SOURCE_DIR}/src/tests.cxx" ${FastBDT_HEADERS})
+  add_executable(unittests ${FastBDT_TESTS} ${FastBDT_HEADERS})
   target_link_libraries(unittests ${GTEST_BOTH_LIBRARIES} FastBDT pthread)
   message(STATUS  ${GTEST_INCLUDE_DIRS})
   target_include_directories(unittests PUBLIC ${GTEST_INCLUDE_DIRS})
