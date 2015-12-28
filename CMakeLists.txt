@@ -28,6 +28,7 @@ set(FastBDT_TESTS
   "${PROJECT_SOURCE_DIR}/src/test_all.cxx"
   "${PROJECT_SOURCE_DIR}/src/test_FastBDT.cxx"
   "${PROJECT_SOURCE_DIR}/src/test_IO.cxx"
+  "${PROJECT_SOURCE_DIR}/src/test_c_interface.cxx"
 )
 
 set(FastBDT_HEADERS
@@ -35,10 +36,15 @@ set(FastBDT_HEADERS
   "${PROJECT_SOURCE_DIR}/include/IO.h"
 )
 
+set(FastBDT_CINTERFACE
+  "${PROJECT_SOURCE_DIR}/src/c_interface.cxx"
+  "${PROJECT_SOURCE_DIR}/include/c_interface.h" 
+)
+
 add_library(FastBDT STATIC ${FastBDT_SOURCES} ${FastBDT_HEADERS})
 add_executable(FastBDTMain "${PROJECT_SOURCE_DIR}/src/main.cxx" ${FastBDT_HEADERS})
 target_link_libraries(FastBDTMain FastBDT)
-add_library(FastBDT_CInterface SHARED "${PROJECT_SOURCE_DIR}/src/c_interface.cxx" ${FastBDT_SOURCES} ${FastBDT_HEADERS})
+add_library(FastBDT_CInterface SHARED ${FastBDT_CINTERFACE} ${FastBDT_SOURCES} ${FastBDT_HEADERS})
 target_link_libraries(FastBDT_CInterface)
 
 install(TARGETS FastBDT FastBDTMain FastBDT_CInterface
@@ -51,7 +57,7 @@ install(FILES ${FastBDT_HEADERS} DESTINATION include)
 
 find_package(GTest)
 if(GTEST_FOUND)
-  add_executable(unittests ${FastBDT_TESTS} ${FastBDT_HEADERS})
+    add_executable(unittests ${FastBDT_TESTS} ${FastBDT_HEADERS} ${FastBDT_CINTERFACE})
   target_link_libraries(unittests ${GTEST_BOTH_LIBRARIES} FastBDT pthread)
   message(STATUS  ${GTEST_INCLUDE_DIRS})
   target_include_directories(unittests PUBLIC ${GTEST_INCLUDE_DIRS})

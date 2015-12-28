@@ -273,6 +273,7 @@ src/c_interface.o: src/c_interface.cxx.o
 # target to build an object file
 src/c_interface.cxx.o:
 	$(MAKE) -f CMakeFiles/FastBDT_CInterface.dir/build.make CMakeFiles/FastBDT_CInterface.dir/src/c_interface.cxx.o
+	$(MAKE) -f CMakeFiles/unittests.dir/build.make CMakeFiles/unittests.dir/src/c_interface.cxx.o
 .PHONY : src/c_interface.cxx.o
 
 src/c_interface.i: src/c_interface.cxx.i
@@ -282,6 +283,7 @@ src/c_interface.i: src/c_interface.cxx.i
 # target to preprocess a source file
 src/c_interface.cxx.i:
 	$(MAKE) -f CMakeFiles/FastBDT_CInterface.dir/build.make CMakeFiles/FastBDT_CInterface.dir/src/c_interface.cxx.i
+	$(MAKE) -f CMakeFiles/unittests.dir/build.make CMakeFiles/unittests.dir/src/c_interface.cxx.i
 .PHONY : src/c_interface.cxx.i
 
 src/c_interface.s: src/c_interface.cxx.s
@@ -291,6 +293,7 @@ src/c_interface.s: src/c_interface.cxx.s
 # target to generate assembly for a file
 src/c_interface.cxx.s:
 	$(MAKE) -f CMakeFiles/FastBDT_CInterface.dir/build.make CMakeFiles/FastBDT_CInterface.dir/src/c_interface.cxx.s
+	$(MAKE) -f CMakeFiles/unittests.dir/build.make CMakeFiles/unittests.dir/src/c_interface.cxx.s
 .PHONY : src/c_interface.cxx.s
 
 src/main.o: src/main.cxx.o
@@ -401,6 +404,33 @@ src/test_all.cxx.s:
 	$(MAKE) -f CMakeFiles/unittests.dir/build.make CMakeFiles/unittests.dir/src/test_all.cxx.s
 .PHONY : src/test_all.cxx.s
 
+src/test_c_interface.o: src/test_c_interface.cxx.o
+
+.PHONY : src/test_c_interface.o
+
+# target to build an object file
+src/test_c_interface.cxx.o:
+	$(MAKE) -f CMakeFiles/unittests.dir/build.make CMakeFiles/unittests.dir/src/test_c_interface.cxx.o
+.PHONY : src/test_c_interface.cxx.o
+
+src/test_c_interface.i: src/test_c_interface.cxx.i
+
+.PHONY : src/test_c_interface.i
+
+# target to preprocess a source file
+src/test_c_interface.cxx.i:
+	$(MAKE) -f CMakeFiles/unittests.dir/build.make CMakeFiles/unittests.dir/src/test_c_interface.cxx.i
+.PHONY : src/test_c_interface.cxx.i
+
+src/test_c_interface.s: src/test_c_interface.cxx.s
+
+.PHONY : src/test_c_interface.s
+
+# target to generate assembly for a file
+src/test_c_interface.cxx.s:
+	$(MAKE) -f CMakeFiles/unittests.dir/build.make CMakeFiles/unittests.dir/src/test_c_interface.cxx.s
+.PHONY : src/test_c_interface.cxx.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -438,6 +468,9 @@ help:
 	@echo "... src/test_all.o"
 	@echo "... src/test_all.i"
 	@echo "... src/test_all.s"
+	@echo "... src/test_c_interface.o"
+	@echo "... src/test_c_interface.i"
+	@echo "... src/test_c_interface.s"
 .PHONY : help
 
 

@@ -436,7 +436,7 @@ namespace FastBDT {
       // the event belongs to.
       unsigned int node = 1;
 
-      while( node < cuts.size() ) {
+      while( node <= cuts.size() ) {
 
         auto &cut = cuts[node-1];
         if(not cut.valid)
@@ -534,7 +534,7 @@ namespace FastBDT {
       // Determines the F value by looping over all trees and
       // summing up the weights of the nodes the event belongs to.
       double F = F0;
-      for( auto &tree : forest)
+      for( auto &tree : forest) 
         F += shrinkage*tree.GetBoostWeight( tree.ValueToNode(values) );
       return F;
 

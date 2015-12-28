@@ -199,9 +199,19 @@ namespace FastBDT {
 
   double Node::GetBoostWeight() const {
 
+    // TODO I wonder why the denomintor isn't zero if only signal or only background is in the
+    // node AND the weights != 1. Could be fixed if th 2* is actually is sqaure (inside the signal sum!)?
+    // Because like this we do not get a perfect probability if we have a perfect separation with signal events != background events
+    // (due to the inital reweighting that occurs in this case)  
     double denominator = (2*(signal+bckgrd)-square);
-    if( denominator == 0 )
-      return 0;
+    if( denominator == 0 ) {
+        if(signal == bckgrd)
+            return 0;
+        if(signal > bckgrd)
+            return std::numeric_limits<double>::infinity();
+        else
+            return -std::numeric_limits<double>::infinity();
+    }
     return (signal - bckgrd)/denominator;
 
   }
