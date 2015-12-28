@@ -2,8 +2,7 @@
  * Thomas Keck 2015
  */
 
-#include "FastBDT.h"
-#include "IO.h"
+#include "c_interface.h"
 
 #include <fstream>
 #include <new>
@@ -16,16 +15,6 @@ extern "C" {
     void PrintVersion() {
       std::cerr << "FastBDT Version: " << FastBDT_VERSION_MAJOR << "." << FastBDT_VERSION_MINOR << std::endl;
     }
-
-    struct Expertise {
-      std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
-      Forest forest;
-      unsigned int nBinningLevels;
-      unsigned int nTrees;
-      double shrinkage;
-      double randRatio;
-      unsigned int nLayersPerTree;
-    };
 
     void* Create() {
       Expertise *expertise = new(std::nothrow) Expertise;

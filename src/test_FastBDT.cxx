@@ -1102,7 +1102,6 @@ class ForestBuilderTest : public ::testing::Test {
         EventSample *eventSample;
 };
 
-
 TEST_F(ForestBuilderTest, F0AndShrinkageIsCorrect) {
 
     // Train without randomness and only with one layer per tree
@@ -1178,3 +1177,120 @@ TEST_F(ForestTest, VariableRankingIsCorrect) {
     EXPECT_FLOAT_EQ(map[1], 2.0);
 
 } 
+
+
+class CornerCasesTest : public ::testing::Test { };
+
+TEST_F(CornerCasesTest, OnlySignalGivesReasonableResult) {
+
+    EventSample eventSample(5, 2, {1, 1});
+    eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample.AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, true);
+    // Train without randomness and only with one layer per tree
+    ForestBuilder forest(eventSample, 10, 0.1, 1.0, 1); 
+    EXPECT_FLOAT_EQ(forest.GetF0(), std::numeric_limits<float>::infinity());
+    
+    FastBDT::Forest testforest( forest.GetShrinkage(), forest.GetF0());
+    for( auto t : forest.GetForest() )
+        testforest.AddTree(t);
+    
+    std::vector<unsigned int> values = {0, 1};
+    EXPECT_FLOAT_EQ(testforest.Analyse(values), 1.0);
+    
+    values = {2, 1};
+    EXPECT_FLOAT_EQ(testforest.Analyse(values), 1.0);
+    
+    // Even for NaN values the signal probability should be one
+    values = {0, 0};
+    EXPECT_FLOAT_EQ(testforest.Analyse(values), 1.0);
+
+}
+
+TEST_F(CornerCasesTest, OnlyBackgroundGivesReasonableResult) {
+
+    EventSample eventSample(5, 2, {1, 1});
+    eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
+    eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
+    eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
+    eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
+    eventSample.AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, false);
+    // Train without randomness and only with one layer per tree
+    ForestBuilder forest(eventSample, 10, 0.1, 1.0, 1); 
+    EXPECT_FLOAT_EQ(forest.GetF0(), -std::numeric_limits<float>::infinity());
+    
+    FastBDT::Forest testforest( forest.GetShrinkage(), forest.GetF0());
+    for( auto t : forest.GetForest() )
+        testforest.AddTree(t);
+    
+    std::vector<unsigned int> values = {0, 1};
+    EXPECT_FLOAT_EQ(testforest.Analyse(values), 0.0);
+    
+    values = {2, 1};
+    EXPECT_FLOAT_EQ(testforest.Analyse(values), 0.0);
+    
+    // Even for NaN values the signal probability should be zero
+    values = {0, 0};
+    EXPECT_FLOAT_EQ(testforest.Analyse(values), 0.0);
+
+}
+
+TEST_F(CornerCasesTest, PerfectSeparationGivesReasonableResults) {
+
+    Cut cut1;
+    cut1.feature = 0;
+    cut1.index = 2;
+    cut1.valid = true;
+    
+    std::vector<Cut> cuts = {cut1};
+    std::vector<float> purities = { 0.5, 0.0, 1.0};
+    std::vector<float> boostWeights = { 0.0, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()};
+    Tree testtree(cuts, purities, boostWeights);
+    Forest testforest(0.1, 0.0);
+    testforest.AddTree(testtree);
+
+    std::vector<unsigned int> values = {1, 1};
+    EXPECT_FLOAT_EQ(testforest.Analyse(values), 0.0);
+    
+    values = {3, 1};
+    EXPECT_FLOAT_EQ(testforest.Analyse(values), 1.0);
+    
+    values = {0, 0};
+    EXPECT_FLOAT_EQ(testforest.Analyse(values), 0.5);
+
+} 
+
+class RegressionTest : public ::testing::Test {
+
+};
+
+TEST_F(TreeTest, LastCutOnTheRightWasNeverUsed) {
+            
+    Cut cut1, cut2, cut3;
+    cut1.feature = 0;
+    cut1.index = 2;
+    cut1.valid = true;
+    cut2.feature = 1;
+    cut2.index = 2;
+    cut2.valid = true;
+    cut3.feature = 1;
+    cut3.index = 2;
+    cut3.valid = true;
+    
+    std::vector<Cut> cuts = {cut1, cut2, cut3};
+    std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
+    std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+    Tree tree(cuts, purities, boostWeights);            
+
+    // Check if we can reach all nodes
+    EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({0,0}) ), 0u );
+    EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({1,0}) ), 1u );
+    EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({2,0}) ), 2u );
+    EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({1,1}) ), 3u );
+    EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({1,2}) ), 4u );
+    EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({2,1}) ), 5u );
+    EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({2,2}) ), 6u );
+
+}
