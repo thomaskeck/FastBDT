@@ -1237,6 +1237,95 @@ TEST_F(CornerCasesTest, OnlyBackgroundGivesReasonableResult) {
 
 }
 
+TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
+    
+    EventSample eventSample1(6, 2, {1, 1});
+    eventSample1.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample1.AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
+    eventSample1.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample1.AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+    eventSample1.AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, false);
+    eventSample1.AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+
+    EventSample eventSample2(6, 2, {1, 1});
+    eventSample2.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample2.AddEvent( std::vector<unsigned int>({ 2, 1 }), 2.0, true);
+    eventSample2.AddEvent( std::vector<unsigned int>({ 1, 1 }), 3.0, true);
+    eventSample2.AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+    eventSample2.AddEvent( std::vector<unsigned int>({ 1, 2 }), 2.0, false);
+    eventSample2.AddEvent( std::vector<unsigned int>({ 2, 2 }), 3.0, false);
+
+    EventSample eventSample3(7, 2, {1, 1});
+    eventSample3.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample3.AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
+    eventSample3.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample3.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample3.AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+    eventSample3.AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, false);
+    eventSample3.AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+
+    EventSample eventSample4(7, 2, {1, 1});
+    eventSample4.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample4.AddEvent( std::vector<unsigned int>({ 2, 1 }), 2.0, true);
+    eventSample4.AddEvent( std::vector<unsigned int>({ 1, 1 }), 3.0, true);
+    eventSample4.AddEvent( std::vector<unsigned int>({ 1, 1 }), 4.0, true);
+    eventSample4.AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+    eventSample4.AddEvent( std::vector<unsigned int>({ 1, 2 }), 2.0, false);
+    eventSample4.AddEvent( std::vector<unsigned int>({ 2, 2 }), 3.0, false);
+
+    EventSample eventSample5(7, 2, {1, 1});
+    eventSample5.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample5.AddEvent( std::vector<unsigned int>({ 2, 1 }), 2.0, true);
+    eventSample5.AddEvent( std::vector<unsigned int>({ 1, 1 }), 3.0, true);
+    eventSample5.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
+    eventSample5.AddEvent( std::vector<unsigned int>({ 2, 2 }), 2.0, false);
+    eventSample5.AddEvent( std::vector<unsigned int>({ 1, 2 }), 3.0, false);
+    eventSample5.AddEvent( std::vector<unsigned int>({ 2, 2 }), 2.0, false);
+
+    std::vector<EventSample*> eventSamples = {&eventSample1, &eventSample2, &eventSample3, &eventSample4, &eventSample5};
+
+    for(auto &sample : eventSamples) {
+
+        // Calculate prior probability before building the forest
+        float sig = 0;
+        float tot = 0;
+        const unsigned int nSignals = sample->GetNSignals();
+        const unsigned int nEvents = sample->GetNEvents();
+        for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
+            if(iEvent < nSignals)
+                sig += sample->GetWeights().GetOriginal(iEvent);
+            tot += sample->GetWeights().GetOriginal(iEvent);
+        }
+
+        // Train without randomness and only with one layer per tree and shrinkage 1
+        // We won't get a perfect separation due to the regularisation of the boostWeights,
+        // however with 10 trees we already get pretty close to perfect separation.
+        ForestBuilder forest(*sample, 10, 1.0, 1.0, 1); 
+        
+        FastBDT::Forest testforest( forest.GetShrinkage(), forest.GetF0());
+        for( auto t : forest.GetForest() ) {
+            //t.Print();
+            testforest.AddTree(t);
+        }
+        
+        std::vector<unsigned int> values = {0, 1};
+        EXPECT_GE(testforest.Analyse(values), 0.999);
+        
+        values = {2, 1};
+        EXPECT_GE(testforest.Analyse(values), 0.999);
+        
+        values = {0, 2};
+        EXPECT_LE(testforest.Analyse(values), 0.001);
+        
+        values = {1, 2};
+        EXPECT_LE(testforest.Analyse(values), 0.001);
+        
+        // Even for NaN values the signal probability should be zero
+        values = {0, 0};
+        EXPECT_FLOAT_EQ(testforest.Analyse(values), sig/tot);
+    }
+}
+
 TEST_F(CornerCasesTest, PerfectSeparationGivesReasonableResults) {
 
     Cut cut1;
