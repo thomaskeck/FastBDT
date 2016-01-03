@@ -199,10 +199,6 @@ namespace FastBDT {
 
   double Node::GetBoostWeight() const {
 
-    // TODO I wonder why the denomintor isn't zero if only signal or only background is in the
-    // node AND the weights != 1. Could be fixed if th 2* is actually is sqaure (inside the signal sum!)?
-    // Because like this we do not get a perfect probability if we have a perfect separation with signal events != background events
-    // (due to the inital reweighting that occurs in this case)  
     double denominator = (2*(signal+bckgrd)-square);
     if( denominator == 0 ) {
         if(signal == bckgrd)
@@ -342,19 +338,52 @@ namespace FastBDT {
 
     std::cout << "Finished Printing Tree" << std::endl;
   }
+  
+  void Tree::Print() const {
+
+    std::cout << "Start Printing Tree" << std::endl;
+
+    for(auto &cut : cuts) {
+      std::cout << "Index: " << cut.index << std::endl;
+      std::cout << "Feature: " << cut.feature << std::endl;
+      std::cout << "Gain: " << cut.gain << std::endl;
+      std::cout << "Valid: " << cut.valid << std::endl;
+      std::cout << std::endl;
+    }
+    
+    for(auto &p : purities) {
+      std::cout << "Purity: " << p << std::endl;
+    }
+    for(auto &p : boostWeights) {
+      std::cout << "BoostWeights: " << p << std::endl;
+    }
+
+    std::cout << "Finished Printing Tree" << std::endl;
+  }
 
   ForestBuilder::ForestBuilder(EventSample &sample, unsigned int nTrees, double shrinkage, double randRatio, unsigned int nLayersPerTree, bool sPlot) : shrinkage(shrinkage) {
 
     auto &weights = sample.GetWeights();
     auto sums = weights.GetSums(sample.GetNSignals()); 
     // Calculating the initial F value from the proportion of the number of signal and background events in the sample
-    //double average = (static_cast<int>(sample.GetNSignals()) - static_cast<int>(sample.GetNBckgrds()))/static_cast<double>(sample.GetNSignals() + sample.GetNBckgrds());
     double average = (sums[0] - sums[1])/(sums[0] + sums[1]);
     F0 = 0.5*std::log((1+average)/(1-average));
-
-    // Resize the FCache to the number of events, and initalise it with the inital F value
-    FCache.resize(sample.GetNEvents(), F0);
-
+    
+    // Apply F0 to original_weights because F0 is not a boost_weight, otherwise prior probability in case of
+    // Events with missing values is wrong.
+    if (F0 != 0.0) {
+        const unsigned int nEvents = sample.GetNEvents();
+        const unsigned int nSignals = sample.GetNSignals();
+        for(unsigned int iEvent = 0; iEvent < nSignals; ++iEvent)
+          weights.SetOriginal(iEvent, 2.0 * sums[1] / (sums[0] + sums[1]) * weights.GetOriginal(iEvent));
+        for(unsigned int iEvent = nSignals; iEvent < nEvents; ++iEvent)
+          weights.SetOriginal(iEvent, 2.0 * sums[0] / (sums[0] + sums[1]) * weights.GetOriginal(iEvent));
+    }
+    
+    // Resize the FCache to the number of events, and initalise it with the inital 0.0 value
+    // Not F0 because F0 is already used in the original_weights
+    FCache.resize(sample.GetNEvents(), 0.0);
+     
     // Reserve enough space for the boost_weights and trees, to avoid reallocations
     forest.reserve(nTrees);
 

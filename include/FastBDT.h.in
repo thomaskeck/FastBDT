@@ -422,6 +422,8 @@ namespace FastBDT {
       const std::vector<Cut>& GetCuts() const { return cuts; }
       const std::vector<float>& GetPurities() const { return purities; }
       const std::vector<float>& GetBoostWeights() const { return boostWeights; }
+      
+      void Print() const;
 
     private:
       std::vector<Cut> cuts;

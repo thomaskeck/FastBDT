@@ -82,7 +82,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorks ) {
     // Use just one branch instead of a whole forest for testing
     // We only test if the ForestBuilder is called correctly,
     // the builder itself is tested elsewhere.
-    SetNTrees(expertise, 1u);
+    SetNTrees(expertise, 10u);
     SetNLayersPerTree(expertise, 1u);
     SetRandRatio(expertise, 1.0);
     SetShrinkage(expertise, 1.0);
@@ -92,7 +92,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorks ) {
     unsigned int target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
     Train(expertise, data_ptr, target_ptr, 7, 2);
 
-    EXPECT_EQ(expertise->forest.GetForest().size(), 1u);
+    EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 2u);
@@ -100,9 +100,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorks ) {
     EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 1.7142857f);
 
     double test_ptr[] = {1.0, 2.6};
-    // TODO We want to get a perfect probability, but instead we get something bigger than 0 even with
-    // a perfect separation due to the initial reweighting!
-    EXPECT_DOUBLE_EQ(Analyse(expertise, test_ptr), 0.0);
+    EXPECT_LE(Analyse(expertise, test_ptr), 0.001);
 }
 
 /* TODO Test this to functions as well using a temporary directory or file
