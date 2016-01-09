@@ -33,7 +33,7 @@ extern "C" {
 
     void Delete(void *ptr);
     
-    void Train(void *ptr, void *data_ptr, void *target_ptr, unsigned int nEvents, unsigned int nFeatures);
+    void Train(void *ptr, void *data_ptr, void *weight_ptr, void *target_ptr, unsigned int nEvents, unsigned int nFeatures);
 
     void Load(void* ptr, char *weightfile);
 

@@ -50,9 +50,10 @@ extern "C" {
       delete reinterpret_cast<Expertise*>(ptr);
     }
     
-    void Train(void *ptr, void *data_ptr, void *target_ptr, unsigned int nEvents, unsigned int nFeatures) {
+    void Train(void *ptr, void *data_ptr, void *weight_ptr, void *target_ptr, unsigned int nEvents, unsigned int nFeatures) {
       Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
       double *data = reinterpret_cast<double*>(data_ptr);
+      float *weights = reinterpret_cast<float*>(weight_ptr);
       unsigned int *target = reinterpret_cast<unsigned int*>(target_ptr);
 
       std::vector<unsigned int> nLevels;
@@ -71,7 +72,7 @@ extern "C" {
         for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
           bins[iFeature] = expertise->featureBinnings[iFeature].ValueToBin(data[iEvent*nFeatures + iFeature]);
         }
-        eventSample.AddEvent(bins, 1.0, target[iEvent] == 1);
+        eventSample.AddEvent(bins, (weight_ptr != nullptr) ? weights[iEvent] : 1.0, target[iEvent] == 1);
       }
 
       ForestBuilder df(eventSample, expertise->nTrees, expertise->shrinkage, expertise->randRatio, expertise->nLayersPerTree);
