@@ -5,6 +5,7 @@ import numpy as np
 import ctypes
 import ctypes.util
 c_double_p = ctypes.POINTER(ctypes.c_double)
+c_float_p = ctypes.POINTER(ctypes.c_float)
 c_uint_p = ctypes.POINTER(ctypes.c_uint)
 
 FastBDT_library_path = ctypes.util.find_library('FastBDT_CInterface')
@@ -13,7 +14,7 @@ FastBDT_library = ctypes.cdll.LoadLibrary(FastBDT_library_path)
 FastBDT_library.Create.restype = ctypes.c_void_p
 FastBDT_library.Delete.argtypes = [ctypes.c_void_p]
 FastBDT_library.Load.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
-FastBDT_library.Train.argtypes = [ctypes.c_void_p, c_double_p, c_uint_p, ctypes.c_uint, ctypes.c_uint]
+FastBDT_library.Train.argtypes = [ctypes.c_void_p, c_double_p, c_float_p, c_uint_p, ctypes.c_uint, ctypes.c_uint]
 FastBDT_library.Analyse.argtypes = [ctypes.c_void_p, c_double_p]
 FastBDT_library.Analyse.restype = ctypes.c_double
 FastBDT_library.SetRandRatio.argtypes = [ctypes.c_void_p, ctypes.c_double]
@@ -37,11 +38,15 @@ class Classifier(object):
         FastBDT_library.SetShrinkage(self.forest, float(shrinkage))
         FastBDT_library.SetRandRatio(self.forest, float(randRatio))
 
-    def fit(self, X, y):
+    def fit(self, X, y, weights=None):
         X_temp = np.require(X, dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
         y_temp = np.require(y, dtype=np.uint32, requirements=['A', 'W', 'C', 'O'])
+        if weights is not None:
+            w_temp = np.require(weights, dtype=np.float32, requirements=['A', 'W', 'C', 'O'])
         numberOfEvents, numberOfFeatures = X_temp.shape
-        FastBDT_library.Train(self.forest, X_temp.ctypes.data_as(c_double_p), y_temp.ctypes.data_as(c_uint_p), int(numberOfEvents), int(numberOfFeatures))
+        FastBDT_library.Train(self.forest, X_temp.ctypes.data_as(c_double_p),
+                              w_temp.ctypes.data_as(c_float_p) if weights is not None else None,
+                              y_temp.ctypes.data_as(c_uint_p), int(numberOfEvents), int(numberOfFeatures))
         return self
 
     def predict(self, X):
