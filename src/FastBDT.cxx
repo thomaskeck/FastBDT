@@ -285,7 +285,6 @@ namespace FastBDT {
         continue;
 
       const unsigned int index = values.Get(iEvent, cut.feature );
-      // TODO Do index calculation int(index < cut.index) = [0,1] instead of jump here
       // If NaN value we throw out the event, but remeber its current node using the a negative flag!
       if( index == 0 ) {
         flags.Set(iEvent, -flag);
