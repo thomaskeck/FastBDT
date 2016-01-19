@@ -397,7 +397,7 @@ namespace FastBDT {
 
       // Create and train a new train on the sample
       TreeBuilder builder(nLayersPerTree, sample);
-      forest.push_back( Tree( builder.GetCuts(), builder.GetPurities(), builder.GetBoostWeights() ) );
+      forest.push_back( Tree( builder.GetCuts(), builder.GetNEntries(), builder.GetPurities(), builder.GetBoostWeights() ) );
     }
 
   }
@@ -465,7 +465,12 @@ namespace FastBDT {
         if( cut.valid ) {
           if ( ranking.find( cut.feature ) != ranking.end() )
             ranking[ cut.feature ] = 0;
-          ranking[ cut.feature ] += cut.gain*std::abs(tree.GetBoostWeight(iNode));
+					const int leftNode = ((iNode+1) << 1) - 1;
+					const int rightNode = ((iNode+1) << 1);
+					const float topFactor = tree.GetNEntries(iNode)*std::abs(tree.GetBoostWeight(iNode));
+					const float leftFactor = tree.GetNEntries(leftNode)*std::abs(tree.GetBoostWeight(leftNode));
+					const float rightFactor = tree.GetNEntries(rightNode)*std::abs(tree.GetBoostWeight(rightNode));
+          ranking[ cut.feature ] += cut.gain*(leftFactor + rightFactor) / topFactor; // * tree.GetNEntries(iNode);
         }
       }
     }

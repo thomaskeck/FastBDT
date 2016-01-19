@@ -56,6 +56,7 @@ namespace FastBDT {
      }
      stream << tree.GetBoostWeights() << std::endl;
      stream << tree.GetPurities() << std::endl;
+     stream << tree.GetNEntries() << std::endl;
      return stream;
   }
   
@@ -74,7 +75,10 @@ namespace FastBDT {
       std::vector<float> purities;
       stream >> purities;
       
-      return Tree(cuts, purities, boost_weights);
+			std::vector<float> nEntries;
+      stream >> nEntries;
+      
+      return Tree(cuts, nEntries, purities, boost_weights);
 
   }
   

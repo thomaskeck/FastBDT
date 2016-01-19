@@ -341,6 +341,7 @@ namespace FastBDT {
       unsigned int GetLayer() const { return iLayer; }
       unsigned int GetPosition() const { return (iNode + (1 << iLayer)) - 1; }
 
+      double GetNEntries() const { return signal + bckgrd; }
       double GetPurity() const { return (signal + bckgrd == 0) ? -1 : signal/(signal + bckgrd); }
       double GetBoostWeight() const;
 
@@ -392,6 +393,13 @@ namespace FastBDT {
           boostWeights[i] = nodes[i].GetBoostWeight();
         return boostWeights; 
       }
+      
+			std::vector<float> GetNEntries() const { 
+        std::vector<float> nEntries(nodes.size());
+        for(unsigned int i = 0; i < nodes.size(); ++i)
+          nEntries[i] = nodes[i].GetNEntries();
+        return nEntries; 
+      }
 
     private: 
       void UpdateCuts(const CumulativeDistributions &CDFs, unsigned int iLayer);
@@ -408,7 +416,7 @@ namespace FastBDT {
   class Tree {
 
     public:
-      Tree(const std::vector<Cut> &cuts, const std::vector<float> &purities, const std::vector<float> &boostWeights) : cuts(cuts), purities(purities), boostWeights(boostWeights) { }
+      Tree(const std::vector<Cut> &cuts, const std::vector<float> &nEntries, const std::vector<float> &purities, const std::vector<float> &boostWeights) : cuts(cuts), nEntries(nEntries), purities(purities), boostWeights(boostWeights) { }
 
       /**
        * Returns the node of a given event
@@ -416,10 +424,12 @@ namespace FastBDT {
        */
       template<class Iterator> unsigned int ValueToNode(const Iterator &values) const;
       unsigned int GetNNodes() const { return boostWeights.size(); }
+      const float& GetNEntries(unsigned int iNode) const { return nEntries[iNode]; }
       const float& GetPurity(unsigned int iNode) const { return purities[iNode]; }
       const float& GetBoostWeight(unsigned int iNode) const { return boostWeights[iNode]; }
       const Cut& GetCut(unsigned int iNode) const { return cuts[iNode]; }
       const std::vector<Cut>& GetCuts() const { return cuts; }
+      const std::vector<float>& GetNEntries() const { return nEntries; }
       const std::vector<float>& GetPurities() const { return purities; }
       const std::vector<float>& GetBoostWeights() const { return boostWeights; }
       
@@ -427,6 +437,7 @@ namespace FastBDT {
 
     private:
       std::vector<Cut> cuts;
+      std::vector<float> nEntries;
       std::vector<float> purities;
       std::vector<float> boostWeights;
   };
