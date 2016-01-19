@@ -40,5 +40,17 @@ extern "C" {
     double Analyse(void *ptr, double *array);
 
     void Save(void* ptr, char *weightfile);
+    
+    struct VariableRanking {
+        std::map<unsigned int, double> ranking;
+    }; 
+
+    void* GetVariableRanking(void* ptr);
+    
+    unsigned int ExtractNumberOfVariablesFromVariableRanking(void* ptr);
+    
+    double ExtractImportanceOfVariableFromVariableRanking(void* ptr, unsigned int iFeature);
+    
+    void DeleteVariableRanking(void* ptr);
 
 }

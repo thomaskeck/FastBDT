@@ -118,8 +118,8 @@ if __name__ == '__main__':
     print("Length training data", len(train_df))
     test_df = df.iloc[N:]
     print("Length test data", len(test_df))
-    keys = ['dM', 'chiProb', 'distance', 'gamma1E', 'gamma2E', 'gamma1clusterTiming', 'gamma2clusterTiming', 'gamma1E9E25', 'gamma2E9E25', 'nTracks']
-    #keys = ['dM', 'Kpi0M', 'KpiM', 'chiProb', 'distance', 'gamma1E', 'gamma2E', 'gamma1clusterTiming', 'gamma2clusterTiming', 'gamma1E9E25', 'gamma2E9E25', 'nTracks']
+    #keys = ['dM', 'chiProb', 'distance', 'gamma1E', 'gamma2E', 'gamma1clusterTiming', 'gamma2clusterTiming', 'gamma1E9E25', 'gamma2E9E25', 'nTracks']
+    keys = ['dM', 'Kpi0M', 'KpiM', 'chiProb', 'distance', 'gamma1E', 'gamma2E', 'gamma1clusterTiming', 'gamma2clusterTiming', 'gamma1E9E25', 'gamma2E9E25', 'nTracks']
     #keys = ['dM', 'Kpi0M', 'KpiM', 'chiProb', 'distance', 'gamma1E', 'gamma2E', 'gamma1clusterTiming', 'gamma2clusterTiming', 'gamma1E9E25', 'gamma2E9E25', 'nTracks', 'dMBestCandidate']
 
     signal = train_df[train_df.isSignal == 1][keys[0]].values
@@ -205,19 +205,19 @@ if __name__ == '__main__':
     side_prior_prediction_test = combine_probabilities(side_prediction_test, prior_prediction_test)
     truth_test = test_df['isSignal'].values
 
-    seaborn.set_palette("Set1", n_colors=6, desat=.5)
+    seaborn.set_palette("Set1", n_colors=10, desat=.5)
     trivial_prior = train_df.isSignal.mean()
     #calculate_score("Trivial", numpy.ones(len(truth_train))*trivial_prior, numpy.ones(len(truth_test))*trivial_prior, truth_train, truth_test)
-    #calculate_score("Full", full_prediction_train, full_prediction_test, truth_train, truth_test)
+    calculate_score("Full", full_prediction_train, full_prediction_test, truth_train, truth_test)
     calculate_score("Ordinary", ordinary_prediction_train, ordinary_prediction_test, truth_train, truth_test)
     calculate_score("SPlot", splot_prediction_train, splot_prediction_test, truth_train, truth_test)
-    #calculate_score("APlot", aplot_prediction_train, aplot_prediction_test, truth_train, truth_test)
+    calculate_score("APlot", aplot_prediction_train, aplot_prediction_test, truth_train, truth_test)
     calculate_score("Sideband", side_prediction_train, side_prediction_test, truth_train, truth_test)
-    #calculate_score("Prior", prior_prediction_train, prior_prediction_test, truth_train, truth_test)
-    #calculate_score("OrdinaryPrior", ordinary_prior_prediction_train, ordinary_prior_prediction_test, truth_train, truth_test)
-    #calculate_score("SPlotPrior", splot_prior_prediction_train, splot_prior_prediction_test, truth_train, truth_test)
-    #calculate_score("APlotPrior", aplot_prior_prediction_train, aplot_prior_prediction_test, truth_train, truth_test)
-    #calculate_score("SidePrior", side_prior_prediction_train, side_prior_prediction_test, truth_train, truth_test)
+    calculate_score("Prior", prior_prediction_train, prior_prediction_test, truth_train, truth_test)
+    calculate_score("OrdinaryPrior", ordinary_prior_prediction_train, ordinary_prior_prediction_test, truth_train, truth_test)
+    calculate_score("SPlotPrior", splot_prior_prediction_train, splot_prior_prediction_test, truth_train, truth_test)
+    calculate_score("APlotPrior", aplot_prior_prediction_train, aplot_prior_prediction_test, truth_train, truth_test)
+    calculate_score("SidePrior", side_prior_prediction_train, side_prior_prediction_test, truth_train, truth_test)
     plt.xlabel('False Positive Rate (Type I Error)')
     plt.ylabel('True Positive Rate (Efficiency)')
     plt.xlim((0.5,1.0))

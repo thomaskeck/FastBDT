@@ -123,9 +123,10 @@ TEST_F(IOTest, IOTree) {
     cut3.valid = false;
     
     std::vector<Cut> before_cuts = {cut1, cut2, cut3};
+    std::vector<float> before_nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
     std::vector<float> before_purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
     std::vector<float> before_boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-    Tree before(before_cuts, before_purities, before_boostWeights);            
+    Tree before(before_cuts, before_nEntries, before_purities, before_boostWeights);            
     
     std::stringstream stream;
     stream << before;
@@ -134,6 +135,7 @@ TEST_F(IOTest, IOTree) {
     const auto &after_cuts = after.GetCuts();
     const auto &after_purities = after.GetPurities();
     const auto &after_boostWeights = after.GetBoostWeights();
+    const auto &after_nEntries = after.GetNEntries();
 
     EXPECT_EQ(before_cuts.size(), after_cuts.size());
     for(unsigned int i = 0; i < before_cuts.size() and i < after_cuts.size(); ++i) {
@@ -150,6 +152,10 @@ TEST_F(IOTest, IOTree) {
     EXPECT_EQ(before_boostWeights.size(), after_boostWeights.size());
     for(unsigned int i = 0; i < before_boostWeights.size() and i < after_boostWeights.size(); ++i)
         EXPECT_DOUBLE_EQ(before_boostWeights[i], after_boostWeights[i]);
+    
+    EXPECT_EQ(before_nEntries.size(), after_nEntries.size());
+    for(unsigned int i = 0; i < before_nEntries.size() and i < after_nEntries.size(); ++i)
+        EXPECT_DOUBLE_EQ(before_nEntries[i], after_nEntries[i]);
 
 }
 
@@ -173,9 +179,11 @@ TEST_F(IOTest, IOForest) {
     cut4.valid = true;
     cut4.gain = 1.61;
     
+    std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
+    
     Forest before(0.5, 1.6);
-    before.AddTree(Tree({cut1, cut2, cut3}, { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 }, { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0}));
-    before.AddTree(Tree({cut1, cut4, cut3}, { 0.6, 0.2, 0.5, 0.4, 0.5, 0.6, 0.7 }, { 2.0, 2.0, 3.0, 5.0, 5.0, 6.0, 1.0}));
+    before.AddTree(Tree({cut1, cut2, cut3}, nEntries, { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 }, { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0}));
+    before.AddTree(Tree({cut1, cut4, cut3}, nEntries, { 0.6, 0.2, 0.5, 0.4, 0.5, 0.6, 0.7 }, { 2.0, 2.0, 3.0, 5.0, 5.0, 6.0, 1.0}));
     const auto &before_forest = before.GetForest();
 
     std::stringstream stream;
@@ -194,11 +202,13 @@ TEST_F(IOTest, IOForest) {
         const auto &before_cuts = before_tree.GetCuts();
         const auto &before_purities = before_tree.GetPurities();
         const auto &before_boostWeights = before_tree.GetBoostWeights();
+        const auto &before_nEntries = before_tree.GetNEntries();
         
         auto &after_tree = after_forest[j];
         const auto &after_cuts = after_tree.GetCuts();
         const auto &after_purities = after_tree.GetPurities();
         const auto &after_boostWeights = after_tree.GetBoostWeights();
+        const auto &after_nEntries = after_tree.GetNEntries();
 
         EXPECT_EQ(before_cuts.size(), after_cuts.size());
         for(unsigned int i = 0; i < before_cuts.size() and i < after_cuts.size(); ++i) {
@@ -215,5 +225,9 @@ TEST_F(IOTest, IOForest) {
         EXPECT_EQ(before_boostWeights.size(), after_boostWeights.size());
         for(unsigned int i = 0; i < before_boostWeights.size() and i < after_boostWeights.size(); ++i)
             EXPECT_DOUBLE_EQ(before_boostWeights[i], after_boostWeights[i]);
+        
+        EXPECT_EQ(before_nEntries.size(), after_nEntries.size());
+        for(unsigned int i = 0; i < before_nEntries.size() and i < after_nEntries.size(); ++i)
+            EXPECT_DOUBLE_EQ(before_nEntries[i], after_nEntries[i]);
     }
 }

@@ -977,6 +977,20 @@ TEST_F(TreeBuilderTest, FlagsAreCorrectAfterTraining) {
 
 }
 
+TEST_F(TreeBuilderTest, NEntriesOfNodesAreCorrectAfterTraining) {
+    
+    TreeBuilder dt(2, *eventSample);
+    const auto &nEntries = dt.GetNEntries();
+    EXPECT_DOUBLE_EQ( nEntries[0], 20.0 );
+    EXPECT_DOUBLE_EQ( nEntries[1], 8.0 );
+    EXPECT_DOUBLE_EQ( nEntries[2], 12.0 );
+    EXPECT_DOUBLE_EQ( nEntries[3], 6.0 );
+    EXPECT_DOUBLE_EQ( nEntries[4], 2.0 );
+    EXPECT_DOUBLE_EQ( nEntries[5], 7.0 );
+    EXPECT_DOUBLE_EQ( nEntries[6], 5.0 );
+
+}
+
 
 TEST_F(TreeBuilderTest, PuritiesOfNodesAreCorrectAfterTraining) {
     
@@ -1021,9 +1035,10 @@ class TreeTest : public ::testing::Test {
             cut3.valid = false;
             
             std::vector<Cut> cuts = {cut1, cut2, cut3};
+            std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
             std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
             std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-            tree = new Tree(cuts, purities, boostWeights);            
+            tree = new Tree(cuts, nEntries, purities, boostWeights);            
         }
 
         virtual void TearDown() {
@@ -1056,6 +1071,11 @@ TEST_F(TreeTest, NaNToNode) {
 
 }
 
+TEST_F(TreeTest, NEntries) {
+    for(unsigned int i = 0; i < 7; ++i) {
+        EXPECT_FLOAT_EQ(tree->GetNEntries(i), 10.0 + i);
+    }
+}
 
 TEST_F(TreeTest, Purities) {
     for(unsigned int i = 0; i < 7; ++i) {
@@ -1140,9 +1160,10 @@ class ForestTest : public ::testing::Test {
             cut3.valid = false;
             
             std::vector<Cut> cuts = {cut1, cut2, cut3};
+            std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
             std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
             std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-            tree = new Tree(cuts, purities, boostWeights);            
+            tree = new Tree(cuts, nEntries, purities, boostWeights);            
 
             forest = new Forest(0.1, 1.0);
         }
@@ -1168,10 +1189,59 @@ TEST_F(ForestTest, GetF) {
 
 }
 
-TEST_F(ForestTest, VariableRankingIsCorrect) {
 
-    // Train without randomness and only with one layer per tree
-    forest->AddTree(*tree);
+class VariableRankingTest : public ::testing::Test {
+    protected:
+        virtual void SetUp() {
+            forest = new Forest(0.1, 1.0);
+        }
+
+        virtual void TearDown() {
+            delete forest;
+        }
+
+        Forest *forest;
+};
+
+TEST_F(VariableRankingTest, Minimal) {
+    
+    Cut cut1;
+    cut1.feature = 1;
+    cut1.index = 5;
+    cut1.valid = true;
+    cut1.gain = 2.0;
+
+    std::vector<Cut> cuts = {cut1};
+    std::vector<float> nEntries = { 10.0, 4.0, 6.0};
+    std::vector<float> purities = { 0.1, 0.2, 0.3 };
+    std::vector<float> boostWeights = {1.0, 2.0, 3.0};
+    Tree tree(cuts, nEntries, purities, boostWeights);            
+    forest->AddTree(tree);
+    auto map = forest->GetVariableRanking();
+    EXPECT_EQ(map.size(), 1);
+    EXPECT_FLOAT_EQ(map[1], 5.2);
+
+} 
+
+TEST_F(VariableRankingTest, Standard) {
+    
+    Cut cut1, cut2, cut3;
+    cut1.feature = 0;
+    cut1.index = 5;
+    cut1.valid = true;
+    cut1.gain = 2.0;
+    cut2.feature = 1;
+    cut2.index = 9;
+    cut2.valid = true;
+    cut2.gain = 1.0;
+    cut3.valid = false;
+
+    std::vector<Cut> cuts = {cut1, cut2, cut3};
+    std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
+    std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
+    std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+    Tree tree(cuts, nEntries, purities, boostWeights);            
+    forest->AddTree(tree);
     auto map = forest->GetVariableRanking();
     EXPECT_FLOAT_EQ(map[0], 2.0);
     EXPECT_FLOAT_EQ(map[1], 2.0);
@@ -1334,9 +1404,10 @@ TEST_F(CornerCasesTest, PerfectSeparationGivesReasonableResults) {
     cut1.valid = true;
     
     std::vector<Cut> cuts = {cut1};
+    std::vector<float> nEntries = { 10.0, 11.0, 12.0 };
     std::vector<float> purities = { 0.5, 0.0, 1.0};
     std::vector<float> boostWeights = { 0.0, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()};
-    Tree testtree(cuts, purities, boostWeights);
+    Tree testtree(cuts, nEntries, purities, boostWeights);
     Forest testforest(0.1, 0.0);
     testforest.AddTree(testtree);
 
@@ -1369,9 +1440,10 @@ TEST_F(TreeTest, LastCutOnTheRightWasNeverUsed) {
     cut3.valid = true;
     
     std::vector<Cut> cuts = {cut1, cut2, cut3};
+    std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
     std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
     std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-    Tree tree(cuts, purities, boostWeights);            
+    Tree tree(cuts, nEntries, purities, boostWeights);            
 
     // Check if we can reach all nodes
     EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({0,0}) ), 0u );
