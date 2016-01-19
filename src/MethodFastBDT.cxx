@@ -247,6 +247,7 @@ void TMVA::MethodFastBDT::AddWeightsXMLTo( void* parent ) const
       SaveVectorToXML(trxml, "CutGains", cut_gains);
       SaveVectorToXML(trxml, "BoostWeights", forest[i].GetBoostWeights());
       SaveVectorToXML(trxml, "Purities", forest[i].GetPurities());
+      SaveVectorToXML(trxml, "NEntries", forest[i].GetNEntries());
    }
 
    for(unsigned int i = 0; i < featureBinnings.size(); ++i) {
@@ -294,12 +295,14 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
       std::vector<double> cut_gains;
       std::vector<float> boost_weights;
       std::vector<float> purities;
+      std::vector<float> nEntries;
       ReadVectorFromXML(trxml, "CutFeatures", cut_features);
       ReadVectorFromXML(trxml, "CutIndexes", cut_indexes);
       ReadVectorFromXML(trxml, "CutValids", cut_valids);
       ReadVectorFromXML(trxml, "CutGains", cut_gains);
       ReadVectorFromXML( trxml, "BoostWeights", boost_weights);
       ReadVectorFromXML( trxml, "Purities", purities);
+      ReadVectorFromXML( trxml, "NEntries", nEntries);
 
       std::vector<Cut> cuts;
       for(unsigned int i = 0; i < cut_features.size(); ++i) {
@@ -310,7 +313,7 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
         cut.gain = cut_gains[i];
         cuts.push_back(cut);
       }
-      fForest->AddTree(Tree(cuts, purities, boost_weights));
+      fForest->AddTree(Tree(cuts, nEntries, purities, boost_weights));
 
       trxml = TMVA::gTools().GetNextChild(trxml, "Tree");
    }
