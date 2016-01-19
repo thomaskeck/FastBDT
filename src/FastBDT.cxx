@@ -463,16 +463,27 @@ namespace FastBDT {
       for(unsigned int iNode = 0; iNode < tree.GetNNodes()/2; ++iNode) {
         const auto &cut = tree.GetCut(iNode);
         if( cut.valid ) {
-          if ( ranking.find( cut.feature ) != ranking.end() )
+          if ( ranking.find( cut.feature ) == ranking.end() )
             ranking[ cut.feature ] = 0;
-					const int leftNode = ((iNode+1) << 1) - 1;
-					const int rightNode = ((iNode+1) << 1);
-					const float topFactor = tree.GetNEntries(iNode)*std::abs(tree.GetBoostWeight(iNode));
-					const float leftFactor = tree.GetNEntries(leftNode)*std::abs(tree.GetBoostWeight(leftNode));
-					const float rightFactor = tree.GetNEntries(rightNode)*std::abs(tree.GetBoostWeight(rightNode));
-          ranking[ cut.feature ] += cut.gain*(leftFactor + rightFactor) / topFactor; // * tree.GetNEntries(iNode);
+          /*
+          const int leftNode = ((iNode+1) << 1) - 1;
+          const int rightNode = ((iNode+1) << 1);
+          const float topFactor = tree.GetNEntries(iNode)*std::abs(tree.GetBoostWeight(iNode));
+          const float leftFactor = tree.GetNEntries(leftNode)*std::abs(tree.GetBoostWeight(leftNode));
+          const float rightFactor = tree.GetNEntries(rightNode)*std::abs(tree.GetBoostWeight(rightNode));
+          ranking[ cut.feature ] += cut.gain*(leftFactor + rightFactor) / topFactor;
+          */
+          ranking[ cut.feature ] += cut.gain;
         }
       }
+    }
+
+    double norm = 0;
+    for(auto &pair : ranking) {
+        norm += pair.second;
+    }
+    for(auto &pair : ranking) {
+        pair.second /= norm;
     }
 
     return ranking;

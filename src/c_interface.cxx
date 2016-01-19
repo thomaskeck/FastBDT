@@ -113,5 +113,34 @@ extern "C" {
       file << expertise->featureBinnings << std::endl;
       file << expertise->forest << std::endl;
     }
+  
+    void* GetVariableRanking(void* ptr) {
+      Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
+      VariableRanking *ranking = new(std::nothrow) VariableRanking;
+      ranking->ranking = expertise->forest.GetVariableRanking();
+      return ranking;
+    }
+    
+    unsigned int ExtractNumberOfVariablesFromVariableRanking(void* ptr) {
+      VariableRanking *ranking = reinterpret_cast<VariableRanking*>(ptr);
+      unsigned int max = 0;
+      for(auto &pair : ranking->ranking) {
+        if(pair.first > max) {
+          max = pair.first;
+        }
+      }
+      return max+1;
+    }
+    
+    double ExtractImportanceOfVariableFromVariableRanking(void* ptr, unsigned int iFeature) {
+      VariableRanking *ranking = reinterpret_cast<VariableRanking*>(ptr);
+      if ( ranking->ranking.find( iFeature ) == ranking->ranking.end() )
+        return 0.0;
+      return ranking->ranking[iFeature];  
+    }
+    
+    void DeleteVariableRanking(void *ptr) {
+      delete reinterpret_cast<VariableRanking*>(ptr);
+    }
 
 }

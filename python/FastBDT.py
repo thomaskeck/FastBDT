@@ -23,6 +23,13 @@ FastBDT_library.SetNTrees.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.SetNBinningLevels.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.SetNLayersPerTree.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 
+FastBDT_library.GetVariableRanking.argtypes = [ctypes.c_void_p]
+FastBDT_library.GetVariableRanking.restype = ctypes.c_void_p
+FastBDT_library.DeleteVariableRanking.argtypes = [ctypes.c_void_p]
+FastBDT_library.ExtractNumberOfVariablesFromVariableRanking.argtypes = [ctypes.c_void_p]
+FastBDT_library.ExtractNumberOfVariablesFromVariableRanking.restype = ctypes.c_uint
+FastBDT_library.ExtractImportanceOfVariableFromVariableRanking.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+FastBDT_library.ExtractImportanceOfVariableFromVariableRanking.restype = ctypes.c_double
 
 def PrintVersion():
     FastBDT_library.PrintVersion()
@@ -62,6 +69,14 @@ class Classifier(object):
 
     def load(self, weightfile):
         FastBDT_library.Load(self.forest, bytes(weightfile, 'utf-8'))
+
+    def variableRanking(self):
+        _ranking = FastBDT_library.GetVariableRanking(self.forest)
+        ranking = []
+        for i in range(FastBDT_library.ExtractNumberOfVariablesFromVariableRanking(_ranking)):
+            ranking.append((i,FastBDT_library.ExtractImportanceOfVariableFromVariableRanking(_ranking, int(i))))
+        FastBDT_library.DeleteVariableRanking(_ranking)
+        return list(reversed(sorted(ranking, key=lambda x: x[1])))
 
     def __del__(self):
         FastBDT_library.Delete(self.forest)
