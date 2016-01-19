@@ -1203,7 +1203,7 @@ class VariableRankingTest : public ::testing::Test {
         Forest *forest;
 };
 
-TEST_F(VariableRankingTest, Minimal) {
+TEST_F(VariableRankingTest, OneVariable) {
     
     Cut cut1;
     cut1.feature = 1;
@@ -1219,7 +1219,7 @@ TEST_F(VariableRankingTest, Minimal) {
     forest->AddTree(tree);
     auto map = forest->GetVariableRanking();
     EXPECT_EQ(map.size(), 1);
-    EXPECT_FLOAT_EQ(map[1], 5.2);
+    EXPECT_FLOAT_EQ(map[1], 1.0);
 
 } 
 
@@ -1243,8 +1243,8 @@ TEST_F(VariableRankingTest, Standard) {
     Tree tree(cuts, nEntries, purities, boostWeights);            
     forest->AddTree(tree);
     auto map = forest->GetVariableRanking();
-    EXPECT_FLOAT_EQ(map[0], 2.0);
-    EXPECT_FLOAT_EQ(map[1], 2.0);
+    EXPECT_FLOAT_EQ(map[0], 2.0/3.0);
+    EXPECT_FLOAT_EQ(map[1], 1.0/3.0);
 
 } 
 
