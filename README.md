@@ -15,7 +15,7 @@ make install
 
 or
 
-python3 ./FastBDTMain.py
+python3 examples/FastBDTMain.py
 
 for the python3 version you probably have to set the LD_LIBRARY_PATH
 
@@ -27,3 +27,5 @@ the C shared library
 or
 
 use the TMVA plugin of you're using ROOT.
+
+root examples/TMVAExample.C\(\"files/TMVA.root\"\)
