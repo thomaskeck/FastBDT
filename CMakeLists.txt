@@ -42,7 +42,7 @@ set(FastBDT_CINTERFACE
 )
 
 add_library(FastBDT STATIC ${FastBDT_SOURCES} ${FastBDT_HEADERS})
-add_executable(FastBDTMain "${PROJECT_SOURCE_DIR}/src/main.cxx" ${FastBDT_HEADERS})
+add_executable(FastBDTMain "${PROJECT_SOURCE_DIR}/examples/FastBDTMain.cxx" ${FastBDT_HEADERS})
 target_link_libraries(FastBDTMain FastBDT)
 add_library(FastBDT_CInterface SHARED ${FastBDT_CINTERFACE} ${FastBDT_SOURCES} ${FastBDT_HEADERS})
 target_link_libraries(FastBDT_CInterface)

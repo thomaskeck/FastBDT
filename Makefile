@@ -246,6 +246,33 @@ TMVA_FastBDT_Dict.cxx.s:
 	$(MAKE) -f CMakeFiles/TMVAFastBDT.dir/build.make CMakeFiles/TMVAFastBDT.dir/TMVA_FastBDT_Dict.cxx.s
 .PHONY : TMVA_FastBDT_Dict.cxx.s
 
+examples/FastBDTMain.o: examples/FastBDTMain.cxx.o
+
+.PHONY : examples/FastBDTMain.o
+
+# target to build an object file
+examples/FastBDTMain.cxx.o:
+	$(MAKE) -f CMakeFiles/FastBDTMain.dir/build.make CMakeFiles/FastBDTMain.dir/examples/FastBDTMain.cxx.o
+.PHONY : examples/FastBDTMain.cxx.o
+
+examples/FastBDTMain.i: examples/FastBDTMain.cxx.i
+
+.PHONY : examples/FastBDTMain.i
+
+# target to preprocess a source file
+examples/FastBDTMain.cxx.i:
+	$(MAKE) -f CMakeFiles/FastBDTMain.dir/build.make CMakeFiles/FastBDTMain.dir/examples/FastBDTMain.cxx.i
+.PHONY : examples/FastBDTMain.cxx.i
+
+examples/FastBDTMain.s: examples/FastBDTMain.cxx.s
+
+.PHONY : examples/FastBDTMain.s
+
+# target to generate assembly for a file
+examples/FastBDTMain.cxx.s:
+	$(MAKE) -f CMakeFiles/FastBDTMain.dir/build.make CMakeFiles/FastBDTMain.dir/examples/FastBDTMain.cxx.s
+.PHONY : examples/FastBDTMain.cxx.s
+
 src/FastBDT.o: src/FastBDT.cxx.o
 
 .PHONY : src/FastBDT.o
@@ -368,33 +395,6 @@ src/c_interface.cxx.s:
 	$(MAKE) -f CMakeFiles/FastBDT_CInterface.dir/build.make CMakeFiles/FastBDT_CInterface.dir/src/c_interface.cxx.s
 	$(MAKE) -f CMakeFiles/unittests.dir/build.make CMakeFiles/unittests.dir/src/c_interface.cxx.s
 .PHONY : src/c_interface.cxx.s
-
-src/main.o: src/main.cxx.o
-
-.PHONY : src/main.o
-
-# target to build an object file
-src/main.cxx.o:
-	$(MAKE) -f CMakeFiles/FastBDTMain.dir/build.make CMakeFiles/FastBDTMain.dir/src/main.cxx.o
-.PHONY : src/main.cxx.o
-
-src/main.i: src/main.cxx.i
-
-.PHONY : src/main.i
-
-# target to preprocess a source file
-src/main.cxx.i:
-	$(MAKE) -f CMakeFiles/FastBDTMain.dir/build.make CMakeFiles/FastBDTMain.dir/src/main.cxx.i
-.PHONY : src/main.cxx.i
-
-src/main.s: src/main.cxx.s
-
-.PHONY : src/main.s
-
-# target to generate assembly for a file
-src/main.cxx.s:
-	$(MAKE) -f CMakeFiles/FastBDTMain.dir/build.make CMakeFiles/FastBDTMain.dir/src/main.cxx.s
-.PHONY : src/main.cxx.s
 
 src/test_FastBDT.o: src/test_FastBDT.cxx.o
 
@@ -524,6 +524,9 @@ help:
 	@echo "... TMVA_FastBDT_Dict.o"
 	@echo "... TMVA_FastBDT_Dict.i"
 	@echo "... TMVA_FastBDT_Dict.s"
+	@echo "... examples/FastBDTMain.o"
+	@echo "... examples/FastBDTMain.i"
+	@echo "... examples/FastBDTMain.s"
 	@echo "... src/FastBDT.o"
 	@echo "... src/FastBDT.i"
 	@echo "... src/FastBDT.s"
@@ -536,9 +539,6 @@ help:
 	@echo "... src/c_interface.o"
 	@echo "... src/c_interface.i"
 	@echo "... src/c_interface.s"
-	@echo "... src/main.o"
-	@echo "... src/main.i"
-	@echo "... src/main.s"
 	@echo "... src/test_FastBDT.o"
 	@echo "... src/test_FastBDT.i"
 	@echo "... src/test_FastBDT.s"
