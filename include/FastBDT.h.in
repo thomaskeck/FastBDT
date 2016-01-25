@@ -416,6 +416,14 @@ namespace FastBDT {
   class Tree {
 
     public:
+      /*
+       * Explicitly activate default/copy constructor and assign operator.
+       * This was a request of a user.
+       */
+      Tree() = default;
+      Tree(const Tree&) = default;
+      Tree& operator=(const Tree &) = default;
+
       Tree(const std::vector<Cut> &cuts, const std::vector<float> &nEntries, const std::vector<float> &purities, const std::vector<float> &boostWeights) : cuts(cuts), nEntries(nEntries), purities(purities), boostWeights(boostWeights) { }
 
       /**
@@ -503,6 +511,10 @@ namespace FastBDT {
   class Forest {
 
     public:
+      /*
+       * Explicitly activate default/copy constructor and assign operator.
+       * This was a request of a user.
+       */
       Forest() = default;
       Forest(const Forest&) = default;
       Forest& operator=(const Forest &) = default;

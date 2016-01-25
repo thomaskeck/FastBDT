@@ -1218,7 +1218,7 @@ TEST_F(VariableRankingTest, OneVariable) {
     Tree tree(cuts, nEntries, purities, boostWeights);            
     forest->AddTree(tree);
     auto map = forest->GetVariableRanking();
-    EXPECT_EQ(map.size(), 1);
+    EXPECT_EQ(map.size(), 1u);
     EXPECT_FLOAT_EQ(map[1], 1.0);
 
 } 
