@@ -7,7 +7,7 @@ project (FastBDT)
 set (FastBDT_VERSION_MAJOR 1)
 set (FastBDT_VERSION_MINOR 2)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -std=c++11 -Wall -Wextra -g")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ggdb3 -g -std=c++11 -Wall -Wextra")
@@ -17,7 +17,7 @@ configure_file (
   "${PROJECT_BINARY_DIR}/include/FastBDT.h"
 )
 
-include_directories("include/")
+include_directories("${PROJECT_SOURCE_DIR}/include/")
 
 set(FastBDT_SOURCES
   "${PROJECT_SOURCE_DIR}/src/FastBDT.cxx"
