@@ -4,6 +4,9 @@
 
 #pragma once
 
+#ifndef ADDITIONAL_INCLUDE_GUARD_BECAUSE_ROOT_IS_SO_STUPID
+#define ADDITIONAL_INCLUDE_GUARD_BECAUSE_ROOT_IS_SO_STUPID
+
 #define FastBDT_VERSION_MAJOR 1
 #define FastBDT_VERSION_MINOR 2
 
@@ -573,3 +576,5 @@ namespace FastBDT {
 
     }
 }
+
+#endif
