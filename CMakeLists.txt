@@ -69,7 +69,12 @@ find_package(ROOT)
 if(ROOT_FOUND)
   separate_arguments(ROOT_CXX_FLAGS)
   if (ROOT_VERSION_MAJOR GREATER 5)
-    ROOT_GENERATE_DICTIONARY(TMVA_FastBDT_Dict ${FastBDT_HEADERS} "${PROJECT_SOURCE_DIR}/include/MethodFastBDT.h" LINKDEF "${PROJECT_SOURCE_DIR}/include/LinkDef.h")
+    # copy header with dictionary to the build folder so we can use relative include Path
+    # this is the only way to have ROOT not store the full path and have a release which is relocate-able
+    # also copy inside of the include/root folder to allow to use the headers if they get placed inside 
+    # of the root include folder of a release
+    file( COPY "${PROJECT_SOURCE_DIR}/include/MethodFastBDT.h" DESTINATION "${PROJECT_BINARY_DIR}/include/root/" )
+    ROOT_GENERATE_DICTIONARY(TMVA_FastBDT_Dict "include/root/MethodFastBDT.h" LINKDEF "${PROJECT_SOURCE_DIR}/include/LinkDef.h")
     add_library(TMVAFastBDT SHARED TMVA_FastBDT_Dict.cxx ${FastBDT_SOURCES} "${PROJECT_SOURCE_DIR}/include/MethodFastBDT.h" "${PROJECT_SOURCE_DIR}/src/MethodFastBDT.cxx" ${FastBDT_HEADERS})
     target_compile_options(TMVAFastBDT PUBLIC ${ROOT_CXX_FLAGS})
     target_include_directories(TMVAFastBDT PUBLIC ${ROOT_INCLUDE_DIR}) 
