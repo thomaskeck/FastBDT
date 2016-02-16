@@ -109,8 +109,10 @@ if(ROOT_CONFIG_EXECUTABLE)
           endif()
         endforeach()
       else()
-        find_file(headerFile ${fp} HINTS ${incdirs} PATHS "/")
-        set(headerfiles ${headerfiles} ${headerFile})
+        # disabled so the full path to the dictionary is not resolved, otherwise
+        # ROOT will not load the header files from paths given via ROOT_INCLUDE_PATH env variable
+        # find_file(headerFile ${fp} HINTS ${incdirs} PATHS "/")
+        set(headerfiles ${headerfiles} ${fp})
         unset(headerFile CACHE)
       endif()
     endforeach()
@@ -125,7 +127,7 @@ if(ROOT_CONFIG_EXECUTABLE)
     add_custom_command(OUTPUT ${dictionary}.cxx
                        COMMAND ${ROOTCINT_EXECUTABLE} -cint -f  ${dictionary}.cxx
                                             -c ${ARG_OPTIONS} ${includedirs} ${headerfiles} ${linkdefs}
-                       DEPENDS ${headerfiles} ${linkdefs} VERBATIM)
+                       VERBATIM)
   endfunction()
 
   #----------------------------------------------------------------------------
