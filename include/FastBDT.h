@@ -125,6 +125,14 @@ namespace FastBDT {
 
         std::vector<Value> GetBinning() const { return binning; }
 
+        /*
+         * Explicitly activate default/copy constructor and assign operator.
+         * This was a request of a user.
+         */
+        FeatureBinning() = default;
+        FeatureBinning(const FeatureBinning&) = default;
+        FeatureBinning& operator=(const FeatureBinning &) = default;
+
       private:
         /**
          * The binning boundaries of the feature. First and last element contain minimum and maximum encountered
