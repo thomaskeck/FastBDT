@@ -41,13 +41,15 @@ set(FastBDT_CINTERFACE
   "${PROJECT_SOURCE_DIR}/include/c_interface.h" 
 )
 
-add_library(FastBDT STATIC ${FastBDT_SOURCES} ${FastBDT_HEADERS})
+add_library(FastBDT_static STATIC ${FastBDT_SOURCES} ${FastBDT_HEADERS})
 add_executable(FastBDTMain "${PROJECT_SOURCE_DIR}/examples/FastBDTMain.cxx" ${FastBDT_HEADERS})
-target_link_libraries(FastBDTMain FastBDT)
+target_link_libraries(FastBDTMain FastBDT_static)
 add_library(FastBDT_CInterface SHARED ${FastBDT_CINTERFACE} ${FastBDT_SOURCES} ${FastBDT_HEADERS})
 target_link_libraries(FastBDT_CInterface)
+add_library(FastBDT_shared SHARED ${FastBDT_SOURCES} ${FastBDT_HEADERS})
+target_link_libraries(FastBDT_shared)
 
-install(TARGETS FastBDT FastBDTMain FastBDT_CInterface
+install(TARGETS FastBDT_static FastBDT_shared FastBDTMain FastBDT_CInterface
    LIBRARY DESTINATION lib
    ARCHIVE DESTINATION lib
    RUNTIME DESTINATION bin   
@@ -58,7 +60,7 @@ install(FILES ${FastBDT_HEADERS} DESTINATION include)
 find_package(GTest)
 if(GTEST_FOUND)
     add_executable(unittests ${FastBDT_TESTS} ${FastBDT_HEADERS} ${FastBDT_CINTERFACE})
-  target_link_libraries(unittests ${GTEST_BOTH_LIBRARIES} FastBDT pthread)
+  target_link_libraries(unittests ${GTEST_BOTH_LIBRARIES} FastBDT_static pthread)
   message(STATUS  ${GTEST_INCLUDE_DIRS})
   target_include_directories(unittests PUBLIC ${GTEST_INCLUDE_DIRS})
 else()
