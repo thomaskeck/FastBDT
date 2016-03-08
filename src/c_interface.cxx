@@ -57,17 +57,19 @@ extern "C" {
       unsigned int *target = reinterpret_cast<unsigned int*>(target_ptr);
 
       std::vector<unsigned int> nLevels;
+      expertise->bins.clear();
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
         std::vector<double> feature(nEvents);
         for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
           feature[iEvent] = *(data + iEvent*nFeatures + iFeature);
         }
         expertise->featureBinnings.push_back(FeatureBinning<double>(expertise->nBinningLevels, feature.begin(), feature.end()));
+        expertise->bins.push_back(0);
         nLevels.push_back(expertise->nBinningLevels);
       }
 
       EventSample eventSample(nEvents, nFeatures, nLevels);
-      std::vector<unsigned int> bins(nFeatures);
+      std::vector<unsigned int> &bins = expertise->bins;
       for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
         for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
           bins[iFeature] = expertise->featureBinnings[iFeature].ValueToBin(data[iEvent*nFeatures + iFeature]);
@@ -91,14 +93,15 @@ extern "C" {
     	  return;
 
       file >> expertise->featureBinnings;
+      unsigned int numberOfFeatures = expertise->featureBinnings.size();
+      expertise->bins.resize(numberOfFeatures);
       expertise->forest = FastBDT::readForestFromStream(file);
     }
 
     double Analyse(void *ptr, double *array) {
       Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
-
       unsigned int numberOfFeatures = expertise->featureBinnings.size();
-      std::vector<unsigned int> bins(numberOfFeatures);
+      std::vector<unsigned int> &bins = expertise->bins;
       for(unsigned int iFeature = 0; iFeature < numberOfFeatures; ++iFeature) {
         bins[iFeature] = expertise->featureBinnings[iFeature].ValueToBin(array[iFeature]);
       }
@@ -110,7 +113,7 @@ extern "C" {
       Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
 
       unsigned int numberOfFeatures = expertise->featureBinnings.size();
-      std::vector<unsigned int> bins(numberOfFeatures);
+      std::vector<unsigned int> &bins = expertise->bins;
       for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
         for(unsigned int iFeature = 0; iFeature < numberOfFeatures; ++iFeature) {
             unsigned int index = iEvent*numberOfFeatures + iFeature;
