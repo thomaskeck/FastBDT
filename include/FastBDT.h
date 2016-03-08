@@ -98,19 +98,12 @@ namespace FastBDT {
           if( std::isnan(value) )
               return 0;
 
-          unsigned int bin = 0;
           unsigned int index = 1;
           for(unsigned int iLevel = 0; iLevel < nLevels; ++iLevel) {
-            if( value >= binning[index] ) {
-              bin = 2*bin + 1;
-              index = 2*index + 1;
-            } else {
-              bin = 2*bin;
-              index = 2*index;
-            }
+              index = 2*index + static_cast<unsigned int>(value >= binning[index]);
           }
           // +1 because 0 bin is reserved for NaN values
-          return bin+1;
+          return index - (1 << nLevels) + 1;
 
         }
 
@@ -471,22 +464,15 @@ namespace FastBDT {
       while( node <= cuts.size() ) {
 
         auto &cut = cuts[node-1];
-        if(not cut.valid)
-          break;
-
         // Return current node if NaN
-        if( values[ cut.feature ] == 0 )
+        if(not cut.valid or values[ cut.feature ] == 0)
           break;
 
         // Perform the cut of the given node and update the node.
         // Either the event is passed to the left child node (which has
         // the position 2*node in the next layer) or to the right
         // (which has the position 2*node + 1 in the next layer)
-        if( values[ cut.feature ] < cut.index ) {
-          node = (node << 1);
-        } else {
-          node = (node << 1) + 1;
-        }
+        node = (node << 1) + static_cast<unsigned int>(values[ cut.feature ] >= cut.index);
       }
 
       // If we're arrived at the bottom of the tree, this event belongs to the node
