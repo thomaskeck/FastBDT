@@ -67,13 +67,8 @@ class Classifier(object):
         FastBDT_library.AnalyseArray(self.forest, X_temp.ctypes.data_as(c_double_p), p.ctypes.data_as(c_double_p), int(len(X_temp)))
         return p
     
-    def predict_single(self, X):
-        X_temp = np.require(X, dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
-        N = len(X)
-        p = np.zeros(N)
-        for i, row in enumerate(X_temp):
-            p[i] = FastBDT_library.Analyse(self.forest, row.ctypes.data_as(c_double_p))
-        return p
+    def predict_single(self, row):
+        return FastBDT_library.Analyse(self.forest, row.ctypes.data_as(c_double_p))
 
     def save(self, weightfile):
         FastBDT_library.Save(self.forest, bytes(weightfile, 'utf-8'))

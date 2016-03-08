@@ -11,6 +11,7 @@ extern "C" {
 
     struct Expertise {
       std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
+      std::vector<unsigned int> bins;
       FastBDT::Forest forest;
       unsigned int nBinningLevels;
       unsigned int nTrees;
