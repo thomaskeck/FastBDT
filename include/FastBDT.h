@@ -516,7 +516,7 @@ namespace FastBDT {
       Forest(const Forest&) = default;
       Forest& operator=(const Forest &) = default;
 
-      Forest(double shrinkage, double F0) : shrinkage(shrinkage), F0(F0) { }
+      Forest(double shrinkage, double F0) : shrinkage(shrinkage), F0(F0) { F0_div_shrink = F0 / shrinkage; }
 
       void AddTree(const Tree &tree) { forest.push_back(tree); }
       const std::vector<Tree>& GetForest() const { return forest; }
@@ -546,6 +546,7 @@ namespace FastBDT {
     private:
       double shrinkage;
       double F0;
+      double F0_div_shrink;
       std::vector<Tree> forest;
 
   };
@@ -555,10 +556,10 @@ namespace FastBDT {
 
       // Determines the F value by looping over all trees and
       // summing up the weights of the nodes the event belongs to.
-      double F = F0;
+      double F = F0_div_shrink;
       for( auto &tree : forest) 
-        F += shrinkage*tree.GetBoostWeight( tree.ValueToNode(values) );
-      return F;
+        F += tree.GetBoostWeight( tree.ValueToNode(values) );
+      return F*shrinkage;
 
     }
 
