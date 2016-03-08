@@ -105,6 +105,20 @@ extern "C" {
 
       return expertise->forest.Analyse(bins);
     }
+    
+    void AnalyseArray(void *ptr, double *array, double *result, unsigned int nEvents) {
+      Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
+
+      unsigned int numberOfFeatures = expertise->featureBinnings.size();
+      std::vector<unsigned int> bins(numberOfFeatures);
+      for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
+        for(unsigned int iFeature = 0; iFeature < numberOfFeatures; ++iFeature) {
+            unsigned int index = iEvent*numberOfFeatures + iFeature;
+            bins[iFeature] = expertise->featureBinnings[iFeature].ValueToBin(array[index]);
+        }
+        result[iEvent] = expertise->forest.Analyse(bins);
+      }
+    }
 
     void Save(void* ptr, char *weightfile) {
       Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
