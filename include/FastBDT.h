@@ -454,6 +454,7 @@ namespace FastBDT {
       std::vector<float> boostWeights;
   };
 
+
   template<class Iterator>
     unsigned int Tree::ValueToNode(const Iterator &values) const {
 
@@ -465,14 +466,19 @@ namespace FastBDT {
 
         auto &cut = cuts[node-1];
         // Return current node if NaN
-        if(not cut.valid or values[ cut.feature ] == 0)
+        if(not cut.valid)
+          break;
+
+        unsigned int value = values[cut.feature];
+        // This if instruction used for Missing Values costs ~ 5% performance ...
+        if(value == 0)
           break;
 
         // Perform the cut of the given node and update the node.
         // Either the event is passed to the left child node (which has
         // the position 2*node in the next layer) or to the right
         // (which has the position 2*node + 1 in the next layer)
-        node = (node << 1) + static_cast<unsigned int>(values[ cut.feature ] >= cut.index);
+        node = (node << 1) + static_cast<unsigned int>(value >= cut.index);
       }
 
       // If we're arrived at the bottom of the tree, this event belongs to the node
