@@ -288,7 +288,7 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
 
       std::vector<Cut<double>> cuts;
       for(unsigned int i = 0; i < cut_features.size(); ++i) {
-        Cut cut;
+        Cut<double> cut;
         cut.feature = cut_features[i];
         cut.index = cut_indexes[i];
         cut.valid = cut_valids[i];
