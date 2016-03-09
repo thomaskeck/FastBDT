@@ -98,8 +98,6 @@ void TMVA::MethodFastBDT::Reset()
    if( fForest != NULL )   
      delete fForest;
    fForest = NULL;
-
-   featureBinnings.clear();
 }
 
 
@@ -112,7 +110,7 @@ void TMVA::MethodFastBDT::Train()
   
   // First thing is to read out the training data from Data()
   // into an EventSample object.
-  featureBinnings.clear();
+  std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
   std::vector<unsigned int> nBinningLevels;
   for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
       std::vector<double> feature(nEvents,0);
@@ -148,9 +146,9 @@ void TMVA::MethodFastBDT::Train()
  
   // Create the forest, this also trains the whole forest immediatly
   ForestBuilder builder(eventSample, fNTrees, fShrinkage, fRandRatio, fNTreeLayers, fsPlot);
-  fForest = new Forest( builder.GetShrinkage(), builder.GetF0());
+  fForest = new Forest<double>( builder.GetShrinkage(), builder.GetF0());
   for( auto tree : builder.GetForest() )
-      fForest->AddTree(tree);
+      fForest->AddTree(removeFeatureBinningTransformationFromTree(tree, featureBinnings));
 
 }
 
@@ -250,22 +248,6 @@ void TMVA::MethodFastBDT::AddWeightsXMLTo( void* parent ) const
       SaveVectorToXML(trxml, "NEntries", forest[i].GetNEntries());
    }
 
-   for(unsigned int i = 0; i < featureBinnings.size(); ++i) {
-      void* binxml = TMVA::gTools().AddChild(wght, "Binning");
-      TMVA::gTools().AddAttr( binxml, "NLevels", featureBinnings[i].GetNLevels() );
-      SaveVectorToXML(binxml, "bins", featureBinnings[i].GetBinning());
-   }
-  
-   /*
-   std::map<unsigned int, double> ranking = fForest->GetVariableRanking();
-   void *rankingxml = TMVA::gTools().AddChild( parent, "Ranking" );
-   for (auto &pair : ranking) {
-      void *entryxml = TMVA::gTools().AddChild( rankingxml, "Entry" );
-      TMVA::gTools().AddAttr( entryxml, "Variable", GetInputLabel(pair.first) );
-      TMVA::gTools().AddAttr( entryxml, "Separation", pair.second );
-   }
-   */
-
 }
 
 void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
@@ -281,7 +263,7 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
 
    double F0;
    TMVA::gTools().ReadAttr( parent, "F0", F0 );
-   fForest = new Forest(fShrinkage, F0);
+   fForest = new Forest<double>(fShrinkage, F0);
 
    void* trxml = TMVA::gTools().GetChild(parent, "Tree");
    while (trxml) {
@@ -304,7 +286,7 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
       ReadVectorFromXML( trxml, "Purities", purities);
       ReadVectorFromXML( trxml, "NEntries", nEntries);
 
-      std::vector<Cut> cuts;
+      std::vector<Cut<double>> cuts;
       for(unsigned int i = 0; i < cut_features.size(); ++i) {
         Cut cut;
         cut.feature = cut_features[i];
@@ -313,19 +295,9 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
         cut.gain = cut_gains[i];
         cuts.push_back(cut);
       }
-      fForest->AddTree(Tree(cuts, nEntries, purities, boost_weights));
+      fForest->AddTree(Tree<double>(cuts, nEntries, purities, boost_weights));
 
       trxml = TMVA::gTools().GetNextChild(trxml, "Tree");
-   }
-
-   void* binxml = TMVA::gTools().GetChild(parent, "Binning");
-   while (binxml) {
-      unsigned int nLevels;
-      TMVA::gTools().ReadAttr( binxml, "NLevels", nLevels );
-      std::vector<double> bins;
-      ReadVectorFromXML(binxml, "bins", bins);
-      featureBinnings.push_back(FeatureBinning<double>(nLevels, bins.begin(), bins.end()));
-      binxml = TMVA::gTools().GetNextChild(binxml, "Binning");
    }
 
 }
@@ -338,12 +310,11 @@ void  TMVA::MethodFastBDT::ReadWeightsFromStream( std::istream&)
 Double_t TMVA::MethodFastBDT::GetMvaValue( Double_t*, Double_t*){
  
   // First get the current event and store it in a vector 
-  std::vector<unsigned int> bins(GetNvar(),0);
+  std::vector<double> bins(GetNvar(),0);
   const Event* ev = Data()->GetEvent();
   for (unsigned int iFeature = 0; iFeature < GetNvar(); iFeature++) {
-    bins[iFeature] = featureBinnings[iFeature].ValueToBin( ev->GetValue(iFeature) );
+    bins[iFeature] = ev->GetValue(iFeature);
   }
-
   return fForest->Analyse(bins);
 
 }

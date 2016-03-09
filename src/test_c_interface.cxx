@@ -95,7 +95,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithoutWeights ) {
     EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 2u);
+    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 1.6f);
     EXPECT_TRUE(expertise->forest.GetForest()[0].GetCuts()[0].valid);
     EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 1.7142857f);
 
@@ -122,7 +122,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithWeights ) {
     EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 2u);
+    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 1.6f);
     EXPECT_TRUE(expertise->forest.GetForest()[0].GetCuts()[0].valid);
     EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 1.7142857f);
 
@@ -134,7 +134,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithWeights ) {
     EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 2u);
+    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 1.6f);
     EXPECT_TRUE(expertise->forest.GetForest()[0].GetCuts()[0].valid);
     EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 2*1.7142857f);
 
@@ -145,7 +145,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithWeights ) {
     EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 2u);
+    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 1.6f);
     EXPECT_TRUE(expertise->forest.GetForest()[0].GetCuts()[0].valid);
     EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 2.0999999f);
 

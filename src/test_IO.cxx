@@ -87,7 +87,7 @@ TEST_F(IOTest, IOFeatureBinningVector) {
 
 TEST_F(IOTest, IOCut) {
 
-    Cut before;
+    Cut<unsigned int> before;
     before.feature = 1;
     before.gain = 3.4;
     before.index = 5;
@@ -96,7 +96,7 @@ TEST_F(IOTest, IOCut) {
     std::stringstream stream;
     stream << before;
 
-    Cut after;
+    Cut<unsigned int> after;
     stream >> after;
 
     EXPECT_EQ(before.feature, after.feature);
@@ -108,7 +108,7 @@ TEST_F(IOTest, IOCut) {
             
 TEST_F(IOTest, IOTree) {
 
-    Cut cut1, cut2, cut3;
+    Cut<unsigned int> cut1, cut2, cut3;
     cut1.feature = 0;
     cut1.index = 5;
     cut1.valid = true;
@@ -122,16 +122,16 @@ TEST_F(IOTest, IOTree) {
     cut3.gain = 0.0;
     cut3.valid = false;
     
-    std::vector<Cut> before_cuts = {cut1, cut2, cut3};
+    std::vector<Cut<unsigned int>> before_cuts = {cut1, cut2, cut3};
     std::vector<float> before_nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
     std::vector<float> before_purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
     std::vector<float> before_boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-    Tree before(before_cuts, before_nEntries, before_purities, before_boostWeights);            
+    Tree<unsigned int> before(before_cuts, before_nEntries, before_purities, before_boostWeights);            
     
     std::stringstream stream;
     stream << before;
 
-    auto after = readTreeFromStream(stream);
+    auto after = readTreeFromStream<unsigned int>(stream);
     const auto &after_cuts = after.GetCuts();
     const auto &after_purities = after.GetPurities();
     const auto &after_boostWeights = after.GetBoostWeights();
@@ -161,7 +161,7 @@ TEST_F(IOTest, IOTree) {
 
 TEST_F(IOTest, IOForest) {
 
-    Cut cut1, cut2, cut3, cut4;
+    Cut<unsigned int> cut1, cut2, cut3, cut4;
     cut1.feature = 0;
     cut1.index = 5;
     cut1.valid = true;
@@ -181,15 +181,15 @@ TEST_F(IOTest, IOForest) {
     
     std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
     
-    Forest before(0.5, 1.6);
-    before.AddTree(Tree({cut1, cut2, cut3}, nEntries, { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 }, { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0}));
-    before.AddTree(Tree({cut1, cut4, cut3}, nEntries, { 0.6, 0.2, 0.5, 0.4, 0.5, 0.6, 0.7 }, { 2.0, 2.0, 3.0, 5.0, 5.0, 6.0, 1.0}));
+    Forest<unsigned int> before(0.5, 1.6);
+    before.AddTree(Tree<unsigned int>({cut1, cut2, cut3}, nEntries, { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 }, { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0}));
+    before.AddTree(Tree<unsigned int>({cut1, cut4, cut3}, nEntries, { 0.6, 0.2, 0.5, 0.4, 0.5, 0.6, 0.7 }, { 2.0, 2.0, 3.0, 5.0, 5.0, 6.0, 1.0}));
     const auto &before_forest = before.GetForest();
 
     std::stringstream stream;
     stream << before;
 
-    auto after = readForestFromStream(stream);
+    auto after = readForestFromStream<unsigned int>(stream);
     const auto &after_forest = after.GetForest();
 
     EXPECT_EQ(before.GetF0(), after.GetF0());

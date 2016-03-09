@@ -10,9 +10,7 @@ extern "C" {
     void PrintVersion();
 
     struct Expertise {
-      std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
-      std::vector<unsigned int> bins;
-      FastBDT::Forest forest;
+      FastBDT::Forest<double> forest;
       unsigned int nBinningLevels;
       unsigned int nTrees;
       double shrinkage;
@@ -39,6 +37,8 @@ extern "C" {
     void Load(void* ptr, char *weightfile);
 
     double Analyse(void *ptr, double *array);
+
+    void AnalyseArray(void *ptr, double *array, double *result, unsigned int nEvents, unsigned int nFeatures);
 
     void Save(void* ptr, char *weightfile);
     
