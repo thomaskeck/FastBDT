@@ -107,6 +107,22 @@ namespace FastBDT {
 
         }
 
+        Value BinToValue(unsigned int bin) const {
+          if( bin == 0 )
+              return NAN;
+          
+          if( bin == 1 )
+              return -std::numeric_limits<double>::infinity();
+          
+          unsigned int index = bin + (1 << nLevels) - 1;
+          for(unsigned int iLevel = 0; iLevel < (nLevels-1) and index % 2 == 0; ++iLevel) {
+            index /= 2;
+          }
+          index /= 2;
+
+          return binning[index];
+        }
+
         const Value& GetMin() const { return binning.front(); }
         const Value& GetMax() const { return binning.back(); }
         unsigned int GetNLevels() const { return nLevels; }
@@ -311,11 +327,12 @@ namespace FastBDT {
   double LossFunction(double nSignal, double nBckgrd);
 
 
+  template<typename T>
   struct Cut {
 
     Cut() : feature(0), index(0), gain(0), valid(false) { }            
     unsigned int feature; /**< The feature on which the cut is performed */
-    unsigned int index; /**<  The numerically cut value on which the cut is performed */
+    T index; /**<  The numerically cut value on which the cut is performed */
     double gain; /**< The separationGain of the cut */
     /**
      * Whether the cut is valid. A cut can become invalid if the related node
@@ -335,7 +352,7 @@ namespace FastBDT {
       /**
        * Calculates for every node in the layer the best Cut with respect to all possible cuts and features using the given CDFs
        */
-      Cut CalculateBestCut(const CumulativeDistributions &CDFs) const;
+      Cut<unsigned int> CalculateBestCut(const CumulativeDistributions &CDFs) const;
 
       void AddSignalWeight(float weight, float original_weight);
       void AddBckgrdWeight(float weight, float original_weight);
@@ -382,7 +399,7 @@ namespace FastBDT {
       TreeBuilder(unsigned int nLayers, EventSample &sample); 
       void Print() const;
 
-      const std::vector<Cut>& GetCuts() const { return cuts; }
+      const std::vector<Cut<unsigned int>>& GetCuts() const { return cuts; }
 
       std::vector<float> GetPurities() const { 
         std::vector<float> purities(nodes.size());
@@ -412,11 +429,12 @@ namespace FastBDT {
 
     private:
       unsigned int nLayers; /**< Number of layers in this tree */
-      std::vector<Cut> cuts; /**< The best cut for every node in the tree excluding the leave nodes */
+      std::vector<Cut<unsigned int>> cuts; /**< The best cut for every node in the tree excluding the leave nodes */
       std::vector<Node> nodes; /**< Information about every node in the tree including the leave nodes */
 
   };
 
+  template<typename T>
   class Tree {
 
     public:
@@ -428,63 +446,80 @@ namespace FastBDT {
       Tree(const Tree&) = default;
       Tree& operator=(const Tree &) = default;
 
-      Tree(const std::vector<Cut> &cuts, const std::vector<float> &nEntries, const std::vector<float> &purities, const std::vector<float> &boostWeights) : cuts(cuts), nEntries(nEntries), purities(purities), boostWeights(boostWeights) { }
+      Tree(const std::vector<Cut<T>> &cuts, const std::vector<float> &nEntries, const std::vector<float> &purities, const std::vector<float> &boostWeights) : cuts(cuts), nEntries(nEntries), purities(purities), boostWeights(boostWeights) { }
 
       /**
        * Returns the node of a given event
        * @param values the feature values of the event in an arbitrary iterator supporting operator[]
        */
-      template<class Iterator> unsigned int ValueToNode(const Iterator &values) const;
+      template<class Iterator> unsigned int ValueToNode(const Iterator &values) const {
+          // Start with a node 1. The node contains the position of the node
+          // the event belongs to.
+          unsigned int node = 1;
+
+          while( node <= cuts.size() ) {
+
+            auto &cut = cuts[node-1];
+            // Return current node if NaN
+            if(not cut.valid)
+              break;
+
+            const T &value = values[cut.feature];
+            // This if instruction used for Missing Values costs ~ 5% performance ...
+            if(value == 0)
+              break;
+
+            // Perform the cut of the given node and update the node.
+            // Either the event is passed to the left child node (which has
+            // the position 2*node in the next layer) or to the right
+            // (which has the position 2*node + 1 in the next layer)
+            node = (node << 1) + static_cast<unsigned int>(value >= cut.index);
+          }
+
+          // If we're arrived at the bottom of the tree, this event belongs to the node
+          // with the position node in the last layer.
+          return node - 1;
+      }
+
       unsigned int GetNNodes() const { return boostWeights.size(); }
       const float& GetNEntries(unsigned int iNode) const { return nEntries[iNode]; }
       const float& GetPurity(unsigned int iNode) const { return purities[iNode]; }
       const float& GetBoostWeight(unsigned int iNode) const { return boostWeights[iNode]; }
-      const Cut& GetCut(unsigned int iNode) const { return cuts[iNode]; }
-      const std::vector<Cut>& GetCuts() const { return cuts; }
+      const Cut<T>& GetCut(unsigned int iNode) const { return cuts[iNode]; }
+      const std::vector<Cut<T>>& GetCuts() const { return cuts; }
       const std::vector<float>& GetNEntries() const { return nEntries; }
       const std::vector<float>& GetPurities() const { return purities; }
       const std::vector<float>& GetBoostWeights() const { return boostWeights; }
       
-      void Print() const;
+      void Print() const {
+  
+        std::cout << "Start Printing Tree" << std::endl;
+
+        for(auto &cut : cuts) {
+          std::cout << "Index: " << cut.index << std::endl;
+          std::cout << "Feature: " << cut.feature << std::endl;
+          std::cout << "Gain: " << cut.gain << std::endl;
+          std::cout << "Valid: " << cut.valid << std::endl;
+          std::cout << std::endl;
+        }
+        
+        for(auto &p : purities) {
+          std::cout << "Purity: " << p << std::endl;
+        }
+        for(auto &p : boostWeights) {
+          std::cout << "BoostWeights: " << p << std::endl;
+        }
+
+        std::cout << "Finished Printing Tree" << std::endl;
+      }
 
     private:
-      std::vector<Cut> cuts;
+      std::vector<Cut<T>> cuts;
       std::vector<float> nEntries;
       std::vector<float> purities;
       std::vector<float> boostWeights;
   };
 
-
-  template<class Iterator>
-    unsigned int Tree::ValueToNode(const Iterator &values) const {
-
-      // Start with a node 1. The node contains the position of the node
-      // the event belongs to.
-      unsigned int node = 1;
-
-      while( node <= cuts.size() ) {
-
-        auto &cut = cuts[node-1];
-        // Return current node if NaN
-        if(not cut.valid)
-          break;
-
-        unsigned int value = values[cut.feature];
-        // This if instruction used for Missing Values costs ~ 5% performance ...
-        if(value == 0)
-          break;
-
-        // Perform the cut of the given node and update the node.
-        // Either the event is passed to the left child node (which has
-        // the position 2*node in the next layer) or to the right
-        // (which has the position 2*node + 1 in the next layer)
-        node = (node << 1) + static_cast<unsigned int>(value >= cut.index);
-      }
-
-      // If we're arrived at the bottom of the tree, this event belongs to the node
-      // with the position node in the last layer.
-      return node - 1;
-    }
 
   /**
    * This class trains a forest of trees with stochastic gradient boosting.
@@ -495,7 +530,7 @@ namespace FastBDT {
       ForestBuilder(EventSample &eventSample, unsigned int nTrees, double shrinkage, double randRatio, unsigned int nLayersPerTree, bool sPlot=false);
       void print();
 
-      const std::vector<Tree>& GetForest() const { return forest; }
+      const std::vector<Tree<unsigned int>>& GetForest() const { return forest; }
       double GetF0() const { return F0; }
       double GetShrinkage() const { return shrinkage; }
 
@@ -508,9 +543,10 @@ namespace FastBDT {
       double shrinkage; /**< The config struct for this DecisionForest*/
       double F0; /** The initial F value. Which basically rewights signal and background events based on their initial proportion in the eventSample. */
       std::vector<double> FCache; /**< Caches the F values for the training events, to spare some time.*/
-      std::vector<Tree> forest; /**< Contains all the trees trained by the stochastic gradient boost algorithm*/
+      std::vector<Tree<unsigned int>> forest; /**< Contains all the trees trained by the stochastic gradient boost algorithm*/
   };
 
+  template<typename T>
   class Forest {
 
     public:
@@ -524,8 +560,8 @@ namespace FastBDT {
 
       Forest(double shrinkage, double F0) : shrinkage(shrinkage), F0(F0) { F0_div_shrink = F0 / shrinkage; }
 
-      void AddTree(const Tree &tree) { forest.push_back(tree); }
-      const std::vector<Tree>& GetForest() const { return forest; }
+      void AddTree(const Tree<T> &tree) { forest.push_back(tree); }
+      const std::vector<Tree<T>>& GetForest() const { return forest; }
       double GetF0() const { return F0; }
       double GetShrinkage() const { return shrinkage; }
 
@@ -535,47 +571,94 @@ namespace FastBDT {
        * of the event in the next boosted training.
        * @param values the feature values of the event in an arbitrary iterator supporting operator[]
        */
-      template<class Iterator> double GetF(const Iterator &values) const;
+      template<class Iterator>
+      double GetF(const Iterator &values) const {
+
+          // Determines the F value by looping over all trees and
+          // summing up the weights of the nodes the event belongs to.
+          double F = F0_div_shrink;
+          for( auto &tree : forest) 
+            F += tree.GetBoostWeight( tree.ValueToNode(values) );
+          return F*shrinkage;
+      }
 
       /**
        * Returns the signal probability of a given event
        * @param values the feature values of the event in an arbitrary iterator supporting operator[]
        */
-      template<class Iterator> double Analyse(const Iterator &values) const;
+      template<class Iterator>
+      double Analyse(const Iterator &values) const {
+
+          // Calculate signal probability out of the F value
+          return 1.0/(1.0+std::exp(-2*GetF(values)));
+
+      }
 
 
       /**
        * Calculates importance ranking of variables, based on the total separation Gain introduced by this variable.
        */
-      std::map<unsigned int, double> GetVariableRanking();
+      std::map<unsigned int, double> GetVariableRanking() {
+        std::map<unsigned int, double> ranking;
+        for(auto &tree : forest) {
+          for(unsigned int iNode = 0; iNode < tree.GetNNodes()/2; ++iNode) {
+            const auto &cut = tree.GetCut(iNode);
+            if( cut.valid ) {
+              if ( ranking.find( cut.feature ) == ranking.end() )
+                ranking[ cut.feature ] = 0;
+              ranking[ cut.feature ] += cut.gain;
+            }
+          }
+        }
+
+        double norm = 0;
+        for(auto &pair : ranking) {
+            norm += pair.second;
+        }
+        for(auto &pair : ranking) {
+            pair.second /= norm;
+        }
+
+        return ranking;
+      }
 
     private:
       double shrinkage;
       double F0;
       double F0_div_shrink;
-      std::vector<Tree> forest;
+      std::vector<Tree<T>> forest;
 
   };
+  
+  template<typename T>
+  Cut<T> removeFeatureBinningTransformationFromCut(const Cut<unsigned int> &cut, const std::vector<FeatureBinning<T>> &featureBinnings) {
+      Cut<T> cleaned_cut;
+      cleaned_cut.feature = cut.feature;
+      cleaned_cut.gain = cut.gain;
+      cleaned_cut.valid = cut.valid;
+      cleaned_cut.index = featureBinnings[cut.feature].BinToValue(cut.index);
+      return cleaned_cut;
+  }
 
-  template<class Iterator>
-    double Forest::GetF(const Iterator &values) const {
+  template<typename T>
+  Tree<T> removeFeatureBinningTransformationFromTree(const Tree<unsigned int> &tree, const std::vector<FeatureBinning<T>> &featureBinnings) {
+      std::vector<Cut<T>> cleaned_cuts;
+      cleaned_cuts.reserve(tree.GetCuts().size());
+      for(auto &cut : tree.GetCuts()) {
+        cleaned_cuts.push_back(removeFeatureBinningTransformationFromCut(cut, featureBinnings));
+      }
+      return Tree<T>(cleaned_cuts, tree.GetNEntries(), tree.GetPurities(), tree.GetBoostWeights());
+  }
 
-      // Determines the F value by looping over all trees and
-      // summing up the weights of the nodes the event belongs to.
-      double F = F0_div_shrink;
-      for( auto &tree : forest) 
-        F += tree.GetBoostWeight( tree.ValueToNode(values) );
-      return F*shrinkage;
+  template<typename T>
+  Forest<T> removeFeatureBinningTransformationFromForest(const Forest<unsigned int> &forest, const std::vector<FeatureBinning<T>> &featureBinnings) {
+      Forest<T> cleaned_forest(forest.GetShrinkage(), forest.GetF0());
+      for(auto &tree : forest.GetForest()) {
+          cleaned_forest.AddTree(removeFeatureBinningTransformationFromTree(tree, featureBinnings));
+      }
+      return cleaned_forest;
+  }
 
-    }
-
-  template<class Iterator>
-    double Forest::Analyse(const Iterator &values) const {
-
-      // Calculate signal probability out of the F value
-      return 1.0/(1.0+std::exp(-2*GetF(values)));
-
-    }
 }
 
 #endif

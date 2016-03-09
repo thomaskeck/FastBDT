@@ -85,6 +85,23 @@ TEST_F(FeatureBinningTest, ValueToBinMapsNormalValuesCorrectly) {
 
 }
 
+TEST_F(FeatureBinningTest, BinToValueMapsNormalValuesCorrectly) {
+    
+    EXPECT_TRUE( std::isnan(calculatedBinning->BinToValue(0u)));
+    EXPECT_EQ( calculatedBinning->BinToValue(1u), -std::numeric_limits<float>::infinity());
+    EXPECT_EQ( calculatedBinning->BinToValue(2u), 4.0f);
+    EXPECT_EQ( calculatedBinning->BinToValue(3u), 7.0f);
+    EXPECT_EQ( calculatedBinning->BinToValue(4u), 10.0f);
+
+
+    EXPECT_TRUE( std::isnan(predefinedBinning->BinToValue(0u)));
+    EXPECT_EQ( predefinedBinning->BinToValue(1u), -std::numeric_limits<float>::infinity());
+    EXPECT_EQ( predefinedBinning->BinToValue(2u), 4.0f);
+    EXPECT_EQ( predefinedBinning->BinToValue(3u), 7.0f);
+    EXPECT_EQ( predefinedBinning->BinToValue(4u), 10.0f);
+
+}
+
 TEST_F(FeatureBinningTest, NaNGivesZeroBin) {
 
     EXPECT_EQ( predefinedBinning->ValueToBin(NAN), 0u);
@@ -842,7 +859,7 @@ TEST_F(NodeTest, BestCut0Layer) {
     Node node(0,0);
     node.SetWeights({10.0, 10.0, 68.0});
 
-    Cut bestCut = node.CalculateBestCut(CDFs);
+    auto bestCut = node.CalculateBestCut(CDFs);
     EXPECT_EQ( bestCut.feature, 0u );
     EXPECT_EQ( bestCut.index, 2u );
     EXPECT_DOUBLE_EQ( bestCut.gain, 1.875 );
@@ -855,7 +872,7 @@ TEST_F(NodeTest, NaNIsIgnored) {
     CumulativeDistributions CDFs(0, *eventSample);
     Node node(0,0);
     node.SetWeights({10.0, 10.0, 68.0});
-    Cut bestCut = node.CalculateBestCut(CDFs);
+    auto bestCut = node.CalculateBestCut(CDFs);
     
     EXPECT_DOUBLE_EQ(CDFs.GetSignal(0, 0, 0), 0.0);
     EXPECT_DOUBLE_EQ(CDFs.GetBckgrd(0, 0, 0), 0.0);
@@ -869,7 +886,7 @@ TEST_F(NodeTest, NaNIsIgnored) {
     const_cast<float&>(CDFs.GetBckgrd(0, 0, 0)) = 1.0;
     const_cast<float&>(CDFs.GetSignal(0, 1, 0)) = 10.0;
     const_cast<float&>(CDFs.GetBckgrd(0, 1, 0)) = 800.0;
-    Cut newBestCut = node.CalculateBestCut(CDFs);
+    auto newBestCut = node.CalculateBestCut(CDFs);
 
     EXPECT_EQ( bestCut.feature, newBestCut.feature );
     EXPECT_EQ( bestCut.index, newBestCut.index );
@@ -894,7 +911,7 @@ TEST_F(NodeTest, BestCut1Layer) {
 
     Node right_node(1,0);
     right_node.SetWeights({7.0, 1.0, 22.0});
-    Cut right_bestCut = right_node.CalculateBestCut(CDFs);
+    auto right_bestCut = right_node.CalculateBestCut(CDFs);
     EXPECT_EQ( right_bestCut.feature, 1u );
     EXPECT_EQ( right_bestCut.index, 2u );
     EXPECT_DOUBLE_EQ( right_bestCut.gain, 0.375);
@@ -902,7 +919,7 @@ TEST_F(NodeTest, BestCut1Layer) {
     
     Node left_node(1,1);
     left_node.SetWeights({3.0, 9.0, 38.0});
-    Cut left_bestCut = left_node.CalculateBestCut(CDFs);
+    auto left_bestCut = left_node.CalculateBestCut(CDFs);
     EXPECT_EQ( left_bestCut.feature, 1u );
     EXPECT_EQ( left_bestCut.index, 2u );
     EXPECT_DOUBLE_EQ( left_bestCut.gain, 0.53571428571428581);
@@ -1025,7 +1042,7 @@ class TreeTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
 
-            Cut cut1, cut2, cut3;
+            Cut<unsigned int> cut1, cut2, cut3;
             cut1.feature = 0;
             cut1.index = 5;
             cut1.valid = true;
@@ -1034,18 +1051,18 @@ class TreeTest : public ::testing::Test {
             cut2.valid = true;
             cut3.valid = false;
             
-            std::vector<Cut> cuts = {cut1, cut2, cut3};
+            std::vector<Cut<unsigned int>> cuts = {cut1, cut2, cut3};
             std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
             std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
             std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-            tree = new Tree(cuts, nEntries, purities, boostWeights);            
+            tree = new Tree<unsigned int>(cuts, nEntries, purities, boostWeights);            
         }
 
         virtual void TearDown() {
             delete tree;
         }
 
-        Tree *tree;
+        Tree<unsigned int> *tree;
 
 };
 
@@ -1148,7 +1165,7 @@ class ForestTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
 
-            Cut cut1, cut2, cut3;
+            Cut<unsigned int> cut1, cut2, cut3;
             cut1.feature = 0;
             cut1.index = 5;
             cut1.valid = true;
@@ -1159,13 +1176,13 @@ class ForestTest : public ::testing::Test {
             cut2.gain = 1.0;
             cut3.valid = false;
             
-            std::vector<Cut> cuts = {cut1, cut2, cut3};
+            std::vector<Cut<unsigned int>> cuts = {cut1, cut2, cut3};
             std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
             std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
             std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-            tree = new Tree(cuts, nEntries, purities, boostWeights);            
+            tree = new Tree<unsigned int>(cuts, nEntries, purities, boostWeights);            
 
-            forest = new Forest(0.1, 1.0);
+            forest = new Forest<unsigned int>(0.1, 1.0);
         }
 
         virtual void TearDown() {
@@ -1173,8 +1190,8 @@ class ForestTest : public ::testing::Test {
             delete forest;
         }
 
-        Tree *tree;
-        Forest *forest;
+        Tree<unsigned int> *tree;
+        Forest<unsigned int> *forest;
 
 };
 
@@ -1193,29 +1210,29 @@ TEST_F(ForestTest, GetF) {
 class VariableRankingTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            forest = new Forest(0.1, 1.0);
+            forest = new Forest<unsigned int>(0.1, 1.0);
         }
 
         virtual void TearDown() {
             delete forest;
         }
 
-        Forest *forest;
+        Forest<unsigned int> *forest;
 };
 
 TEST_F(VariableRankingTest, OneVariable) {
     
-    Cut cut1;
+    Cut<unsigned int> cut1;
     cut1.feature = 1;
     cut1.index = 5;
     cut1.valid = true;
     cut1.gain = 2.0;
 
-    std::vector<Cut> cuts = {cut1};
+    std::vector<Cut<unsigned int>> cuts = {cut1};
     std::vector<float> nEntries = { 10.0, 4.0, 6.0};
     std::vector<float> purities = { 0.1, 0.2, 0.3 };
     std::vector<float> boostWeights = {1.0, 2.0, 3.0};
-    Tree tree(cuts, nEntries, purities, boostWeights);            
+    Tree<unsigned int> tree(cuts, nEntries, purities, boostWeights);            
     forest->AddTree(tree);
     auto map = forest->GetVariableRanking();
     EXPECT_EQ(map.size(), 1u);
@@ -1225,7 +1242,7 @@ TEST_F(VariableRankingTest, OneVariable) {
 
 TEST_F(VariableRankingTest, Standard) {
     
-    Cut cut1, cut2, cut3;
+    Cut<unsigned int> cut1, cut2, cut3;
     cut1.feature = 0;
     cut1.index = 5;
     cut1.valid = true;
@@ -1236,11 +1253,11 @@ TEST_F(VariableRankingTest, Standard) {
     cut2.gain = 1.0;
     cut3.valid = false;
 
-    std::vector<Cut> cuts = {cut1, cut2, cut3};
+    std::vector<Cut<unsigned int>> cuts = {cut1, cut2, cut3};
     std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
     std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
     std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-    Tree tree(cuts, nEntries, purities, boostWeights);            
+    Tree<unsigned int> tree(cuts, nEntries, purities, boostWeights);            
     forest->AddTree(tree);
     auto map = forest->GetVariableRanking();
     EXPECT_FLOAT_EQ(map[0], 2.0/3.0);
@@ -1263,7 +1280,7 @@ TEST_F(CornerCasesTest, OnlySignalGivesReasonableResult) {
     ForestBuilder forest(eventSample, 10, 0.1, 1.0, 1); 
     EXPECT_FLOAT_EQ(forest.GetF0(), std::numeric_limits<float>::infinity());
     
-    FastBDT::Forest testforest( forest.GetShrinkage(), forest.GetF0());
+    FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0());
     for( auto t : forest.GetForest() )
         testforest.AddTree(t);
     
@@ -1291,7 +1308,7 @@ TEST_F(CornerCasesTest, OnlyBackgroundGivesReasonableResult) {
     ForestBuilder forest(eventSample, 10, 0.1, 1.0, 1); 
     EXPECT_FLOAT_EQ(forest.GetF0(), -std::numeric_limits<float>::infinity());
     
-    FastBDT::Forest testforest( forest.GetShrinkage(), forest.GetF0());
+    FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0());
     for( auto t : forest.GetForest() )
         testforest.AddTree(t);
     
@@ -1372,7 +1389,7 @@ TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
         // however with 10 trees we already get pretty close to perfect separation.
         ForestBuilder forest(*sample, 10, 1.0, 1.0, 1); 
         
-        FastBDT::Forest testforest( forest.GetShrinkage(), forest.GetF0());
+        FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0());
         for( auto t : forest.GetForest() ) {
             //t.Print();
             testforest.AddTree(t);
@@ -1398,17 +1415,17 @@ TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
 
 TEST_F(CornerCasesTest, PerfectSeparationGivesReasonableResults) {
 
-    Cut cut1;
+    Cut<unsigned int> cut1;
     cut1.feature = 0;
     cut1.index = 2;
     cut1.valid = true;
     
-    std::vector<Cut> cuts = {cut1};
+    std::vector<Cut<unsigned int>> cuts = {cut1};
     std::vector<float> nEntries = { 10.0, 11.0, 12.0 };
     std::vector<float> purities = { 0.5, 0.0, 1.0};
     std::vector<float> boostWeights = { 0.0, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()};
-    Tree testtree(cuts, nEntries, purities, boostWeights);
-    Forest testforest(0.1, 0.0);
+    Tree<unsigned int> testtree(cuts, nEntries, purities, boostWeights);
+    Forest<unsigned int> testforest(0.1, 0.0);
     testforest.AddTree(testtree);
 
     std::vector<unsigned int> values = {1, 1};
@@ -1428,7 +1445,7 @@ class RegressionTest : public ::testing::Test {
 
 TEST_F(TreeTest, LastCutOnTheRightWasNeverUsed) {
             
-    Cut cut1, cut2, cut3;
+    Cut<unsigned int> cut1, cut2, cut3;
     cut1.feature = 0;
     cut1.index = 2;
     cut1.valid = true;
@@ -1439,11 +1456,11 @@ TEST_F(TreeTest, LastCutOnTheRightWasNeverUsed) {
     cut3.index = 2;
     cut3.valid = true;
     
-    std::vector<Cut> cuts = {cut1, cut2, cut3};
+    std::vector<Cut<unsigned int>> cuts = {cut1, cut2, cut3};
     std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
     std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
     std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-    Tree tree(cuts, nEntries, purities, boostWeights);            
+    Tree<unsigned int> tree(cuts, nEntries, purities, boostWeights);            
 
     // Check if we can reach all nodes
     EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({0,0}) ), 0u );

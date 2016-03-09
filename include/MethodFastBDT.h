@@ -189,13 +189,8 @@ namespace TMVA {
       /**
        * Pointer to the Forest trained by this method
        */
-      FastBDT::Forest *fForest;
-
-      /**
-       * FeatureBinnings used to bin all the features
-       */
-      std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
-
+      FastBDT::Forest<double> *fForest;
+      
       /**
        * Class Definition. This is used by ROOT to identify this class
        */

@@ -20,7 +20,7 @@ FastBDT_library.Load.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 FastBDT_library.Train.argtypes = [ctypes.c_void_p, c_double_p, c_float_p, c_uint_p, ctypes.c_uint, ctypes.c_uint]
 FastBDT_library.Analyse.argtypes = [ctypes.c_void_p, c_double_p]
 FastBDT_library.Analyse.restype = ctypes.c_double
-FastBDT_library.AnalyseArray.argtypes = [ctypes.c_void_p, c_double_p, c_double_p, ctypes.c_uint]
+FastBDT_library.AnalyseArray.argtypes = [ctypes.c_void_p, c_double_p, c_double_p, ctypes.c_uint, ctypes.c_uint]
 FastBDT_library.SetRandRatio.argtypes = [ctypes.c_void_p, ctypes.c_double]
 FastBDT_library.SetShrinkage.argtypes = [ctypes.c_void_p, ctypes.c_double]
 FastBDT_library.SetNTrees.argtypes = [ctypes.c_void_p, ctypes.c_uint]
@@ -64,7 +64,7 @@ class Classifier(object):
         X_temp = np.require(X, dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
         N = len(X)
         p = np.require(np.zeros(N), dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
-        FastBDT_library.AnalyseArray(self.forest, X_temp.ctypes.data_as(c_double_p), p.ctypes.data_as(c_double_p), int(len(X_temp)))
+        FastBDT_library.AnalyseArray(self.forest, X_temp.ctypes.data_as(c_double_p), p.ctypes.data_as(c_double_p), int(X_temp.shape[0]), int(X_temp.shape[1]))
         return p
     
     def predict_single(self, row):

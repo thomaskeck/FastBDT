@@ -58,42 +58,119 @@ namespace FastBDT {
    * @param stream an std::ostream reference
    * @param cut which shall be stored
    */
-  std::ostream& operator<<(std::ostream& stream, const Cut &cut);
+  template<class T>
+  std::ostream& operator<<(std::ostream& stream, const Cut<T> &cut) {
+     stream << cut.feature << " ";
+     stream << cut.index << " ";
+     stream << cut.valid << " ";
+     stream << cut.gain;
+     stream << std::endl;
+     return stream;
+  }
   
   /**
    * This function reads a Cut from an std::istream
    * @param stream an std::istream reference
    * @param cut containing read data
    */
-  std::istream& operator>>(std::istream& stream, Cut &cut);
+  template<class T>
+  std::istream& operator>>(std::istream& stream, Cut<T> &cut) {
+     stream >> cut.feature;
+     stream >> cut.index;
+     stream >> cut.valid;
+     stream >> cut.gain;
+     return stream;
+  }
   
   /**
    * This function saves a Tree to an std::ostream
    * @param stream an std::ostream reference
    * @param tree the tree which shall be stored
    */
-  std::ostream& operator<<(std::ostream& stream, const Tree &tree);
+  template<class T>
+  std::ostream& operator<<(std::ostream& stream, const Tree<T> &tree) {
+     const auto &cuts = tree.GetCuts();
+     stream << cuts.size() << std::endl;
+     for( const auto& cut : cuts ) {
+        stream << cut << std::endl;
+     }
+     stream << tree.GetBoostWeights() << std::endl;
+     stream << tree.GetPurities() << std::endl;
+     stream << tree.GetNEntries() << std::endl;
+     return stream;
+  }
+  
   
   /**
    * This function reads a Tree from an std::istream
    * @param stream an std::istream reference
    * @preturn tree containing read data
    */
-  Tree readTreeFromStream(std::istream& stream);
+  template<class T>
+  Tree<T> readTreeFromStream(std::istream& stream) {
+      unsigned int size;
+      stream >> size;
+      std::vector<Cut<T>> cuts(size);
+      for(unsigned int i = 0; i < size; ++i) {
+        stream >> cuts[i];
+      }
+
+      std::vector<float> boost_weights;
+      stream >> boost_weights;
+      
+      std::vector<float> purities;
+      stream >> purities;
+      
+			std::vector<float> nEntries;
+      stream >> nEntries;
+      
+      return Tree<T>(cuts, nEntries, purities, boost_weights);
+
+  }
   
   /**
    * This function saves a Forest to an std::ostream
    * @param stream an std::ostream reference
    * @param forest the forest which shall be stored
    */
-  std::ostream& operator<<(std::ostream& stream, const Forest &forest);
+  template<class T>
+  std::ostream& operator<<(std::ostream& stream, const Forest<T> &forest) {
+     stream << forest.GetF0() << std::endl;
+     stream << forest.GetShrinkage() << std::endl;
+
+     const auto &trees = forest.GetForest();
+     stream << trees.size() << std::endl;
+     for(const auto& tree : trees) {
+         stream << tree << std::endl;
+     }
+
+     return stream;
+  }
   
   /**
    * This function reads a Forest from an std::istream
    * @param stream an std::istream reference
    * @preturn forest containing read data
    */
-  Forest readForestFromStream(std::istream& stream);
+  template<class T>
+  Forest<T> readForestFromStream(std::istream& stream) {
+      double F0;
+      stream >> F0;
+
+      double shrinkage;
+      stream >> shrinkage;
+
+      Forest<T> forest(shrinkage, F0);
+
+      unsigned int size;
+      stream >> size;
+
+      for(unsigned int i = 0; i < size; ++i) {
+        forest.AddTree(readTreeFromStream<T>(stream));
+      }
+
+      return forest;
+  }
   
   /**
    * This function saves a FeatureBinning to an std::ostream

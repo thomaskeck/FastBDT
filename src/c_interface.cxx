@@ -57,31 +57,31 @@ extern "C" {
       unsigned int *target = reinterpret_cast<unsigned int*>(target_ptr);
 
       std::vector<unsigned int> nLevels;
-      expertise->bins.clear();
+      std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
         std::vector<double> feature(nEvents);
         for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
           feature[iEvent] = *(data + iEvent*nFeatures + iFeature);
         }
-        expertise->featureBinnings.push_back(FeatureBinning<double>(expertise->nBinningLevels, feature.begin(), feature.end()));
-        expertise->bins.push_back(0);
+        featureBinnings.push_back(FeatureBinning<double>(expertise->nBinningLevels, feature.begin(), feature.end()));
         nLevels.push_back(expertise->nBinningLevels);
       }
 
       EventSample eventSample(nEvents, nFeatures, nLevels);
-      std::vector<unsigned int> &bins = expertise->bins;
+      std::vector<unsigned int> bins(nFeatures);
       for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
         for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
-          bins[iFeature] = expertise->featureBinnings[iFeature].ValueToBin(data[iEvent*nFeatures + iFeature]);
+          bins[iFeature] = featureBinnings[iFeature].ValueToBin(data[iEvent*nFeatures + iFeature]);
         }
         eventSample.AddEvent(bins, (weight_ptr != nullptr) ? weights[iEvent] : 1.0, target[iEvent] == 1);
       }
 
       ForestBuilder df(eventSample, expertise->nTrees, expertise->shrinkage, expertise->randRatio, expertise->nLayersPerTree);
-      expertise->forest = Forest( df.GetShrinkage(), df.GetF0());
+      Forest<double> forest( df.GetShrinkage(), df.GetF0());
       for( auto t : df.GetForest() ) {
-          expertise->forest.AddTree(t);
+         forest.AddTree(removeFeatureBinningTransformationFromTree(t, featureBinnings));
       }
+      expertise->forest = forest;
 
     }
 
@@ -92,34 +92,19 @@ extern "C" {
       if(not file)
     	  return;
 
-      file >> expertise->featureBinnings;
-      unsigned int numberOfFeatures = expertise->featureBinnings.size();
-      expertise->bins.resize(numberOfFeatures);
-      expertise->forest = FastBDT::readForestFromStream(file);
+      expertise->forest = FastBDT::readForestFromStream<double>(file);
     }
 
     double Analyse(void *ptr, double *array) {
       Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
-      unsigned int numberOfFeatures = expertise->featureBinnings.size();
-      std::vector<unsigned int> &bins = expertise->bins;
-      for(unsigned int iFeature = 0; iFeature < numberOfFeatures; ++iFeature) {
-        bins[iFeature] = expertise->featureBinnings[iFeature].ValueToBin(array[iFeature]);
-      }
-
-      return expertise->forest.Analyse(bins);
+      return expertise->forest.Analyse(array);
     }
     
-    void AnalyseArray(void *ptr, double *array, double *result, unsigned int nEvents) {
+    void AnalyseArray(void *ptr, double *array, double *result, unsigned int nEvents, unsigned int nFeatures) {
       Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
 
-      unsigned int numberOfFeatures = expertise->featureBinnings.size();
-      std::vector<unsigned int> &bins = expertise->bins;
       for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
-        for(unsigned int iFeature = 0; iFeature < numberOfFeatures; ++iFeature) {
-            unsigned int index = iEvent*numberOfFeatures + iFeature;
-            bins[iFeature] = expertise->featureBinnings[iFeature].ValueToBin(array[index]);
-        }
-        result[iEvent] = expertise->forest.Analyse(bins);
+        result[iEvent] = expertise->forest.Analyse(&array[iEvent*nFeatures]);
       }
     }
 
@@ -127,7 +112,6 @@ extern "C" {
       Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
 
       std::fstream file(weightfile, std::ios_base::out | std::ios_base::trunc);
-      file << expertise->featureBinnings << std::endl;
       file << expertise->forest << std::endl;
     }
   

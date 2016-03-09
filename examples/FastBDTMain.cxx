@@ -59,9 +59,7 @@ std::vector<std::vector<double>> readDataFile(std::string datafile) {
 	return data;
 }
 
-void analyse(const FastBDT::Forest &forest, const std::vector<std::vector<double>> &data, const std::vector<FastBDT::FeatureBinning<double>> & featureBinnings) {
-
-    unsigned int numberOfFeatures = data[0].size() - 1;
+void analyse(const FastBDT::Forest<double> &forest, const std::vector<std::vector<double>> &data) {
 
     /*
      * Again we use the feature binning to bin the data
@@ -78,12 +76,7 @@ void analyse(const FastBDT::Forest &forest, const std::vector<std::vector<double
     for(auto &event : data) {
         int _class = int(event.back());
 
-        std::vector<unsigned int> bins(numberOfFeatures);
-        for(unsigned int iFeature = 0; iFeature < numberOfFeatures; ++iFeature) {
-            bins[iFeature] = featureBinnings[iFeature].ValueToBin( event[iFeature] );
-        }
-
-        double p = forest.Analyse(bins);
+        double p = forest.Analyse(event);
         
         if(_class == 1) {
           signal++;
@@ -196,18 +189,16 @@ int train(int argc, char *argv[]) {
      * To apply the trained method again we create a Forest using the trees
      * from the ForestBuilder
      */
-    FastBDT::Forest forest( dt.GetShrinkage(), dt.GetF0());
+    FastBDT::Forest<double> forest( dt.GetShrinkage(), dt.GetF0());
     for( auto t : dt.GetForest() )
-        forest.AddTree(t);
+        forest.AddTree(FastBDT::removeFeatureBinningTransformationFromTree(t, featureBinnings));
 
-
-    analyse(forest, data, featureBinnings);
+    analyse(forest, data);
 
     /**
      * Saving featureBinnings and forest into a file:
      */
     std::fstream file(weightfile, std::ios_base::out | std::ios_base::trunc);
-    file << featureBinnings << std::endl;
     file << forest << std::endl;
     file.close();
 
@@ -232,12 +223,10 @@ int apply(int argc, char *argv[]) {
     	throw std::runtime_error("Couldn't open weightfile " + weightfile);
     }
 
-    std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
-    file >> featureBinnings;
-    auto forest = FastBDT::readForestFromStream(file);
+    auto forest = FastBDT::readForestFromStream<double>(file);
     file.close();
 
-    analyse(forest, data, featureBinnings);
+    analyse(forest, data);
 
 	return 0;
 }

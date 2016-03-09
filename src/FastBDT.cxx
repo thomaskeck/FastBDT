@@ -144,9 +144,9 @@ namespace FastBDT {
     return bins;
   }
 
-  Cut Node::CalculateBestCut(const CumulativeDistributions &CDFs) const {
+  Cut<unsigned int> Node::CalculateBestCut(const CumulativeDistributions &CDFs) const {
 
-    Cut cut;
+    Cut<unsigned int> cut;
 
     const unsigned int nFeatures = CDFs.GetNFeatures();
     const auto& nBins = CDFs.GetNBins();
@@ -337,28 +337,6 @@ namespace FastBDT {
 
     std::cout << "Finished Printing Tree" << std::endl;
   }
-  
-  void Tree::Print() const {
-
-    std::cout << "Start Printing Tree" << std::endl;
-
-    for(auto &cut : cuts) {
-      std::cout << "Index: " << cut.index << std::endl;
-      std::cout << "Feature: " << cut.feature << std::endl;
-      std::cout << "Gain: " << cut.gain << std::endl;
-      std::cout << "Valid: " << cut.valid << std::endl;
-      std::cout << std::endl;
-    }
-    
-    for(auto &p : purities) {
-      std::cout << "Purity: " << p << std::endl;
-    }
-    for(auto &p : boostWeights) {
-      std::cout << "BoostWeights: " << p << std::endl;
-    }
-
-    std::cout << "Finished Printing Tree" << std::endl;
-  }
 
   ForestBuilder::ForestBuilder(EventSample &sample, unsigned int nTrees, double shrinkage, double randRatio, unsigned int nLayersPerTree, bool sPlot) : shrinkage(shrinkage) {
 
@@ -397,7 +375,7 @@ namespace FastBDT {
 
       // Create and train a new train on the sample
       TreeBuilder builder(nLayersPerTree, sample);
-      forest.push_back( Tree( builder.GetCuts(), builder.GetNEntries(), builder.GetPurities(), builder.GetBoostWeights() ) );
+      forest.push_back( Tree<unsigned int>( builder.GetCuts(), builder.GetNEntries(), builder.GetPurities(), builder.GetBoostWeights() ) );
     }
 
   }
@@ -455,38 +433,5 @@ namespace FastBDT {
 
   }
 
-  std::map<unsigned int, double> Forest::GetVariableRanking() {
-
-    std::map<unsigned int, double> ranking;
-
-    for(auto &tree : forest) {
-      for(unsigned int iNode = 0; iNode < tree.GetNNodes()/2; ++iNode) {
-        const auto &cut = tree.GetCut(iNode);
-        if( cut.valid ) {
-          if ( ranking.find( cut.feature ) == ranking.end() )
-            ranking[ cut.feature ] = 0;
-          /*
-          const int leftNode = ((iNode+1) << 1) - 1;
-          const int rightNode = ((iNode+1) << 1);
-          const float topFactor = tree.GetNEntries(iNode)*std::abs(tree.GetBoostWeight(iNode));
-          const float leftFactor = tree.GetNEntries(leftNode)*std::abs(tree.GetBoostWeight(leftNode));
-          const float rightFactor = tree.GetNEntries(rightNode)*std::abs(tree.GetBoostWeight(rightNode));
-          ranking[ cut.feature ] += cut.gain*(leftFactor + rightFactor) / topFactor;
-          */
-          ranking[ cut.feature ] += cut.gain;
-        }
-      }
-    }
-
-    double norm = 0;
-    for(auto &pair : ranking) {
-        norm += pair.second;
-    }
-    for(auto &pair : ranking) {
-        pair.second /= norm;
-    }
-
-    return ranking;
-  }
 }
 
