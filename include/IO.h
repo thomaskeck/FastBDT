@@ -60,9 +60,9 @@ namespace FastBDT {
    */
   template<class T>
   std::ostream& operator<<(std::ostream& stream, const Cut<T> &cut) {
-     stream << cut.feature << " ";
-     stream << cut.index << " ";
-     stream << cut.valid << " ";
+     stream << cut.feature << std::endl;
+     stream << cut.index << std::endl;
+     stream << cut.valid << std::endl;
      stream << cut.gain;
      stream << std::endl;
      return stream;
@@ -81,6 +81,13 @@ namespace FastBDT {
      stream >> cut.gain;
      return stream;
   }
+  
+  template<>
+  std::istream& operator>>(std::istream& stream, Cut<float> &cut);
+  
+  template<>
+  std::istream& operator>>(std::istream& stream, Cut<double> &cut);
+  
   
   /**
    * This function saves a Tree to an std::ostream

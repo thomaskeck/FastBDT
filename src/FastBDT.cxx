@@ -219,6 +219,14 @@ namespace FastBDT {
     std::cout << "Bckgrd: " << bckgrd << std::endl;
     std::cout << "Square: " << square << std::endl;
   }
+  
+  /**
+   * In bin-space NaN is marked by bin 0
+   */
+  template<>
+  bool is_nan(const unsigned int &value) {
+    return value == 0;
+  }
 
 
   TreeBuilder::TreeBuilder(unsigned int nLayers, EventSample &sample) : nLayers(nLayers) {

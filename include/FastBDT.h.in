@@ -433,6 +433,16 @@ namespace FastBDT {
       std::vector<Node> nodes; /**< Information about every node in the tree including the leave nodes */
 
   };
+      
+  /**
+   * Check if given value (either float or double) is NaN
+   */
+  template<class T>
+  bool is_nan(const T &value) {
+    return std::isnan(value);
+  }
+  template<>
+  bool is_nan(const unsigned int &value);
 
   template<typename T>
   class Tree {
@@ -465,8 +475,7 @@ namespace FastBDT {
               break;
 
             const T &value = values[cut.feature];
-            // This if instruction used for Missing Values costs ~ 5% performance ...
-            if(value == 0)
+            if(is_nan<T>(value))
               break;
 
             // Perform the cut of the given node and update the node.
