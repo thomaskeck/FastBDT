@@ -181,7 +181,7 @@ TEST_F(IOTest, IOForest) {
     
     std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
     
-    Forest<unsigned int> before(0.5, 1.6);
+    Forest<unsigned int> before(0.5, 1.6, true);
     before.AddTree(Tree<unsigned int>({cut1, cut2, cut3}, nEntries, { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 }, { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0}));
     before.AddTree(Tree<unsigned int>({cut1, cut4, cut3}, nEntries, { 0.6, 0.2, 0.5, 0.4, 0.5, 0.6, 0.7 }, { 2.0, 2.0, 3.0, 5.0, 5.0, 6.0, 1.0}));
     const auto &before_forest = before.GetForest();
@@ -192,6 +192,7 @@ TEST_F(IOTest, IOForest) {
     auto after = readForestFromStream<unsigned int>(stream);
     const auto &after_forest = after.GetForest();
 
+    EXPECT_EQ(before.GetTransform2Probability(), after.GetTransform2Probability());
     EXPECT_EQ(before.GetF0(), after.GetF0());
     EXPECT_EQ(before.GetShrinkage(), after.GetShrinkage());
 

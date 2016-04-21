@@ -23,6 +23,7 @@ extern "C" {
       expertise->shrinkage = 0.1;
       expertise->randRatio = 0.5;
       expertise->nLayersPerTree = 3;
+      expertise->transform2probability = true;
       return expertise;
     }
 
@@ -44,6 +45,10 @@ extern "C" {
     
     void SetRandRatio(void *ptr, double randRatio) {
       reinterpret_cast<Expertise*>(ptr)->randRatio = randRatio;
+    }
+    
+    void SetTransform2Probability(void *ptr, bool transform2probability) {
+      reinterpret_cast<Expertise*>(ptr)->transform2probability = transform2probability;
     }
 
     void Delete(void *ptr) {
@@ -77,7 +82,7 @@ extern "C" {
       }
 
       ForestBuilder df(eventSample, expertise->nTrees, expertise->shrinkage, expertise->randRatio, expertise->nLayersPerTree);
-      Forest<double> forest( df.GetShrinkage(), df.GetF0());
+      Forest<double> forest( df.GetShrinkage(), df.GetF0(), expertise->transform2probability);
       for( auto t : df.GetForest() ) {
          forest.AddTree(removeFeatureBinningTransformationFromTree(t, featureBinnings));
       }

@@ -178,8 +178,8 @@ namespace FastBDT {
         /**
          * Creates a new FeatureBinning which maps the values of a feature to bins
          * @param nLevels number of binning levels, in total 2^nLevels bins are used
-         * @param first RandomAccessIterator to the begin of the range of values
-         * @param last RandomAcessIterator to the end of the range of values
+         * @param values values of this features
+         * @param weights of the corresponding events
          */
           WeightedFeatureBinning(unsigned int _nLevels, std::vector<Value> &values, std::vector<double> &weights) {
 
@@ -209,29 +209,33 @@ namespace FastBDT {
             this->binning.resize(this->GetNBins(), 0);
             this->binning.front() = first[0].value;
             this->binning.back()  = first[size-1].value;
-
+            Value last_value = first[size-1].value;
+            
             double weight_per_bin = total_weight / (this->GetNBins() - 1);
             double current_weight = 0;
             unsigned int bin = 1;
             while(first != last) {
                 current_weight += first->weight;
+                // Fill next bin boundary with current value if maximum weight for this bin is reached
+                // or if we ran out of bin boundaries
                 if(current_weight > weight_per_bin and bin < this->GetNBins()) {
-                    current_weight = 0;
+                    current_weight -= weight_per_bin;
                     this->binning[bin] = first->value;
                     bin++;
                 }
                 first++;
             }
-
-            while(bin < this->GetNBins()) {
-                this->binning[bin] = first[size-1].value;
+            
+            // Fill all remaning bins with highest value
+            while(bin < this->GetNBins() -1) {
+                this->binning[bin] = last_value;
                 bin++;
             }
-            std::cerr << this->binning[size-1] << std::endl;
-            //Resort binning
+            
+            //Resort binning into correct ordering by binning our bins again!
             FeatureBinning<Value> temp(this->nLevels, this->binning.begin(), this->binning.end());
             this->binning = temp.GetBinning();
-            std::cerr << this->binning[size-1] << std::endl;
+
 
           }
     };
@@ -651,12 +655,13 @@ namespace FastBDT {
       Forest(const Forest&) = default;
       Forest& operator=(const Forest &) = default;
 
-      Forest(double shrinkage, double F0) : shrinkage(shrinkage), F0(F0) { F0_div_shrink = F0 / shrinkage; }
+      Forest(double shrinkage, double F0, bool transform2probability) : shrinkage(shrinkage), F0(F0), transform2probability(transform2probability) { F0_div_shrink = F0 / shrinkage; }
 
       void AddTree(const Tree<T> &tree) { forest.push_back(tree); }
       const std::vector<Tree<T>>& GetForest() const { return forest; }
       double GetF0() const { return F0; }
       double GetShrinkage() const { return shrinkage; }
+      double GetTransform2Probability() const { return transform2probability; }
 
       /**
        * Returns the F value calculated from the DecisionForest for a given event.
@@ -682,6 +687,8 @@ namespace FastBDT {
       template<class Iterator>
       double Analyse(const Iterator &values) const {
 
+          if(not transform2probability)
+              return GetF(values);
           // Calculate signal probability out of the F value
           return 1.0/(1.0+std::exp(-2*GetF(values)));
 
@@ -720,6 +727,7 @@ namespace FastBDT {
       double F0;
       double F0_div_shrink;
       std::vector<Tree<T>> forest;
+      bool transform2probability;
 
   };
   

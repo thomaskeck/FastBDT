@@ -190,6 +190,16 @@ namespace TMVA {
        * Pointer to the Forest trained by this method
        */
       FastBDT::Forest<double> *fForest;
+
+      /**
+       * Transform to probability
+       */
+      bool transform2probability;
+      
+      /**
+       * Use weighted feature binning
+       */
+      bool useWeightedFeatureBinning;
       
       /**
        * Class Definition. This is used by ROOT to identify this class

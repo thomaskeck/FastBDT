@@ -26,6 +26,7 @@ FastBDT_library.SetShrinkage.argtypes = [ctypes.c_void_p, ctypes.c_double]
 FastBDT_library.SetNTrees.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.SetNBinningLevels.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.SetNLayersPerTree.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+FastBDT_library.SetTransform2Probability.argtypes = [ctypes.c_void_p, ctypes.c_bool]
 
 FastBDT_library.GetVariableRanking.argtypes = [ctypes.c_void_p]
 FastBDT_library.GetVariableRanking.restype = ctypes.c_void_p
@@ -40,7 +41,7 @@ def PrintVersion():
 
 
 class Classifier(object):
-    def __init__(self, nBinningLevels=4, nTrees=100, nLayersPerTree=3, shrinkage=0.1, randRatio=0.5):
+    def __init__(self, nBinningLevels=4, nTrees=100, nLayersPerTree=3, shrinkage=0.1, randRatio=0.5, transform2probability=True):
         self.forest = FastBDT_library.Create()
 
         FastBDT_library.SetNBinningLevels(self.forest, int(nBinningLevels))
@@ -48,6 +49,7 @@ class Classifier(object):
         FastBDT_library.SetNLayersPerTree(self.forest, int(nLayersPerTree))
         FastBDT_library.SetShrinkage(self.forest, float(shrinkage))
         FastBDT_library.SetRandRatio(self.forest, float(randRatio))
+        FastBDT_library.SetTransform2Probability(self.forest, bool(transform2probability))
 
     def fit(self, X, y, weights=None):
         X_temp = np.require(X, dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
