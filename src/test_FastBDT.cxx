@@ -207,6 +207,57 @@ TEST_F(FeatureBinningTest, LowStatisticIsHandledCorrectly) {
     
 }
 
+class WeightedFeatureBinningTest : public ::testing::Test {
+    protected:
+        virtual void SetUp() {
+            std::vector<float> data = {10.0f,8.0f,2.0f,NAN,NAN,NAN,NAN,7.0f,5.0f,6.0f,9.0f,NAN,4.0f,3.0f,11.0f,12.0f,1.0f,NAN};
+            std::vector<double> weights = {2.0f,0.1f,0.1f,3.0f,0.5f,1.0f,2.0f,0.1f,2.0f,3.0f,1.0f,0.1f,1.0f,2.0f,2.0f,1.0f,0.5f,12.0f};
+            calculatedBinning = new WeightedFeatureBinning<float>(2, data, weights);
+
+            binning = { 1.0f, 7.0f, 4.0f, 10.0f, 12.0f }; 
+            predefinedBinning = new FeatureBinning<float>(2, binning.begin(), binning.end());
+            
+            // Set the binning again, because it is sorted inside the constructor
+            binning = { 1.0f, 7.0f, 4.0f, 10.0f, 12.0f }; 
+        }
+
+        virtual void TearDown() {
+            delete calculatedBinning;
+            delete predefinedBinning;
+        }
+
+        unsigned int nLevels;
+        std::vector<float> binning;
+        WeightedFeatureBinning<float> *calculatedBinning;
+        FeatureBinning<float> *predefinedBinning;
+
+};
+
+TEST_F(WeightedFeatureBinningTest, MaximumAndMinimumValueAreCorrectlyIdentified) {
+
+    EXPECT_DOUBLE_EQ( calculatedBinning->GetMin(), 1.0f);
+    EXPECT_DOUBLE_EQ( calculatedBinning->GetMax(), 12.0f);
+    EXPECT_DOUBLE_EQ( predefinedBinning->GetMin(), 1.0f);
+    EXPECT_DOUBLE_EQ( predefinedBinning->GetMax(), 12.0f);
+
+}
+
+TEST_F(WeightedFeatureBinningTest, NumberOfLevelsAndBinsIsCorrectlyIdentified) {
+
+    EXPECT_EQ( calculatedBinning->GetNLevels(), 2u );
+    EXPECT_EQ( predefinedBinning->GetNLevels(), 2u );
+    // 5 bins, 2^2 ordinary bins + 1 NaN bin
+    EXPECT_EQ( calculatedBinning->GetNBins(), 5u );
+    EXPECT_EQ( predefinedBinning->GetNBins(), 5u );
+
+}
+
+TEST_F(WeightedFeatureBinningTest, GetBinningIsCorrect) {
+
+    EXPECT_EQ( calculatedBinning->GetBinning(), binning);
+    EXPECT_EQ( predefinedBinning->GetBinning(), binning);
+
+}
 
 class EventWeightsTest : public ::testing::Test {
 

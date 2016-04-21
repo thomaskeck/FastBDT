@@ -2,7 +2,7 @@
  * Thomas Keck 2014
  */
 
-#include "IO.h"
+#include "FastBDT_IO.h"
 
 namespace FastBDT {
   

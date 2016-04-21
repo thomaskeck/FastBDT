@@ -9,9 +9,10 @@ import FastBDT
 
 def readDataFile(datafile):
     data = np.loadtxt(datafile, skiprows=1, dtype=np.float64)
-    X = data[:, :-1].astype(np.float64)
+    X = data[:, :-2].astype(np.float64)
+    w = data[:, -2].astype(np.float64)
     y = data[:, -1].astype(np.uint32)
-    return X, y
+    return X, y, w
 
 
 def train():
@@ -23,9 +24,9 @@ def train():
     weightfile = sys.argv[3]
     
     forest = FastBDT.Classifier(*sys.argv[4:])
-    X, y = readDataFile(datafile);
+    X, y, w = readDataFile(datafile);
 
-    forest.fit(X, y)
+    forest.fit(X, y, w)
     forest.save(weightfile)
     analyse(forest, X, y);
 

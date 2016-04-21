@@ -142,7 +142,7 @@ namespace FastBDT {
         FeatureBinning(const FeatureBinning&) = default;
         FeatureBinning& operator=(const FeatureBinning &) = default;
 
-      private:
+      protected:
         /**
          * The binning boundaries of the feature. First and last element contain minimum and maximum encountered
          * value of the feature. Everything in between marks the boundaries for the bins. In total 2^nLevels bins are used.
@@ -150,6 +150,90 @@ namespace FastBDT {
         std::vector<Value> binning;
         unsigned int nLevels;
 
+    };
+  
+    /**
+     * Compare function which sorts all NaN values to the left
+     */
+    template<class Value>
+    struct ValueWithWeight {
+        Value value;
+        double weight;
+    };
+
+    template<class Value>
+    bool compareWithWeightsIncludingNaN (ValueWithWeight<Value> i, ValueWithWeight<Value> j) {
+        if( std::isnan(i.value) ) {
+            return true;
+        }
+        // If j is NaN the following line will return false,
+        // which is fine in our case.
+        return i.value < j.value;
+    }
+
+    template<class Value>
+    class WeightedFeatureBinning : public FeatureBinning<Value> {
+
+      public:
+        /**
+         * Creates a new FeatureBinning which maps the values of a feature to bins
+         * @param nLevels number of binning levels, in total 2^nLevels bins are used
+         * @param first RandomAccessIterator to the begin of the range of values
+         * @param last RandomAcessIterator to the end of the range of values
+         */
+          WeightedFeatureBinning(unsigned int _nLevels, std::vector<Value> &values, std::vector<double> &weights) {
+
+            this->nLevels = _nLevels;
+            std::vector<ValueWithWeight<Value>> values_with_weights;
+            values_with_weights.resize(values.size());
+            double total_weight = 0;
+            for(unsigned int iEvent = 0; iEvent < values.size(); ++iEvent) {
+                values_with_weights[iEvent] = {values[iEvent], weights[iEvent]};
+                if (not std::isnan(values[iEvent]))
+                    total_weight += weights[iEvent];
+            }
+
+            auto first = values_with_weights.begin();
+            auto last = values_with_weights.end();
+            std::sort(first, last, compareWithWeightsIncludingNaN<Value>);
+
+            // Wind iterator forward until first finite value
+            while( std::isnan(first->value) ) {
+                first++;
+            }
+
+            unsigned int size = last - first;
+            
+            // Need only Nbins, altough we store upper and lower boundary as well,
+            // however GetNBins counts also the NaN bin, so it really is GetNBins() - 1 + 1
+            this->binning.resize(this->GetNBins(), 0);
+            this->binning.front() = first[0].value;
+            this->binning.back()  = first[size-1].value;
+
+            double weight_per_bin = total_weight / (this->GetNBins() - 1);
+            double current_weight = 0;
+            unsigned int bin = 1;
+            while(first != last) {
+                current_weight += first->weight;
+                if(current_weight > weight_per_bin and bin < this->GetNBins()) {
+                    current_weight = 0;
+                    this->binning[bin] = first->value;
+                    bin++;
+                }
+                first++;
+            }
+
+            while(bin < this->GetNBins()) {
+                this->binning[bin] = first[size-1].value;
+                bin++;
+            }
+            std::cerr << this->binning[size-1] << std::endl;
+            //Resort binning
+            FeatureBinning<Value> temp(this->nLevels, this->binning.begin(), this->binning.end());
+            this->binning = temp.GetBinning();
+            std::cerr << this->binning[size-1] << std::endl;
+
+          }
     };
 
   class EventWeights {
