@@ -68,7 +68,7 @@ extern "C" {
         for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
           feature[iEvent] = *(data + iEvent*nFeatures + iFeature);
         }
-        featureBinnings.push_back(FeatureBinning<double>(expertise->nBinningLevels, feature.begin(), feature.end()));
+        featureBinnings.push_back(FeatureBinning<double>(expertise->nBinningLevels, feature));
         nLevels.push_back(expertise->nBinningLevels);
       }
 

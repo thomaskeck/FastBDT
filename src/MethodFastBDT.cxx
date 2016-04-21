@@ -33,6 +33,7 @@ TMVA::MethodFastBDT::MethodFastBDT( const TString& jobName,
    , fsPlot(false)
    , transform2probability(false)
    , useWeightedFeatureBinning(false)
+   , useEquidistantFeatureBinning(false)
    , fNCutLevel(0)
    , fNTreeLayers(0)
    , fForest(NULL)
@@ -49,6 +50,7 @@ TMVA::MethodFastBDT::MethodFastBDT( DataSetInfo& theData,
    , fsPlot(false)
    , transform2probability(false)
    , useWeightedFeatureBinning(false)
+   , useEquidistantFeatureBinning(false)
    , fNCutLevel(0)
    , fNTreeLayers(0)
    , fForest(NULL)
@@ -78,6 +80,7 @@ void TMVA::MethodFastBDT::DeclareOptions()
    DeclareOptionRef(fsPlot=false, "sPlot", "Keep signal and background event pairs together during stochastic bagging, should improve an sPlot training, but frankly said: There was no difference in my tests");
    DeclareOptionRef(transform2probability=true, "transform2probability", "Use sigmoid function to transform output to probability");
    DeclareOptionRef(useWeightedFeatureBinning=false, "useWeightedFeatureBinning", "Use weighted feature binning for equal frequency binning.");
+   DeclareOptionRef(useEquidistantFeatureBinning=false, "useEquidistantFeatureBinning", "Use equidistant binning instead of equal frequency binning.");
 }
 
 void TMVA::MethodFastBDT::ProcessOptions()
@@ -97,6 +100,7 @@ void TMVA::MethodFastBDT::Init()
    fsPlot           = false;
    transform2probability = true;
    useWeightedFeatureBinning = false;
+   useEquidistantFeatureBinning = false;
 }
 
 
@@ -120,11 +124,44 @@ void TMVA::MethodFastBDT::Train()
   // into an EventSample object.
   std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
   std::vector<unsigned int> nBinningLevels;
+  
+  unsigned int total_signal_events = 0;
+  double total_signal_weight = 0;
+  unsigned int total_bckgrd_events = 0;
+  double total_bckgrd_weight = 0;
+  for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
+     if(DataInfo().IsSignal(GetTrainingEvent(iEvent))) {
+        total_signal_events++;
+        total_signal_weight += GetTrainingEvent(iEvent)->GetWeight();
+     } else {
+        total_bckgrd_events++;
+        total_bckgrd_weight +=GetTrainingEvent(iEvent)->GetWeight();
+     }
+  }
+  double signal_correction = (total_signal_events + total_bckgrd_events) / (2*total_signal_weight);
+  double bckgrd_correction = (total_signal_events + total_bckgrd_events) / (2*total_bckgrd_weight);
 
-  if(useWeightedFeatureBinning) {
+  std::cerr << "Signal Correction " << signal_correction << std::endl;
+  std::cerr << "Bckgrd Correction " << bckgrd_correction << std::endl;
+
+  if(useEquidistantFeatureBinning) {
+      for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
+          std::vector<double> feature(nEvents,0);
+          for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
+             feature[iEvent] = GetTrainingEvent(iEvent)->GetValue(iFeature);
+          }
+          featureBinnings.push_back( EquidistantFeatureBinning<double>(fNCutLevel, feature ) );
+          nBinningLevels.push_back(fNCutLevel);
+      }
+
+  } else if(useWeightedFeatureBinning) {
       std::vector<double> weights(nEvents,0);
       for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
-         weights[iEvent] = GetTrainingEvent(iEvent)->GetWeight();
+         if(DataInfo().IsSignal(GetTrainingEvent(iEvent))) {
+            weights[iEvent] = GetTrainingEvent(iEvent)->GetWeight() * signal_correction;
+         } else {
+            weights[iEvent] = GetTrainingEvent(iEvent)->GetWeight() * bckgrd_correction;
+         }
       }
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
           std::vector<double> feature(nEvents,0);
@@ -133,6 +170,13 @@ void TMVA::MethodFastBDT::Train()
           }
           featureBinnings.push_back( WeightedFeatureBinning<double>(fNCutLevel, feature, weights ) );
           nBinningLevels.push_back(fNCutLevel);
+
+          auto v = featureBinnings.back().GetBinning();
+          std::sort(v.begin(), v.end());
+          std::cout << "Feature Binning " << iFeature << " ";
+          for(auto bin : v)
+            std::cout << bin << " ";
+          std::cout << std::endl;
       }
 
   } else {
@@ -141,14 +185,14 @@ void TMVA::MethodFastBDT::Train()
           for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
              feature[iEvent] = GetTrainingEvent(iEvent)->GetValue(iFeature);
           }
-          featureBinnings.push_back( FeatureBinning<double>(fNCutLevel, feature.begin(), feature.end() ) );
+          featureBinnings.push_back( FeatureBinning<double>(fNCutLevel, feature ) );
           nBinningLevels.push_back(fNCutLevel);
       }
   }
 
   unsigned int nEventsPruned = 0;
   for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
-     if(std::abs(GetTrainingEvent(iEvent)->GetWeight()) < 1e-7) {
+     if(std::abs(GetTrainingEvent(iEvent)->GetWeight()) < 1e-8) {
        std::cerr << "Removed event with extremly small value" << std::endl;
        continue;
      }
@@ -160,13 +204,19 @@ void TMVA::MethodFastBDT::Train()
   for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
       std::vector<unsigned int> bins(nFeatures);
       auto *event = GetTrainingEvent(iEvent);
-      if(std::abs(event->GetWeight()) < 1e-7) {
+      if(std::abs(event->GetWeight()) < 1e-8) {
         continue;
       }
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
           bins[iFeature] = featureBinnings[iFeature].ValueToBin( event->GetValue(iFeature) );
       }
-      eventSample.AddEvent(bins, event->GetWeight(), DataInfo().IsSignal(event));
+      auto weight = event->GetWeight();
+      if(DataInfo().IsSignal(event)) {
+        weight *= signal_correction;
+      } else {
+        weight *= bckgrd_correction;
+      }
+      eventSample.AddEvent(bins, weight, DataInfo().IsSignal(event));
   }
  
   // Create the forest, this also trains the whole forest immediatly

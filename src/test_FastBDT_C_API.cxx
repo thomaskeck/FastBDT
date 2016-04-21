@@ -95,7 +95,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithoutWeights ) {
     SetNLayersPerTree(expertise, 1u);
     SetRandRatio(expertise, 1.0);
     SetShrinkage(expertise, 1.0);
-    SetNBinningLevels(expertise, 1u);
+    SetNBinningLevels(expertise, 2u);
     SetTransform2Probability(expertise, true);
 
     double data_ptr[] = {1.0, 2.6, 1.6, 2.5, 1.1, 2.0, 1.9, 2.1, 1.6, 2.9, 1.9, 2.9, 1.5, 2.0};
@@ -122,7 +122,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithWeights ) {
     SetNLayersPerTree(expertise, 1u);
     SetRandRatio(expertise, 1.0);
     SetShrinkage(expertise, 1.0);
-    SetNBinningLevels(expertise, 1u);
+    SetNBinningLevels(expertise, 2u);
     SetTransform2Probability(expertise, true);
 
     double data_ptr[] = {1.0, 2.6, 1.6, 2.5, 1.1, 2.0, 1.9, 2.1, 1.6, 2.9, 1.9, 2.9, 1.5, 2.0};

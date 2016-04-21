@@ -177,6 +177,21 @@ namespace TMVA {
       bool fsPlot;   
 
       /**
+       * Transform to probability
+       */
+      bool transform2probability;
+      
+      /**
+       * Use weighted feature binning
+       */
+      bool useWeightedFeatureBinning;
+      
+      /**
+       * Use equidistant feature binning
+       */
+      bool useEquidistantFeatureBinning;
+
+      /**
        * Binning levels used, determines cuts applied in node splitting
        */
       Int_t fNCutLevel;           
@@ -190,16 +205,6 @@ namespace TMVA {
        * Pointer to the Forest trained by this method
        */
       FastBDT::Forest<double> *fForest;
-
-      /**
-       * Transform to probability
-       */
-      bool transform2probability;
-      
-      /**
-       * Use weighted feature binning
-       */
-      bool useWeightedFeatureBinning;
       
       /**
        * Class Definition. This is used by ROOT to identify this class

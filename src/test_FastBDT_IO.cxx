@@ -39,7 +39,7 @@ TEST_F(IOTest, IOVector) {
 TEST_F(IOTest, IOFeatureBinning) {
 
     std::vector<double> binning = { 1.0f, 7.0f, 4.0f, 10.0f, 12.0f }; 
-    FeatureBinning<double> before(2, binning.begin(), binning.end());
+    FeatureBinning<double> before(2, binning);
     const auto &before_binning = before.GetBinning();
 
     std::stringstream stream;
@@ -59,8 +59,8 @@ TEST_F(IOTest, IOFeatureBinningVector) {
 
     std::vector<double> binning1 = { 1.0f, 7.0f, 4.0f, 10.0f, 12.0f }; 
     std::vector<double> binning2 = { 6.0f, 7.0f, 2.0f, 12.0f, 12.0f }; 
-    std::vector<FeatureBinning<double>> before = {FeatureBinning<double>(2, binning1.begin(), binning1.end()),
-                                                  FeatureBinning<double>(2, binning2.begin(), binning2.end())};
+    std::vector<FeatureBinning<double>> before = {FeatureBinning<double>(2, binning1),
+                                                  FeatureBinning<double>(2, binning2)};
 
     std::stringstream stream;
     stream << before;
