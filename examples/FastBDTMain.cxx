@@ -152,7 +152,7 @@ int train(int argc, char *argv[]) {
         for(auto &event : data) {
             feature.push_back( event[iFeature] );
         }
-        featureBinnings.push_back(FastBDT::FeatureBinning<double>(nCuts, feature.begin(), feature.end()));
+        featureBinnings.push_back(FastBDT::FeatureBinning<double>(nCuts, feature));
         nBinningLevels.push_back(nCuts);
     }
 

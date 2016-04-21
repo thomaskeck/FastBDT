@@ -52,8 +52,14 @@ namespace FastBDT {
          * @param first RandomAccessIterator to the begin of the range of values
          * @param last RandomAcessIterator to the end of the range of values
          */
-        template<class RandomAccessIterator>
-          FeatureBinning(unsigned int nLevels, RandomAccessIterator first, RandomAccessIterator last) : nLevels(nLevels) {
+          FeatureBinning(unsigned int nLevels, std::vector<Value> &values) : nLevels(nLevels) {
+    
+            if(nLevels < 2) {
+              throw std::runtime_error("Binning level must be at least two!");
+            }
+
+            auto first = values.begin();
+            auto last = values.end();
 
             std::sort(first, last, compareIncludingNaN<Value>);
 
@@ -64,25 +70,32 @@ namespace FastBDT {
 
             unsigned int size = last - first;
             
-            unsigned long int numberOfDistinctValues = 1;
-            for(unsigned int iEvent = 1; iEvent < size; ++iEvent) {
-              if(first[iEvent] != first[iEvent-1])
-                numberOfDistinctValues++;
-            }
-
-            // TODO Use numberOfDistinctValues to calculate nLevels automatically
-            // TODO Uniquefy the data if there are only a "few" (< 1024?) unique values,
-            // to ensure that each feature gets its own bin.
-            if(nLevels == 0) {
-              // Choose nLevels automatically
-              // Same for nTrees
-            }
-
             // Need only Nbins, altough we store upper and lower boundary as well,
             // however GetNBins counts also the NaN bin, so it really is GetNBins() - 1 + 1
-            binning.resize(GetNBins(), 0);
-            binning.front() = first[0];
-            binning.back()  = first[size-1];
+            binning.resize(GetNBins(), first[0]);
+            binning[0] = first[0];
+            binning[GetNBins()-1] = first[size-1];
+
+            unsigned long int numberOfDistinctValues = 1;
+            std::vector<Value> temp(GetNBins(), first[size-1]);
+            temp[0] = first[0];
+            temp[1] = first[0];
+            for(unsigned int iEvent = 1; iEvent < size; ++iEvent) {
+              if(first[iEvent] != first[iEvent-1]) {
+                if(numberOfDistinctValues < GetNBins() - 2) {
+                  temp[numberOfDistinctValues+1] = first[iEvent];
+                }
+                numberOfDistinctValues++;
+              }
+            }
+            // Uniquefy the data if there are only a "few" (less than number of bins) unique values
+            if(numberOfDistinctValues <= GetNBins() - 2) {
+              first = temp.begin();
+              last = temp.end();
+              size = last - first;
+            }
+
+            // TODO Choose nLevels automatically if nLevels == 0
 
             unsigned int bin_index = 0;
             for(unsigned int iLevel = 0; iLevel < nLevels; ++iLevel) {
@@ -187,10 +200,20 @@ namespace FastBDT {
             std::vector<ValueWithWeight<Value>> values_with_weights;
             values_with_weights.resize(values.size());
             double total_weight = 0;
+            unsigned long int numberOfDistinctValues = 1;
             for(unsigned int iEvent = 0; iEvent < values.size(); ++iEvent) {
                 values_with_weights[iEvent] = {values[iEvent], weights[iEvent]};
                 if (not std::isnan(values[iEvent]))
                     total_weight += weights[iEvent];
+                if(iEvent > 0 and values[iEvent] != values[iEvent-1]) {
+                  numberOfDistinctValues++;
+                }
+            }
+            
+            if(numberOfDistinctValues <= this->GetNBins() - 2) {
+              FeatureBinning<Value> temp(this->nLevels, values);
+              this->binning = temp.GetBinning();
+              return;
             }
 
             auto first = values_with_weights.begin();
@@ -233,9 +256,47 @@ namespace FastBDT {
             }
             
             //Resort binning into correct ordering by binning our bins again!
-            FeatureBinning<Value> temp(this->nLevels, this->binning.begin(), this->binning.end());
+            FeatureBinning<Value> temp(this->nLevels, this->binning);
             this->binning = temp.GetBinning();
 
+
+          }
+    };
+    
+    template<class Value>
+    class EquidistantFeatureBinning : public FeatureBinning<Value> {
+
+      public:
+        /**
+         * Creates a new FeatureBinning which maps the values of a feature to bins
+         * @param nLevels number of binning levels, in total 2^nLevels bins are used
+         * @param values values of this features
+         * @param weights of the corresponding events
+         */
+          EquidistantFeatureBinning(unsigned int _nLevels, std::vector<Value> &values) {
+
+            this->nLevels = _nLevels;
+            Value min = values[0];
+            Value max = values[0];
+            for(unsigned int iEvent = 1; iEvent < values.size(); ++iEvent) {
+                if(values[iEvent] > max)
+                  max = values[iEvent];
+                if(values[iEvent] < min)
+                  min = values[iEvent];
+            }
+
+            Value step = (max - min) / (this->GetNBins() - 1);
+            
+            this->binning.resize(this->GetNBins(), 0);
+            this->binning.front() = min;
+            this->binning.back()  = max;
+            for(unsigned int iBin = 1; iBin < this->GetNBins() - 1; ++iBin) {
+              this->binning[iBin] = iBin*step + min;
+            }
+
+            //Resort binning into correct ordering by binning our bins again!
+            FeatureBinning<Value> temp(this->nLevels, this->binning);
+            this->binning = temp.GetBinning();
 
           }
     };

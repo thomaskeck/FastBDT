@@ -211,7 +211,7 @@ namespace FastBDT {
       std::vector<T> bins;
       stream >> bins;
 
-      return FeatureBinning<T>(nLevels, bins.begin(), bins.end());
+      return FeatureBinning<T>(nLevels, bins);
 
   }
  

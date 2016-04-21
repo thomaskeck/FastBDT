@@ -15,10 +15,10 @@ class FeatureBinningTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
             std::vector<float> data = {10.0f,8.0f,2.0f,NAN,NAN,NAN,NAN,7.0f,5.0f,6.0f,9.0f,NAN,4.0f,3.0f,11.0f,12.0f,1.0f,NAN};
-            calculatedBinning = new FeatureBinning<float>(2, data.begin(), data.end());
+            calculatedBinning = new FeatureBinning<float>(2, data);
 
             binning = { 1.0f, 7.0f, 4.0f, 10.0f, 12.0f }; 
-            predefinedBinning = new FeatureBinning<float>(2, binning.begin(), binning.end());
+            predefinedBinning = new FeatureBinning<float>(2, binning);
             
             // Set the binning again, because it is sorted inside the constructor
             binning = { 1.0f, 7.0f, 4.0f, 10.0f, 12.0f }; 
@@ -147,7 +147,7 @@ TEST_F(FeatureBinningTest, GetBinningIsCorrect) {
 TEST_F(FeatureBinningTest, ConstantFeatureIsHandledCorrectly) {
 
     std::vector<float> data = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }; 
-    FeatureBinning<float> featureBinning(3, data.begin(), data.end());
+    FeatureBinning<float> featureBinning(3, data);
 
     std::vector<float> binning = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }; 
     EXPECT_EQ( featureBinning.GetNBins(), 9u);
@@ -158,12 +158,32 @@ TEST_F(FeatureBinningTest, ConstantFeatureIsHandledCorrectly) {
 
 }
 
+TEST_F(FeatureBinningTest, FewDistinctValuesIsHandledCorrectly) {
+
+    std::vector<float> data = { 1.0f, 1.0f, 7.0, 6.0, 1.0f, 3.0f, 3.0f, 5.0f, 2.0f, 2.0f, 2.0f, 4.0f, 1.0f, 1.0f }; 
+    FeatureBinning<float> featureBinning(3, data);
+
+    std::vector<float> binning = { 1.0f, 4.0f, 2.0f, 6.0f, 1.0, 3.0, 5.0, 7.0, 7.0f }; 
+    EXPECT_EQ( featureBinning.GetNBins(), 9u);
+    EXPECT_EQ( featureBinning.GetBinning(), binning);
+    EXPECT_EQ( featureBinning.ValueToBin(100.0f), 8u);
+    EXPECT_EQ( featureBinning.ValueToBin(-100.0f), 1u);
+    EXPECT_EQ( featureBinning.ValueToBin(1.0f), 2u);
+    EXPECT_EQ( featureBinning.ValueToBin(2.0f), 3u);
+    EXPECT_EQ( featureBinning.ValueToBin(3.0f), 4u);
+    EXPECT_EQ( featureBinning.ValueToBin(4.0f), 5u);
+    EXPECT_EQ( featureBinning.ValueToBin(5.0f), 6u);
+    EXPECT_EQ( featureBinning.ValueToBin(6.0f), 7u);
+    EXPECT_EQ( featureBinning.ValueToBin(7.0f), 8u);
+
+}
+
 TEST_F(FeatureBinningTest, LowStatisticIsHandledCorrectly) {
 
     std::vector<float> data = { 1.0f, 4.0f, 4.0f, 7.0f, 10.0f, 11.0f, 12.0f }; 
-    FeatureBinning<float> featureBinning(3, data.begin(), data.end());
+    FeatureBinning<float> featureBinning(3, data);
 
-    std::vector<float> binning = { 1.0f, 7.0f, 4.0f, 10.0f, 1.0f, 4.0f, 7.0f, 11.0f, 12.0f }; 
+    std::vector<float> binning = { 1.0f, 10.0f, 4.0f, 12.0f, 1.0f, 7.0f, 11.0f, 12.0f, 12.0f }; 
     EXPECT_EQ( featureBinning.GetNBins(), 9u);
     EXPECT_EQ( featureBinning.GetBinning(), binning);
     
@@ -173,36 +193,36 @@ TEST_F(FeatureBinningTest, LowStatisticIsHandledCorrectly) {
     EXPECT_EQ( featureBinning.ValueToBin(1.0f), 2u);
     EXPECT_EQ( featureBinning.ValueToBin(2.0f), 2u);
     EXPECT_EQ( featureBinning.ValueToBin(3.0f), 2u);
-    EXPECT_EQ( featureBinning.ValueToBin(4.0f), 4u);
-    EXPECT_EQ( featureBinning.ValueToBin(5.0f), 4u);
-    EXPECT_EQ( featureBinning.ValueToBin(6.0f), 4u);
-    EXPECT_EQ( featureBinning.ValueToBin(7.0f), 6u);
-    EXPECT_EQ( featureBinning.ValueToBin(8.0f), 6u);
-    EXPECT_EQ( featureBinning.ValueToBin(9.0f), 6u);
-    EXPECT_EQ( featureBinning.ValueToBin(10.0f), 7u);
-    EXPECT_EQ( featureBinning.ValueToBin(11.0f), 8u);
+    EXPECT_EQ( featureBinning.ValueToBin(4.0f), 3u);
+    EXPECT_EQ( featureBinning.ValueToBin(5.0f), 3u);
+    EXPECT_EQ( featureBinning.ValueToBin(6.0f), 3u);
+    EXPECT_EQ( featureBinning.ValueToBin(7.0f), 4u);
+    EXPECT_EQ( featureBinning.ValueToBin(8.0f), 4u);
+    EXPECT_EQ( featureBinning.ValueToBin(9.0f), 4u);
+    EXPECT_EQ( featureBinning.ValueToBin(10.0f), 5u);
+    EXPECT_EQ( featureBinning.ValueToBin(11.0f), 6u);
     EXPECT_EQ( featureBinning.ValueToBin(12.0f), 8u);
     
-    FeatureBinning<float> featureBinning2(4, data.begin(), data.end());
+    FeatureBinning<float> featureBinning2(4, data);
 
-    std::vector<float> binning2 = { 1.0f, 7.0f, 4.0f, 10.0f, 1.0f, 4.0f, 7.0f, 11.0f, 1.0f, 1.0f, 4.0f, 4.0f, 7.0f, 10.0f, 11.0f, 12.0f, 12.0f }; 
+    std::vector<float> binning2 = { 1.0f, 12.0f, 10.0f, 12.0f, 4.0f, 12.0f, 12.0f, 12.0f, 1.0f, 7.0f, 11.0f, 12.0f, 12.0f, 12.0f, 12.0f, 12.0f, 12.0f }; 
     EXPECT_EQ( featureBinning2.GetNBins(), 17u);
     EXPECT_EQ( featureBinning2.GetBinning(), binning2);
     
     EXPECT_EQ( featureBinning2.ValueToBin(100.0f), 16u);
     EXPECT_EQ( featureBinning2.ValueToBin(-100.0f), 1u);
     
-    EXPECT_EQ( featureBinning2.ValueToBin(1.0f), 4u);
-    EXPECT_EQ( featureBinning2.ValueToBin(2.0f), 4u);
-    EXPECT_EQ( featureBinning2.ValueToBin(3.0f), 4u);
-    EXPECT_EQ( featureBinning2.ValueToBin(4.0f), 8u);
-    EXPECT_EQ( featureBinning2.ValueToBin(5.0f), 8u);
-    EXPECT_EQ( featureBinning2.ValueToBin(6.0f), 8u);
-    EXPECT_EQ( featureBinning2.ValueToBin(7.0f), 11u);
-    EXPECT_EQ( featureBinning2.ValueToBin(8.0f), 11u);
-    EXPECT_EQ( featureBinning2.ValueToBin(9.0f), 11u);
-    EXPECT_EQ( featureBinning2.ValueToBin(10.0f), 13u);
-    EXPECT_EQ( featureBinning2.ValueToBin(11.0f), 15u);
+    EXPECT_EQ( featureBinning2.ValueToBin(1.0f), 2u);
+    EXPECT_EQ( featureBinning2.ValueToBin(2.0f), 2u);
+    EXPECT_EQ( featureBinning2.ValueToBin(3.0f), 2u);
+    EXPECT_EQ( featureBinning2.ValueToBin(4.0f), 3u);
+    EXPECT_EQ( featureBinning2.ValueToBin(5.0f), 3u);
+    EXPECT_EQ( featureBinning2.ValueToBin(6.0f), 3u);
+    EXPECT_EQ( featureBinning2.ValueToBin(7.0f), 4u);
+    EXPECT_EQ( featureBinning2.ValueToBin(8.0f), 4u);
+    EXPECT_EQ( featureBinning2.ValueToBin(9.0f), 4u);
+    EXPECT_EQ( featureBinning2.ValueToBin(10.0f), 5u);
+    EXPECT_EQ( featureBinning2.ValueToBin(11.0f), 6u);
     EXPECT_EQ( featureBinning2.ValueToBin(12.0f), 16u);
     
 }
@@ -215,7 +235,7 @@ class WeightedFeatureBinningTest : public ::testing::Test {
             calculatedBinning = new WeightedFeatureBinning<float>(2, data, weights);
 
             binning = { 1.0f, 6.0f, 5.0f, 10.0f, 12.0f }; 
-            predefinedBinning = new FeatureBinning<float>(2, binning.begin(), binning.end());
+            predefinedBinning = new FeatureBinning<float>(2, binning);
             
             // Set the binning again, because it is sorted inside the constructor
             binning = { 1.0f, 6.0f, 5.0f, 10.0f, 12.0f }; 
@@ -261,12 +281,44 @@ TEST_F(WeightedFeatureBinningTest, GetBinningIsCorrect) {
 TEST_F(WeightedFeatureBinningTest, SameAsUsualBinningWithoutWeights) {
     std::vector<float> data = {10.0f,8.0f,2.0f,NAN,NAN,NAN,NAN,7.0f,5.0f,6.0f,9.0f,NAN,4.0f,3.0f,11.0f,12.0f,1.0f,NAN};
     std::vector<double> weights(data.size(), 1.0);
-    FeatureBinning<float> usualBinning(2, data.begin(), data.end());
+    FeatureBinning<float> usualBinning(2, data);
     WeightedFeatureBinning<float> weightedBinning(2, data, weights);
     
     EXPECT_EQ( usualBinning.GetBinning(), weightedBinning.GetBinning() );
 
 }
+
+class EquidistantFeatureBinningTest : public ::testing::Test {
+    protected:
+        virtual void SetUp() {
+            std::vector<float> data = {10.0f,8.0f,8.0, 8.0,16.0,2.0f,NAN,NAN,NAN,NAN,7.0f,4.0f,4.0f,9.0f,NAN,4.0f,3.0f,1.0f,0.0f,1.0f,NAN};
+            calculatedBinning = new EquidistantFeatureBinning<float>(2, data);
+
+            binning = { 0.0, 8.0f, 4.0f, 12.0f, 16.0f }; 
+        }
+
+        virtual void TearDown() {
+            delete calculatedBinning;
+        }
+
+        unsigned int nLevels;
+        std::vector<float> binning;
+        EquidistantFeatureBinning<float> *calculatedBinning;
+
+};
+
+TEST_F(EquidistantFeatureBinningTest, MaximumAndMinimumValueAreCorrectlyIdentified) {
+
+    EXPECT_DOUBLE_EQ( calculatedBinning->GetMin(), 0.0f);
+    EXPECT_DOUBLE_EQ( calculatedBinning->GetMax(), 16.0f);
+
+}
+
+TEST_F(EquidistantFeatureBinningTest, GetBinningIsCorrect) {
+
+    EXPECT_EQ( calculatedBinning->GetBinning(), binning);
+}
+
 
 class EventWeightsTest : public ::testing::Test {
 

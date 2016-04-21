@@ -9,8 +9,8 @@ set (FastBDT_VERSION_MINOR 0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -std=c++11 -Wall -Wextra -g -msse2")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ggdb3 -g -std=c++11 -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -std=c++11 -Wall -Wextra -g -msse2")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ggdb3 -g -std=c++11 -Wall -Wextra")
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/include/FastBDT.h.in"
@@ -49,13 +49,13 @@ target_link_libraries(FastBDT_CInterface)
 add_library(FastBDT_shared SHARED ${FastBDT_SOURCES} ${FastBDT_HEADERS})
 target_link_libraries(FastBDT_shared)
 
-install(TARGETS FastBDT_static FastBDT_shared FastBDTMain FastBDT_CInterface
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib
-   RUNTIME DESTINATION bin   
-)
+#install(TARGETS FastBDT_static FastBDT_shared FastBDTMain FastBDT_CInterface
+  #   LIBRARY DESTINATION lib
+   #   ARCHIVE DESTINATION lib
+   #   RUNTIME DESTINATION bin   
+   #)
 
-install(FILES ${FastBDT_HEADERS} DESTINATION include)
+#install(FILES ${FastBDT_HEADERS} DESTINATION include)
 
 find_package(GTest)
 if(GTEST_FOUND)
