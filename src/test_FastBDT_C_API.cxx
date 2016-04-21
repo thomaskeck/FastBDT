@@ -2,7 +2,7 @@
  * Thomas Keck 2015
  */
 
-#include "c_interface.h"
+#include "FastBDT_C_API.h"
 
 #include <gtest/gtest.h>
 

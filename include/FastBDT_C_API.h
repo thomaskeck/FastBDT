@@ -3,7 +3,7 @@
  */
 
 #include "FastBDT.h"
-#include "IO.h"
+#include "FastBDT_IO.h"
 
 extern "C" {
 

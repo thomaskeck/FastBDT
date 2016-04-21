@@ -21,24 +21,24 @@ include_directories("${PROJECT_SOURCE_DIR}/include/")
 
 set(FastBDT_SOURCES
   "${PROJECT_SOURCE_DIR}/src/FastBDT.cxx"
-  "${PROJECT_SOURCE_DIR}/src/IO.cxx"
+  "${PROJECT_SOURCE_DIR}/src/FastBDT_IO.cxx"
 )
 
 set(FastBDT_TESTS
   "${PROJECT_SOURCE_DIR}/src/test_all.cxx"
   "${PROJECT_SOURCE_DIR}/src/test_FastBDT.cxx"
-  "${PROJECT_SOURCE_DIR}/src/test_IO.cxx"
-  "${PROJECT_SOURCE_DIR}/src/test_c_interface.cxx"
+  "${PROJECT_SOURCE_DIR}/src/test_FastBDT_IO.cxx"
+  "${PROJECT_SOURCE_DIR}/src/test_FastBDT_C_API.cxx"
 )
 
 set(FastBDT_HEADERS
   "${PROJECT_BINARY_DIR}/include/FastBDT.h"
-  "${PROJECT_SOURCE_DIR}/include/IO.h"
+  "${PROJECT_SOURCE_DIR}/include/FastBDT_IO.h"
 )
 
 set(FastBDT_CINTERFACE
-  "${PROJECT_SOURCE_DIR}/src/c_interface.cxx"
-  "${PROJECT_SOURCE_DIR}/include/c_interface.h" 
+    "${PROJECT_SOURCE_DIR}/src/FastBDT_C_API.cxx"
+    "${PROJECT_SOURCE_DIR}/include/FastBDT_C_API.h" 
 )
 
 add_library(FastBDT_static STATIC ${FastBDT_SOURCES} ${FastBDT_HEADERS})
