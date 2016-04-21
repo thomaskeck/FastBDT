@@ -31,6 +31,8 @@ TMVA::MethodFastBDT::MethodFastBDT( const TString& jobName,
    , fShrinkage(0)
    , fRandRatio(0)
    , fsPlot(false)
+   , transform2probability(false)
+   , useWeightedFeatureBinning(false)
    , fNCutLevel(0)
    , fNTreeLayers(0)
    , fForest(NULL)
@@ -45,6 +47,8 @@ TMVA::MethodFastBDT::MethodFastBDT( DataSetInfo& theData,
    , fShrinkage(0)
    , fRandRatio(0)
    , fsPlot(false)
+   , transform2probability(false)
+   , useWeightedFeatureBinning(false)
    , fNCutLevel(0)
    , fNTreeLayers(0)
    , fForest(NULL)
@@ -72,6 +76,8 @@ void TMVA::MethodFastBDT::DeclareOptions()
    DeclareOptionRef(fShrinkage=1.0, "Shrinkage", "Learning rate for Gradient Boost algorithm");
    DeclareOptionRef(fRandRatio=1.0, "RandRatio", "Ratio for Stochastic Gradient Boost algorithm");
    DeclareOptionRef(fsPlot=false, "sPlot", "Keep signal and background event pairs together during stochastic bagging, should improve an sPlot training, but frankly said: There was no difference in my tests");
+   DeclareOptionRef(transform2probability=true, "transform2probability", "Use sigmoid function to transform output to probability");
+   DeclareOptionRef(useWeightedFeatureBinning=false, "useWeightedFeatureBinning", "Use weighted feature binning for equal frequency binning.");
 }
 
 void TMVA::MethodFastBDT::ProcessOptions()
@@ -89,6 +95,8 @@ void TMVA::MethodFastBDT::Init()
    fShrinkage       = 1.0;
    fRandRatio       = 1.0;
    fsPlot           = false;
+   transform2probability = true;
+   useWeightedFeatureBinning = false;
 }
 
 
@@ -112,13 +120,30 @@ void TMVA::MethodFastBDT::Train()
   // into an EventSample object.
   std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
   std::vector<unsigned int> nBinningLevels;
-  for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
-      std::vector<double> feature(nEvents,0);
+
+  if(useWeightedFeatureBinning) {
+      std::vector<double> weights(nEvents,0);
       for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
-         feature[iEvent] = GetTrainingEvent(iEvent)->GetValue(iFeature);
+         weights[iEvent] = GetTrainingEvent(iEvent)->GetWeight();
       }
-      featureBinnings.push_back( FeatureBinning<double>(fNCutLevel, feature.begin(), feature.end() ) );
-      nBinningLevels.push_back(fNCutLevel);
+      for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
+          std::vector<double> feature(nEvents,0);
+          for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
+             feature[iEvent] = GetTrainingEvent(iEvent)->GetValue(iFeature);
+          }
+          featureBinnings.push_back( WeightedFeatureBinning<double>(fNCutLevel, feature, weights ) );
+          nBinningLevels.push_back(fNCutLevel);
+      }
+
+  } else {
+      for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
+          std::vector<double> feature(nEvents,0);
+          for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
+             feature[iEvent] = GetTrainingEvent(iEvent)->GetValue(iFeature);
+          }
+          featureBinnings.push_back( FeatureBinning<double>(fNCutLevel, feature.begin(), feature.end() ) );
+          nBinningLevels.push_back(fNCutLevel);
+      }
   }
 
   unsigned int nEventsPruned = 0;
@@ -146,7 +171,7 @@ void TMVA::MethodFastBDT::Train()
  
   // Create the forest, this also trains the whole forest immediatly
   ForestBuilder builder(eventSample, fNTrees, fShrinkage, fRandRatio, fNTreeLayers, fsPlot);
-  fForest = new Forest<double>( builder.GetShrinkage(), builder.GetF0());
+  fForest = new Forest<double>( builder.GetShrinkage(), builder.GetF0(), transform2probability);
   for( auto tree : builder.GetForest() )
       fForest->AddTree(removeFeatureBinningTransformationFromTree(tree, featureBinnings));
 
@@ -221,6 +246,7 @@ void TMVA::MethodFastBDT::AddWeightsXMLTo( void* parent ) const
    TMVA::gTools().AddAttr( wght, "NLevels", fNTreeLayers );
    TMVA::gTools().AddAttr( wght, "RandRatio", fRandRatio );
    TMVA::gTools().AddAttr( wght, "sPlot", fsPlot );
+   TMVA::gTools().AddAttr( wght, "transform2probability", transform2probability );
    TMVA::gTools().AddAttr( wght, "F0", fForest->GetF0() );
 
    auto &forest = fForest->GetForest();
@@ -260,10 +286,11 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
    TMVA::gTools().ReadAttr( parent, "NLevels", fNTreeLayers );
    TMVA::gTools().ReadAttr( parent, "RandRatio", fRandRatio );
    TMVA::gTools().ReadAttr( parent, "sPlot", fsPlot );
+   TMVA::gTools().ReadAttr( parent, "transform2probability", transform2probability );
 
    double F0;
    TMVA::gTools().ReadAttr( parent, "F0", F0 );
-   fForest = new Forest<double>(fShrinkage, F0);
+   fForest = new Forest<double>(fShrinkage, F0, transform2probability);
 
    void* trxml = TMVA::gTools().GetChild(parent, "Tree");
    while (trxml) {

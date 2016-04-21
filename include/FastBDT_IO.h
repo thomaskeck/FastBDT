@@ -144,6 +144,7 @@ namespace FastBDT {
   std::ostream& operator<<(std::ostream& stream, const Forest<T> &forest) {
      stream << forest.GetF0() << std::endl;
      stream << forest.GetShrinkage() << std::endl;
+     stream << forest.GetTransform2Probability() << std::endl;
 
      const auto &trees = forest.GetForest();
      stream << trees.size() << std::endl;
@@ -166,8 +167,11 @@ namespace FastBDT {
 
       double shrinkage;
       stream >> shrinkage;
+     
+      bool transform2probability;
+      stream >> transform2probability;
 
-      Forest<T> forest(shrinkage, F0);
+      Forest<T> forest(shrinkage, F0, transform2probability);
 
       unsigned int size;
       stream >> size;

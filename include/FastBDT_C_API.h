@@ -15,6 +15,7 @@ extern "C" {
       unsigned int nTrees;
       double shrinkage;
       double randRatio;
+      bool transform2probability;
       unsigned int nLayersPerTree;
     };
 
@@ -29,6 +30,8 @@ extern "C" {
     void SetShrinkage(void *ptr, double shrinkage);
     
     void SetRandRatio(void *ptr, double randRatio);
+    
+    void SetTransform2Probability(void *ptr, bool transform2probability);
 
     void Delete(void *ptr);
     

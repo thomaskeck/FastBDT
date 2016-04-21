@@ -189,7 +189,7 @@ int train(int argc, char *argv[]) {
      * To apply the trained method again we create a Forest using the trees
      * from the ForestBuilder
      */
-    FastBDT::Forest<double> forest( dt.GetShrinkage(), dt.GetF0());
+    FastBDT::Forest<double> forest( dt.GetShrinkage(), dt.GetF0(), true);
     for( auto t : dt.GetForest() )
         forest.AddTree(FastBDT::removeFeatureBinningTransformationFromTree(t, featureBinnings));
 

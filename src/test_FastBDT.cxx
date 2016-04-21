@@ -214,11 +214,11 @@ class WeightedFeatureBinningTest : public ::testing::Test {
             std::vector<double> weights = {2.0f,0.1f,0.1f,3.0f,0.5f,1.0f,2.0f,0.1f,2.0f,3.0f,1.0f,0.1f,1.0f,2.0f,2.0f,1.0f,0.5f,12.0f};
             calculatedBinning = new WeightedFeatureBinning<float>(2, data, weights);
 
-            binning = { 1.0f, 7.0f, 4.0f, 10.0f, 12.0f }; 
+            binning = { 1.0f, 6.0f, 5.0f, 10.0f, 12.0f }; 
             predefinedBinning = new FeatureBinning<float>(2, binning.begin(), binning.end());
             
             // Set the binning again, because it is sorted inside the constructor
-            binning = { 1.0f, 7.0f, 4.0f, 10.0f, 12.0f }; 
+            binning = { 1.0f, 6.0f, 5.0f, 10.0f, 12.0f }; 
         }
 
         virtual void TearDown() {
@@ -256,6 +256,15 @@ TEST_F(WeightedFeatureBinningTest, GetBinningIsCorrect) {
 
     EXPECT_EQ( calculatedBinning->GetBinning(), binning);
     EXPECT_EQ( predefinedBinning->GetBinning(), binning);
+}
+
+TEST_F(WeightedFeatureBinningTest, SameAsUsualBinningWithoutWeights) {
+    std::vector<float> data = {10.0f,8.0f,2.0f,NAN,NAN,NAN,NAN,7.0f,5.0f,6.0f,9.0f,NAN,4.0f,3.0f,11.0f,12.0f,1.0f,NAN};
+    std::vector<double> weights(data.size(), 1.0);
+    FeatureBinning<float> usualBinning(2, data.begin(), data.end());
+    WeightedFeatureBinning<float> weightedBinning(2, data, weights);
+    
+    EXPECT_EQ( usualBinning.GetBinning(), weightedBinning.GetBinning() );
 
 }
 
@@ -1233,7 +1242,7 @@ class ForestTest : public ::testing::Test {
             std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
             tree = new Tree<unsigned int>(cuts, nEntries, purities, boostWeights);            
 
-            forest = new Forest<unsigned int>(0.1, 1.0);
+            forest = new Forest<unsigned int>(0.1, 1.0, true);
         }
 
         virtual void TearDown() {
@@ -1261,7 +1270,7 @@ TEST_F(ForestTest, GetF) {
 class VariableRankingTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            forest = new Forest<unsigned int>(0.1, 1.0);
+            forest = new Forest<unsigned int>(0.1, 1.0, true);
         }
 
         virtual void TearDown() {
@@ -1331,7 +1340,7 @@ TEST_F(CornerCasesTest, OnlySignalGivesReasonableResult) {
     ForestBuilder forest(eventSample, 10, 0.1, 1.0, 1); 
     EXPECT_FLOAT_EQ(forest.GetF0(), std::numeric_limits<float>::infinity());
     
-    FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0());
+    FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0(), true);
     for( auto t : forest.GetForest() )
         testforest.AddTree(t);
     
@@ -1359,7 +1368,7 @@ TEST_F(CornerCasesTest, OnlyBackgroundGivesReasonableResult) {
     ForestBuilder forest(eventSample, 10, 0.1, 1.0, 1); 
     EXPECT_FLOAT_EQ(forest.GetF0(), -std::numeric_limits<float>::infinity());
     
-    FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0());
+    FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0(), true);
     for( auto t : forest.GetForest() )
         testforest.AddTree(t);
     
@@ -1440,7 +1449,7 @@ TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
         // however with 10 trees we already get pretty close to perfect separation.
         ForestBuilder forest(*sample, 10, 1.0, 1.0, 1); 
         
-        FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0());
+        FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0(), true);
         for( auto t : forest.GetForest() ) {
             //t.Print();
             testforest.AddTree(t);
@@ -1476,7 +1485,7 @@ TEST_F(CornerCasesTest, PerfectSeparationGivesReasonableResults) {
     std::vector<float> purities = { 0.5, 0.0, 1.0};
     std::vector<float> boostWeights = { 0.0, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()};
     Tree<unsigned int> testtree(cuts, nEntries, purities, boostWeights);
-    Forest<unsigned int> testforest(0.1, 0.0);
+    Forest<unsigned int> testforest(0.1, 0.0, true);
     testforest.AddTree(testtree);
 
     std::vector<unsigned int> values = {1, 1};

@@ -48,6 +48,15 @@ TEST_F(CInterfaceTest, SetNTreesWorks ) {
 
 }
 
+TEST_F(CInterfaceTest, SetTransform2Probability ) {
+    
+    SetTransform2Probability(expertise, false);
+    EXPECT_EQ( expertise->transform2probability, false);
+    SetTransform2Probability(expertise, true);
+    EXPECT_EQ( expertise->transform2probability, true);
+
+}
+
 TEST_F(CInterfaceTest, SetNLayersPerTreeWorks ) {
     
     SetNLayersPerTree(expertise, 5u);
@@ -87,6 +96,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithoutWeights ) {
     SetRandRatio(expertise, 1.0);
     SetShrinkage(expertise, 1.0);
     SetNBinningLevels(expertise, 1u);
+    SetTransform2Probability(expertise, true);
 
     double data_ptr[] = {1.0, 2.6, 1.6, 2.5, 1.1, 2.0, 1.9, 2.1, 1.6, 2.9, 1.9, 2.9, 1.5, 2.0};
     unsigned int target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
@@ -113,6 +123,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithWeights ) {
     SetRandRatio(expertise, 1.0);
     SetShrinkage(expertise, 1.0);
     SetNBinningLevels(expertise, 1u);
+    SetTransform2Probability(expertise, true);
 
     double data_ptr[] = {1.0, 2.6, 1.6, 2.5, 1.1, 2.0, 1.9, 2.1, 1.6, 2.9, 1.9, 2.9, 1.5, 2.0};
     float weight_ptr[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
