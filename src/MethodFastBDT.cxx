@@ -125,25 +125,6 @@ void TMVA::MethodFastBDT::Train()
   std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
   std::vector<unsigned int> nBinningLevels;
   
-  unsigned int total_signal_events = 0;
-  double total_signal_weight = 0;
-  unsigned int total_bckgrd_events = 0;
-  double total_bckgrd_weight = 0;
-  for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
-     if(DataInfo().IsSignal(GetTrainingEvent(iEvent))) {
-        total_signal_events++;
-        total_signal_weight += GetTrainingEvent(iEvent)->GetWeight();
-     } else {
-        total_bckgrd_events++;
-        total_bckgrd_weight +=GetTrainingEvent(iEvent)->GetWeight();
-     }
-  }
-  double signal_correction = (total_signal_events + total_bckgrd_events) / (2*total_signal_weight);
-  double bckgrd_correction = (total_signal_events + total_bckgrd_events) / (2*total_bckgrd_weight);
-
-  std::cerr << "Signal Correction " << signal_correction << std::endl;
-  std::cerr << "Bckgrd Correction " << bckgrd_correction << std::endl;
-
   if(useEquidistantFeatureBinning) {
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
           std::vector<double> feature(nEvents,0);
@@ -155,6 +136,26 @@ void TMVA::MethodFastBDT::Train()
       }
 
   } else if(useWeightedFeatureBinning) {
+
+      unsigned int total_signal_events = 0;
+      double total_signal_weight = 0;
+      unsigned int total_bckgrd_events = 0;
+      double total_bckgrd_weight = 0;
+      for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
+         if(DataInfo().IsSignal(GetTrainingEvent(iEvent))) {
+            total_signal_events++;
+            total_signal_weight += GetTrainingEvent(iEvent)->GetWeight();
+         } else {
+            total_bckgrd_events++;
+            total_bckgrd_weight +=GetTrainingEvent(iEvent)->GetWeight();
+         }
+      }
+      double signal_correction = (total_signal_events + total_bckgrd_events) / (2*total_signal_weight);
+      double bckgrd_correction = (total_signal_events + total_bckgrd_events) / (2*total_bckgrd_weight);
+
+      //std::cerr << "Signal Correction " << signal_correction << std::endl;
+      //std::cerr << "Bckgrd Correction " << bckgrd_correction << std::endl;
+
       std::vector<double> weights(nEvents,0);
       for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
          if(DataInfo().IsSignal(GetTrainingEvent(iEvent))) {
@@ -173,10 +174,10 @@ void TMVA::MethodFastBDT::Train()
 
           auto v = featureBinnings.back().GetBinning();
           std::sort(v.begin(), v.end());
-          std::cout << "Feature Binning " << iFeature << " ";
+          /*std::cout << "Feature Binning " << iFeature << " ";
           for(auto bin : v)
             std::cout << bin << " ";
-          std::cout << std::endl;
+          std::cout << std::endl;*/
       }
 
   } else {
@@ -211,11 +212,6 @@ void TMVA::MethodFastBDT::Train()
           bins[iFeature] = featureBinnings[iFeature].ValueToBin( event->GetValue(iFeature) );
       }
       auto weight = event->GetWeight();
-      if(DataInfo().IsSignal(event)) {
-        weight *= signal_correction;
-      } else {
-        weight *= bckgrd_correction;
-      }
       eventSample.AddEvent(bins, weight, DataInfo().IsSignal(event));
   }
  
