@@ -86,6 +86,19 @@ namespace TMVA {
        * Reads this method from the given XML node
        */
       void ReadWeightsFromXML(void* parent);
+      
+      /**
+       * Use Version 1
+       * - Loads FeatureBinnings and rewrites Trees into new featurebinningless format
+       */
+      void ReadWeightsFromXML_V1(void* parent);
+      
+      /**
+       * Use Version 2
+       * - No FeatureBinnings
+       * - additional transform2probability feature
+       */
+      void ReadWeightsFromXML_V2(void* parent);
 
       /**
        * FIXME
