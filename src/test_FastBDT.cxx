@@ -326,7 +326,7 @@ class EventWeightsTest : public ::testing::Test {
         virtual void SetUp() {
             eventWeights = new EventWeights(10);
             for(unsigned int i = 0; i < 10; ++i) {
-                eventWeights->Set(i, static_cast<float>(i+1));
+                eventWeights->Set(i, static_cast<Weight>(i+1));
                 eventWeights->SetOriginal(i, 2);
             }
         }
@@ -371,7 +371,7 @@ TEST_F(EventWeightsTest, WeightSumsAreNotInfluencedByZeroWeights) {
 TEST_F(EventWeightsTest, GetterIsCorrect) {
 
     for(unsigned int i = 0; i < 10; ++i) {
-        EXPECT_DOUBLE_EQ( eventWeights->Get(i), static_cast<float>(i+1) * 2); 
+        EXPECT_DOUBLE_EQ( eventWeights->Get(i), static_cast<Weight>(i+1) * 2); 
     }
     
 }
@@ -379,7 +379,7 @@ TEST_F(EventWeightsTest, GetterIsCorrect) {
 TEST_F(EventWeightsTest, WeightSumsAndGetterAreCorrectlyUpdated) {
 
     for(unsigned int i = 0; i < 10; ++i) {
-        eventWeights->Set(i, static_cast<float>(i+3));
+        eventWeights->Set(i, static_cast<Weight>(i+3));
     }
 
     auto sums = eventWeights->GetSums(5);
@@ -388,7 +388,7 @@ TEST_F(EventWeightsTest, WeightSumsAndGetterAreCorrectlyUpdated) {
     EXPECT_DOUBLE_EQ(sums[2], 645.0 * 2);
     
     for(unsigned int i = 0; i < 10; ++i) {
-        EXPECT_DOUBLE_EQ( eventWeights->Get(i), static_cast<float>(i+3) * 2); 
+        EXPECT_DOUBLE_EQ( eventWeights->Get(i), static_cast<Weight>(i+3) * 2); 
     }
 
 }
@@ -564,7 +564,7 @@ class CumulativeDistributionsTest : public ::testing::Test {
             eventSample = new EventSample(numberOfEvents, 2, {2, 2});
             for(unsigned int i = 0; i < numberOfEvents; ++i) {
                 bool isSignal = i < (numberOfEvents/2);
-                eventSample->AddEvent( std::vector<unsigned int>({i % 4 + 1, (numberOfEvents-i) % 4 + 1}), static_cast<float>(i+1), isSignal);
+                eventSample->AddEvent( std::vector<unsigned int>({i % 4 + 1, (numberOfEvents-i) % 4 + 1}), static_cast<Weight>(i+1), isSignal);
             }
         }
 
@@ -994,10 +994,10 @@ TEST_F(NodeTest, NaNIsIgnored) {
     // of the 0th bin, which contains the weights for the NaN values.
     // Signal and Background are chosen extremly asymmetric for both features, so
     // this should change the cut if the 0th bin is considered.
-    const_cast<float&>(CDFs.GetSignal(0, 0, 0)) = 100.0;
-    const_cast<float&>(CDFs.GetBckgrd(0, 0, 0)) = 1.0;
-    const_cast<float&>(CDFs.GetSignal(0, 1, 0)) = 10.0;
-    const_cast<float&>(CDFs.GetBckgrd(0, 1, 0)) = 800.0;
+    const_cast<Weight&>(CDFs.GetSignal(0, 0, 0)) = 100.0;
+    const_cast<Weight&>(CDFs.GetBckgrd(0, 0, 0)) = 1.0;
+    const_cast<Weight&>(CDFs.GetSignal(0, 1, 0)) = 10.0;
+    const_cast<Weight&>(CDFs.GetBckgrd(0, 1, 0)) = 800.0;
     auto newBestCut = node.CalculateBestCut(CDFs);
 
     EXPECT_EQ( bestCut.feature, newBestCut.feature );
@@ -1130,7 +1130,7 @@ TEST_F(TreeBuilderTest, PuritiesOfNodesAreCorrectAfterTraining) {
     EXPECT_DOUBLE_EQ( purities[2], 0.25 );
     EXPECT_DOUBLE_EQ( purities[3], 1.0 );
     EXPECT_DOUBLE_EQ( purities[4], 0.5 );
-    EXPECT_DOUBLE_EQ( purities[5], 0.4285714328289032 );
+    EXPECT_DOUBLE_EQ( purities[5], 0.42857142857142855 );
     EXPECT_DOUBLE_EQ( purities[6], 0.0 );
 
 }
@@ -1141,11 +1141,11 @@ TEST_F(TreeBuilderTest, BoostWeightsOfNodesAreCorrectAfterTraining) {
     const auto &boostWeights = dt.GetBoostWeights();
     EXPECT_DOUBLE_EQ( boostWeights[0], 0.0 );
     EXPECT_DOUBLE_EQ( boostWeights[1], -1.0 );
-    EXPECT_DOUBLE_EQ( boostWeights[2], 0.4285714328289032 );
+    EXPECT_DOUBLE_EQ( boostWeights[2], 0.42857142857142855 );
     EXPECT_DOUBLE_EQ( boostWeights[3], -0.75 );
     EXPECT_DOUBLE_EQ( boostWeights[4], 0 );
-    EXPECT_DOUBLE_EQ( boostWeights[5], 0.090909093618392944 );
-    EXPECT_DOUBLE_EQ( boostWeights[6], 1.6666666269302368 );
+    EXPECT_DOUBLE_EQ( boostWeights[5], 0.090909090909090912 );
+    EXPECT_DOUBLE_EQ( boostWeights[6], 1.6666666666666667 );
 
 }
 
@@ -1164,9 +1164,9 @@ class TreeTest : public ::testing::Test {
             cut3.valid = false;
             
             std::vector<Cut<unsigned int>> cuts = {cut1, cut2, cut3};
-            std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
-            std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
-            std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+            std::vector<Weight> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
+            std::vector<Weight> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
+            std::vector<Weight> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
             tree = new Tree<unsigned int>(cuts, nEntries, purities, boostWeights);            
         }
 
@@ -1289,9 +1289,9 @@ class ForestTest : public ::testing::Test {
             cut3.valid = false;
             
             std::vector<Cut<unsigned int>> cuts = {cut1, cut2, cut3};
-            std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
-            std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
-            std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+            std::vector<Weight> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
+            std::vector<Weight> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
+            std::vector<Weight> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
             tree = new Tree<unsigned int>(cuts, nEntries, purities, boostWeights);            
 
             forest = new Forest<unsigned int>(0.1, 1.0, true);
@@ -1341,9 +1341,9 @@ TEST_F(VariableRankingTest, OneVariable) {
     cut1.gain = 2.0;
 
     std::vector<Cut<unsigned int>> cuts = {cut1};
-    std::vector<float> nEntries = { 10.0, 4.0, 6.0};
-    std::vector<float> purities = { 0.1, 0.2, 0.3 };
-    std::vector<float> boostWeights = {1.0, 2.0, 3.0};
+    std::vector<Weight> nEntries = { 10.0, 4.0, 6.0};
+    std::vector<Weight> purities = { 0.1, 0.2, 0.3 };
+    std::vector<Weight> boostWeights = {1.0, 2.0, 3.0};
     Tree<unsigned int> tree(cuts, nEntries, purities, boostWeights);            
     forest->AddTree(tree);
     auto map = forest->GetVariableRanking();
@@ -1366,9 +1366,9 @@ TEST_F(VariableRankingTest, Standard) {
     cut3.valid = false;
 
     std::vector<Cut<unsigned int>> cuts = {cut1, cut2, cut3};
-    std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
-    std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
-    std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+    std::vector<Weight> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
+    std::vector<Weight> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
+    std::vector<Weight> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
     Tree<unsigned int> tree(cuts, nEntries, purities, boostWeights);            
     forest->AddTree(tree);
     auto map = forest->GetVariableRanking();
@@ -1390,7 +1390,7 @@ TEST_F(CornerCasesTest, OnlySignalGivesReasonableResult) {
     eventSample.AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, true);
     // Train without randomness and only with one layer per tree
     ForestBuilder forest(eventSample, 10, 0.1, 1.0, 1); 
-    EXPECT_FLOAT_EQ(forest.GetF0(), std::numeric_limits<float>::infinity());
+    EXPECT_FLOAT_EQ(forest.GetF0(), std::numeric_limits<double>::infinity());
     
     FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0(), true);
     for( auto t : forest.GetForest() )
@@ -1418,7 +1418,7 @@ TEST_F(CornerCasesTest, OnlyBackgroundGivesReasonableResult) {
     eventSample.AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, false);
     // Train without randomness and only with one layer per tree
     ForestBuilder forest(eventSample, 10, 0.1, 1.0, 1); 
-    EXPECT_FLOAT_EQ(forest.GetF0(), -std::numeric_limits<float>::infinity());
+    EXPECT_FLOAT_EQ(forest.GetF0(), -std::numeric_limits<double>::infinity());
     
     FastBDT::Forest<unsigned int> testforest( forest.GetShrinkage(), forest.GetF0(), true);
     for( auto t : forest.GetForest() )
@@ -1486,8 +1486,8 @@ TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
     for(auto &sample : eventSamples) {
 
         // Calculate prior probability before building the forest
-        float sig = 0;
-        float tot = 0;
+        Weight sig = 0;
+        Weight tot = 0;
         const unsigned int nSignals = sample->GetNSignals();
         const unsigned int nEvents = sample->GetNEvents();
         for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
@@ -1533,9 +1533,9 @@ TEST_F(CornerCasesTest, PerfectSeparationGivesReasonableResults) {
     cut1.valid = true;
     
     std::vector<Cut<unsigned int>> cuts = {cut1};
-    std::vector<float> nEntries = { 10.0, 11.0, 12.0 };
-    std::vector<float> purities = { 0.5, 0.0, 1.0};
-    std::vector<float> boostWeights = { 0.0, -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()};
+    std::vector<Weight> nEntries = { 10.0, 11.0, 12.0 };
+    std::vector<Weight> purities = { 0.5, 0.0, 1.0};
+    std::vector<Weight> boostWeights = { 0.0, -std::numeric_limits<Weight>::infinity(), std::numeric_limits<Weight>::infinity()};
     Tree<unsigned int> testtree(cuts, nEntries, purities, boostWeights);
     Forest<unsigned int> testforest(0.1, 0.0, true);
     testforest.AddTree(testtree);
@@ -1569,9 +1569,9 @@ TEST_F(TreeTest, LastCutOnTheRightWasNeverUsed) {
     cut3.valid = true;
     
     std::vector<Cut<unsigned int>> cuts = {cut1, cut2, cut3};
-    std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
-    std::vector<float> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
-    std::vector<float> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+    std::vector<Weight> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
+    std::vector<Weight> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
+    std::vector<Weight> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
     Tree<unsigned int> tree(cuts, nEntries, purities, boostWeights);            
 
     // Check if we can reach all nodes

@@ -123,9 +123,9 @@ TEST_F(IOTest, IOTree) {
     cut3.valid = false;
     
     std::vector<Cut<unsigned int>> before_cuts = {cut1, cut2, cut3};
-    std::vector<float> before_nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
-    std::vector<float> before_purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
-    std::vector<float> before_boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+    std::vector<Weight> before_nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
+    std::vector<Weight> before_purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
+    std::vector<Weight> before_boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
     Tree<unsigned int> before(before_cuts, before_nEntries, before_purities, before_boostWeights);            
     
     std::stringstream stream;
@@ -179,7 +179,7 @@ TEST_F(IOTest, IOForest) {
     cut4.valid = true;
     cut4.gain = 1.61;
     
-    std::vector<float> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
+    std::vector<Weight> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
     
     Forest<unsigned int> before(0.5, 1.6, true);
     before.AddTree(Tree<unsigned int>({cut1, cut2, cut3}, nEntries, { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 }, { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0}));

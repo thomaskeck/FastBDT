@@ -150,11 +150,11 @@ void TMVA::MethodFastBDT::Train()
             total_bckgrd_weight +=GetTrainingEvent(iEvent)->GetWeight();
          }
       }
-      double signal_correction = (total_signal_events + total_bckgrd_events) / (2*total_signal_weight);
-      double bckgrd_correction = (total_signal_events + total_bckgrd_events) / (2*total_bckgrd_weight);
+      double signal_correction = (2*total_bckgrd_weight) / (total_signal_weight + total_bckgrd_weight);
+      double bckgrd_correction = (2*total_signal_weight) / (total_signal_weight + total_bckgrd_weight);
 
-      //std::cerr << "Signal Correction " << signal_correction << std::endl;
-      //std::cerr << "Bckgrd Correction " << bckgrd_correction << std::endl;
+      std::cerr << "Signal Correction " << signal_correction << std::endl;
+      std::cerr << "Bckgrd Correction " << bckgrd_correction << std::endl;
 
       std::vector<double> weights(nEvents,0);
       for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
@@ -174,10 +174,6 @@ void TMVA::MethodFastBDT::Train()
 
           auto v = featureBinnings.back().GetBinning();
           std::sort(v.begin(), v.end());
-          /*std::cout << "Feature Binning " << iFeature << " ";
-          for(auto bin : v)
-            std::cout << bin << " ";
-          std::cout << std::endl;*/
       }
 
   } else {
@@ -302,7 +298,7 @@ void TMVA::MethodFastBDT::AddWeightsXMLTo( void* parent ) const
       TMVA::gTools().AddAttr( trxml, "iTree", i );
       
       std::vector<unsigned int> cut_features;
-      std::vector<unsigned int> cut_indexes;
+      std::vector<double> cut_indexes;
       std::vector<bool> cut_valids;
       std::vector<double> cut_gains;
       for( auto& cut : forest[i].GetCuts() ) {
@@ -367,9 +363,9 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML_V2(void* parent) {
       std::vector<double> cut_indexes;
       std::vector<bool> cut_valids;
       std::vector<double> cut_gains;
-      std::vector<float> boost_weights;
-      std::vector<float> purities;
-      std::vector<float> nEntries;
+      std::vector<FastBDT::Weight> boost_weights;
+      std::vector<FastBDT::Weight> purities;
+      std::vector<FastBDT::Weight> nEntries;
       ReadVectorFromXML(trxml, "CutFeatures", cut_features);
       ReadVectorFromXML(trxml, "CutIndexes", cut_indexes);
       ReadVectorFromXML(trxml, "CutValids", cut_valids);
@@ -432,9 +428,9 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML_V1(void* parent) {
       std::vector<unsigned int> cut_indexes;
       std::vector<bool> cut_valids;
       std::vector<double> cut_gains;
-      std::vector<float> boost_weights;
-      std::vector<float> purities;
-      std::vector<float> nEntries;
+      std::vector<FastBDT::Weight> boost_weights;
+      std::vector<FastBDT::Weight> purities;
+      std::vector<FastBDT::Weight> nEntries;
       ReadVectorFromXML(trxml, "CutFeatures", cut_features);
       ReadVectorFromXML(trxml, "CutIndexes", cut_indexes);
       ReadVectorFromXML(trxml, "CutValids", cut_valids);

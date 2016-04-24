@@ -122,13 +122,13 @@ namespace FastBDT {
         stream >> cuts[i];
       }
 
-      std::vector<float> boost_weights;
+      std::vector<Weight> boost_weights;
       stream >> boost_weights;
       
-      std::vector<float> purities;
+      std::vector<Weight> purities;
       stream >> purities;
       
-			std::vector<float> nEntries;
+			std::vector<Weight> nEntries;
       stream >> nEntries;
       
       return Tree<T>(cuts, nEntries, purities, boost_weights);
