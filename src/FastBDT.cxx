@@ -10,10 +10,10 @@
 
 namespace FastBDT {
 
-  std::vector<double> EventWeights::GetSums(unsigned int nSignals) const {
+  std::vector<Weight> EventWeights::GetSums(unsigned int nSignals) const {
 
     // Vectorizing FTW!
-    std::vector<double> sums(3,0);
+    std::vector<Weight> sums(3,0);
     for(unsigned int i = 0; i < nSignals; ++i) {
       sums[0] += weights[i] * original_weights[i];
       sums[2] += weights[i]*weights[i] * original_weights[i];
@@ -64,7 +64,7 @@ namespace FastBDT {
 
   }
 
-  void EventSample::AddEvent(const std::vector<unsigned int> &features, float weight, bool isSignal) {
+  void EventSample::AddEvent(const std::vector<unsigned int> &features, Weight weight, bool isSignal) {
 
     // First check of we have enough space for an additional event. As the number of
     // events is fixed in the constructor (to avoid time consuming reallocations)
@@ -90,7 +90,7 @@ namespace FastBDT {
 
   }
 
-  double LossFunction(double nSignal, double nBckgrd) {
+  Weight LossFunction(const Weight &nSignal, const Weight &nBckgrd) {
     // Gini-Index x total number of events (needed to calculate information gain efficiently)!
     if( nSignal <= 0 or nBckgrd <= 0 )
       return 0; 
@@ -111,13 +111,13 @@ namespace FastBDT {
 
   }
 
-  std::vector<float> CumulativeDistributions::CalculateCDFs(const EventSample &sample, const unsigned int firstEvent, const unsigned int lastEvent) const {
+  std::vector<Weight> CumulativeDistributions::CalculateCDFs(const EventSample &sample, const unsigned int firstEvent, const unsigned int lastEvent) const {
 
     const auto &values = sample.GetValues();
     const auto &flags = sample.GetFlags();
     const auto &weights = sample.GetWeights();
 
-    std::vector<float> bins( nNodes*nFeatures*nBinSums.back() );
+    std::vector<Weight> bins( nNodes*nFeatures*nBinSums.back() );
 
     // Fill Cut-PDFs for all nodes in this layer and for every feature
     for(unsigned int iEvent = firstEvent; iEvent < lastEvent; ++iEvent) {
@@ -151,7 +151,7 @@ namespace FastBDT {
     const unsigned int nFeatures = CDFs.GetNFeatures();
     const auto& nBins = CDFs.GetNBins();
 
-    double currentLoss = LossFunction(signal, bckgrd);
+    Weight currentLoss = LossFunction(signal, bckgrd);
     if( currentLoss == 0 )
       return cut;
 
@@ -159,9 +159,9 @@ namespace FastBDT {
     for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
       // Start at 2, this ignores the NaN bin at 0
       for(unsigned int iCut = 2; iCut < nBins[iFeature]; ++iCut) {
-        double s = CDFs.GetSignal(iNode, iFeature, iCut-1);
-        double b = CDFs.GetBckgrd(iNode, iFeature, iCut-1);
-        double currentGain = currentLoss - LossFunction( signal-s, bckgrd-b ) - LossFunction( s, b );
+        Weight s = CDFs.GetSignal(iNode, iFeature, iCut-1);
+        Weight b = CDFs.GetBckgrd(iNode, iFeature, iCut-1);
+        Weight currentGain = currentLoss - LossFunction( signal-s, bckgrd-b ) - LossFunction( s, b );
 
         if( cut.gain <= currentGain ) {
           cut.gain = currentGain;
@@ -176,7 +176,7 @@ namespace FastBDT {
 
   }
 
-  void Node::AddSignalWeight(float weight, float original_weight) {
+  void Node::AddSignalWeight(Weight weight, Weight original_weight) {
     if(original_weight == 0)
       return;
     signal += weight;
@@ -184,29 +184,29 @@ namespace FastBDT {
   }
 
 
-  void Node::AddBckgrdWeight(float weight, float original_weight) {
+  void Node::AddBckgrdWeight(Weight weight, Weight original_weight) {
     if(original_weight == 0)
       return;
     bckgrd += weight;
     square += weight*weight / original_weight;
   }
 
-  void Node::SetWeights(std::vector<double> weights) {
+  void Node::SetWeights(std::vector<Weight> weights) {
     signal = weights[0];
     bckgrd = weights[1];
     square = weights[2];
   }
 
-  double Node::GetBoostWeight() const {
+  Weight Node::GetBoostWeight() const {
 
-    double denominator = (2*(signal+bckgrd)-square);
+    Weight denominator = (2*(signal+bckgrd)-square);
     if( denominator == 0 ) {
         if(signal == bckgrd)
             return 0;
         if(signal > bckgrd)
-            return std::numeric_limits<double>::infinity();
+            return std::numeric_limits<Weight>::infinity();
         else
-            return -std::numeric_limits<double>::infinity();
+            return -std::numeric_limits<Weight>::infinity();
     }
     return (signal - bckgrd)/denominator;
 

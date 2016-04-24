@@ -19,6 +19,8 @@
 
 namespace FastBDT {
 
+  typedef double Weight;
+
   /**
    * Compare function which sorts all NaN values to the left
    */
@@ -125,7 +127,7 @@ namespace FastBDT {
               return NAN;
           
           if( bin == 1 )
-              return -std::numeric_limits<double>::infinity();
+              return -std::numeric_limits<Value>::infinity();
           
           unsigned int index = bin + (1 << nLevels) - 1;
           for(unsigned int iLevel = 0; iLevel < (nLevels-1) and index % 2 == 0; ++iLevel) {
@@ -171,7 +173,7 @@ namespace FastBDT {
     template<class Value>
     struct ValueWithWeight {
         Value value;
-        double weight;
+        Weight weight;
     };
 
     template<class Value>
@@ -194,12 +196,12 @@ namespace FastBDT {
          * @param values values of this features
          * @param weights of the corresponding events
          */
-          WeightedFeatureBinning(unsigned int _nLevels, std::vector<Value> &values, std::vector<double> &weights) {
+          WeightedFeatureBinning(unsigned int _nLevels, std::vector<Value> &values, std::vector<Weight> &weights) {
 
             this->nLevels = _nLevels;
             std::vector<ValueWithWeight<Value>> values_with_weights;
             values_with_weights.resize(values.size());
-            double total_weight = 0;
+            Weight total_weight = 0;
             unsigned long int numberOfDistinctValues = 1;
             for(unsigned int iEvent = 0; iEvent < values.size(); ++iEvent) {
                 values_with_weights[iEvent] = {values[iEvent], weights[iEvent]};
@@ -234,8 +236,8 @@ namespace FastBDT {
             this->binning.back()  = first[size-1].value;
             Value last_value = first[size-1].value;
             
-            double weight_per_bin = total_weight / (this->GetNBins() - 1);
-            double current_weight = 0;
+            Weight weight_per_bin = total_weight / (this->GetNBins() - 1);
+            Weight current_weight = 0;
             unsigned int bin = 1;
             while(first != last) {
                 current_weight += first->weight;
@@ -306,21 +308,21 @@ namespace FastBDT {
     public:
       EventWeights(unsigned int nEvents) : weights(nEvents, 1), original_weights(nEvents, 0) { }
 
-      inline float Get(unsigned int iEvent) const { return weights[iEvent] * original_weights[iEvent]; }
-      void Set(unsigned int iEvent, const float& weight) {  weights[iEvent] = weight; } 
+      inline Weight Get(unsigned int iEvent) const { return weights[iEvent] * original_weights[iEvent]; }
+      void Set(unsigned int iEvent, const Weight& weight) {  weights[iEvent] = weight; } 
       
-      inline const float& GetOriginal(unsigned int iEvent) const { return original_weights[iEvent]; }
-      void SetOriginal(unsigned int iEvent, const float& weight) {  original_weights[iEvent] = weight; } 
+      inline const Weight& GetOriginal(unsigned int iEvent) const { return original_weights[iEvent]; }
+      void SetOriginal(unsigned int iEvent, const Weight& weight) {  original_weights[iEvent] = weight; } 
 
       /**
        * Returns the sum of all weights. 0: SignalSum, 1: BckgrdSum, 2: SquareSum
        * @param nSignals number of signal events, to determine which weights are signal weights and which are background weights
        */ 
-      std::vector<double> GetSums(unsigned int nSignals) const;  
+      std::vector<Weight> GetSums(unsigned int nSignals) const;  
 
     private:
-      std::vector<float> weights;
-      std::vector<float> original_weights;
+      std::vector<Weight> weights;
+      std::vector<Weight> original_weights;
   };
 
   /**
@@ -401,7 +403,7 @@ namespace FastBDT {
       EventSample(unsigned int nEvents, unsigned int nFeatures, const std::vector<unsigned int> &nLevels) : nEvents(nEvents), nSignals(0), nBckgrds(0),
       weights(nEvents), flags(nEvents), values(nEvents,nFeatures,nLevels) { }
 
-      void AddEvent(const std::vector<unsigned int> &features, float weight, bool isSignal);
+      void AddEvent(const std::vector<unsigned int> &features, Weight weight, bool isSignal);
 
       /** 
        * Returns whether or not the event is considered as signal. If you loop over all events, it's not necessary to use this function. Just loop
@@ -441,8 +443,8 @@ namespace FastBDT {
     public:
       CumulativeDistributions(unsigned int iLayer, const EventSample& sample);
 
-      inline const float& GetSignal(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return signalCDFs[iNode*nBinSums.back() + nBinSums[iFeature] + iBin]; }
-      inline const float& GetBckgrd(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return bckgrdCDFs[iNode*nBinSums.back() + nBinSums[iFeature] + iBin]; }
+      inline const Weight& GetSignal(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return signalCDFs[iNode*nBinSums.back() + nBinSums[iFeature] + iBin]; }
+      inline const Weight& GetBckgrd(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return bckgrdCDFs[iNode*nBinSums.back() + nBinSums[iFeature] + iBin]; }
 
       unsigned int GetNFeatures() const { return nFeatures; } 
       unsigned int GetNNodes() const { return nNodes; }
@@ -457,15 +459,15 @@ namespace FastBDT {
        * @param firstEvent begin of the range used to calculated the CDFs
        * @param lastEvent  end of the range used to calculate the CDFs
        */
-      std::vector<float> CalculateCDFs(const EventSample &sample, const unsigned int firstEvent, const unsigned int lastEvent) const;
+      std::vector<Weight> CalculateCDFs(const EventSample &sample, const unsigned int firstEvent, const unsigned int lastEvent) const;
 
     private:
       unsigned int nFeatures;
       std::vector<unsigned int> nBins; /**< Number of bins for each feature, therefore maximum numerical value of a feature, 0 bin is reserved for NaN values */
       std::vector<unsigned int> nBinSums; /**< Total number of bins up to this feature, including all bins of previous features, excluding first feature  */
       unsigned int nNodes;
-      std::vector<float> signalCDFs;
-      std::vector<float> bckgrdCDFs;
+      std::vector<Weight> signalCDFs;
+      std::vector<Weight> bckgrdCDFs;
   };
 
   /**
@@ -473,7 +475,7 @@ namespace FastBDT {
    * @param nSignal number of signal events in the node
    * @param nBackgrd number of background events in the node
    */
-  double LossFunction(double nSignal, double nBckgrd);
+  Weight LossFunction(const Weight &nSignal,const Weight &nBckgrd);
 
 
   template<typename T>
@@ -503,23 +505,23 @@ namespace FastBDT {
        */
       Cut<unsigned int> CalculateBestCut(const CumulativeDistributions &CDFs) const;
 
-      void AddSignalWeight(float weight, float original_weight);
-      void AddBckgrdWeight(float weight, float original_weight);
-      void SetWeights(std::vector<double> weights);
+      void AddSignalWeight(Weight weight, Weight original_weight);
+      void AddBckgrdWeight(Weight weight, Weight original_weight);
+      void SetWeights(std::vector<Weight> weights);
 
       bool IsInLayer(unsigned int iLayer) const { return this->iLayer == iLayer; }
       unsigned int GetLayer() const { return iLayer; }
       unsigned int GetPosition() const { return (iNode + (1 << iLayer)) - 1; }
 
-      double GetNEntries() const { return signal + bckgrd; }
-      double GetPurity() const { return (signal + bckgrd == 0) ? -1 : signal/(signal + bckgrd); }
-      double GetBoostWeight() const;
+      Weight GetNEntries() const { return signal + bckgrd; }
+      Weight GetPurity() const { return (signal + bckgrd == 0) ? -1 : signal/(signal + bckgrd); }
+      Weight GetBoostWeight() const;
 
       void Print() const;
     private:
-      double signal; /**< The sum of weights of signal events which belong to this node */
-      double bckgrd; /**< The sum of weights of background events which belong to this node */
-      double square; /**< The squared sum of weights of events which belong to this node */
+      Weight signal; /**< The sum of weights of signal events which belong to this node */
+      Weight bckgrd; /**< The sum of weights of background events which belong to this node */
+      Weight square; /**< The squared sum of weights of events which belong to this node */
       unsigned int iNode; /**< Position of the node in the tree */
       unsigned int iLayer; /**< Layer in which the node is inside the tree */
   };
@@ -550,22 +552,22 @@ namespace FastBDT {
 
       const std::vector<Cut<unsigned int>>& GetCuts() const { return cuts; }
 
-      std::vector<float> GetPurities() const { 
-        std::vector<float> purities(nodes.size());
+      std::vector<Weight> GetPurities() const { 
+        std::vector<Weight> purities(nodes.size());
         for(unsigned int i = 0; i < nodes.size(); ++i)
           purities[i] = nodes[i].GetPurity();
         return purities; 
       }
 
-      std::vector<float> GetBoostWeights() const { 
-        std::vector<float> boostWeights(nodes.size());
+      std::vector<Weight> GetBoostWeights() const { 
+        std::vector<Weight> boostWeights(nodes.size());
         for(unsigned int i = 0; i < nodes.size(); ++i)
           boostWeights[i] = nodes[i].GetBoostWeight();
         return boostWeights; 
       }
       
-			std::vector<float> GetNEntries() const { 
-        std::vector<float> nEntries(nodes.size());
+			std::vector<Weight> GetNEntries() const { 
+        std::vector<Weight> nEntries(nodes.size());
         for(unsigned int i = 0; i < nodes.size(); ++i)
           nEntries[i] = nodes[i].GetNEntries();
         return nEntries; 
@@ -605,7 +607,7 @@ namespace FastBDT {
       Tree(const Tree&) = default;
       Tree& operator=(const Tree &) = default;
 
-      Tree(const std::vector<Cut<T>> &cuts, const std::vector<float> &nEntries, const std::vector<float> &purities, const std::vector<float> &boostWeights) : cuts(cuts), nEntries(nEntries), purities(purities), boostWeights(boostWeights) { }
+      Tree(const std::vector<Cut<T>> &cuts, const std::vector<Weight> &nEntries, const std::vector<Weight> &purities, const std::vector<Weight> &boostWeights) : cuts(cuts), nEntries(nEntries), purities(purities), boostWeights(boostWeights) { }
 
       /**
        * Returns the node of a given event
@@ -640,14 +642,14 @@ namespace FastBDT {
       }
 
       unsigned int GetNNodes() const { return boostWeights.size(); }
-      const float& GetNEntries(unsigned int iNode) const { return nEntries[iNode]; }
-      const float& GetPurity(unsigned int iNode) const { return purities[iNode]; }
-      const float& GetBoostWeight(unsigned int iNode) const { return boostWeights[iNode]; }
+      const Weight& GetNEntries(unsigned int iNode) const { return nEntries[iNode]; }
+      const Weight& GetPurity(unsigned int iNode) const { return purities[iNode]; }
+      const Weight& GetBoostWeight(unsigned int iNode) const { return boostWeights[iNode]; }
       const Cut<T>& GetCut(unsigned int iNode) const { return cuts[iNode]; }
       const std::vector<Cut<T>>& GetCuts() const { return cuts; }
-      const std::vector<float>& GetNEntries() const { return nEntries; }
-      const std::vector<float>& GetPurities() const { return purities; }
-      const std::vector<float>& GetBoostWeights() const { return boostWeights; }
+      const std::vector<Weight>& GetNEntries() const { return nEntries; }
+      const std::vector<Weight>& GetPurities() const { return purities; }
+      const std::vector<Weight>& GetBoostWeights() const { return boostWeights; }
       
       void Print() const {
   
@@ -673,9 +675,9 @@ namespace FastBDT {
 
     private:
       std::vector<Cut<T>> cuts;
-      std::vector<float> nEntries;
-      std::vector<float> purities;
-      std::vector<float> boostWeights;
+      std::vector<Weight> nEntries;
+      std::vector<Weight> purities;
+      std::vector<Weight> boostWeights;
   };
 
 
