@@ -286,6 +286,7 @@ void TMVA::MethodFastBDT::AddWeightsXMLTo( void* parent ) const
    // write weights to XML
    void* wght = TMVA::gTools().AddChild(parent, "Weights");
 
+   TMVA::gTools().AddAttr( wght, "Version", 2 );
    TMVA::gTools().AddAttr( wght, "NTrees", fNTrees );
    TMVA::gTools().AddAttr( wght, "Shrinkage", fShrinkage );
    TMVA::gTools().AddAttr( wght, "NCuts", fNCutLevel );
@@ -325,6 +326,24 @@ void TMVA::MethodFastBDT::AddWeightsXMLTo( void* parent ) const
 void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
 
    Reset();
+   if(TMVA::gTools().HasAttr( parent, "Version" )) {
+     unsigned int version = 0;
+     TMVA::gTools().ReadAttr( parent, "Version", version );
+     if(version == 2) {
+		std::cout << "Loading newest FastBDT weightfile Version 2." << std::endl;
+	 	TMVA::MethodFastBDT::ReadWeightsFromXML_V2(parent);
+	 } else {
+		throw std::runtime_error("Unkown FastBDT weightfile Version " + std::to_string(version) + ". Sorry I have no idea how to load this");
+     }
+   } else {
+	 std::cout << "Loading deprecated FastBDT weightfile Version 1." << std::endl;
+	 std::cout << "This should be save, however think about retraining your classifier, so you can profit from improvements in the algorithm." << std::endl;
+	 TMVA::MethodFastBDT::ReadWeightsFromXML_V1(parent);
+   } 
+
+}
+
+void TMVA::MethodFastBDT::ReadWeightsFromXML_V2(void* parent) {
 
    TMVA::gTools().ReadAttr( parent, "NTrees", fNTrees );
    TMVA::gTools().ReadAttr( parent, "Shrinkage", fShrinkage );
@@ -345,7 +364,7 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
       TMVA::gTools().ReadAttr( trxml, "iTree", iTree );
       // Read the weights
       std::vector<unsigned int> cut_features;
-      std::vector<unsigned int> cut_indexes;
+      std::vector<double> cut_indexes;
       std::vector<bool> cut_valids;
       std::vector<double> cut_gains;
       std::vector<float> boost_weights;
@@ -369,6 +388,69 @@ void TMVA::MethodFastBDT::ReadWeightsFromXML(void* parent) {
         cuts.push_back(cut);
       }
       fForest->AddTree(Tree<double>(cuts, nEntries, purities, boost_weights));
+
+      trxml = TMVA::gTools().GetNextChild(trxml, "Tree");
+   }
+
+}
+
+void TMVA::MethodFastBDT::ReadWeightsFromXML_V1(void* parent) {
+
+   void* binxml = TMVA::gTools().GetChild(parent, "Binning");
+   while (binxml) {
+      unsigned int nLevels;
+      TMVA::gTools().ReadAttr( binxml, "NLevels", nLevels );
+      std::vector<double> bins;
+      ReadVectorFromXML(binxml, "bins", bins);
+      featureBinnings.push_back(FeatureBinning<double>(nLevels, bins.begin(), bins.end()));
+      binxml = TMVA::gTools().GetNextChild(binxml, "Binning");
+   }
+
+   TMVA::gTools().ReadAttr( parent, "NTrees", fNTrees );
+   TMVA::gTools().ReadAttr( parent, "Shrinkage", fShrinkage );
+   TMVA::gTools().ReadAttr( parent, "NCuts", fNCutLevel );
+   TMVA::gTools().ReadAttr( parent, "NLevels", fNTreeLayers );
+   TMVA::gTools().ReadAttr( parent, "RandRatio", fRandRatio );
+   TMVA::gTools().ReadAttr( parent, "sPlot", fsPlot );
+   
+   transform2probability = true;
+
+   double F0;
+   TMVA::gTools().ReadAttr( parent, "F0", F0 );
+   fForest = new Forest(fShrinkage, F0, transform2probability);
+
+   void* trxml = TMVA::gTools().GetChild(parent, "Tree");
+   while (trxml) {
+      // Read the tree number, this value isn't used currently
+      unsigned int iTree;
+      TMVA::gTools().ReadAttr( trxml, "iTree", iTree );
+      // Read the weights
+      std::vector<unsigned int> cut_features;
+      std::vector<unsigned int> cut_indexes;
+      std::vector<bool> cut_valids;
+      std::vector<double> cut_gains;
+      std::vector<float> boost_weights;
+      std::vector<float> purities;
+      std::vector<float> nEntries;
+      ReadVectorFromXML(trxml, "CutFeatures", cut_features);
+      ReadVectorFromXML(trxml, "CutIndexes", cut_indexes);
+      ReadVectorFromXML(trxml, "CutValids", cut_valids);
+      ReadVectorFromXML(trxml, "CutGains", cut_gains);
+      ReadVectorFromXML( trxml, "BoostWeights", boost_weights);
+      ReadVectorFromXML( trxml, "Purities", purities);
+      ReadVectorFromXML( trxml, "NEntries", nEntries);
+
+      std::vector<Cut> cuts;
+      for(unsigned int i = 0; i < cut_features.size(); ++i) {
+        Cut cut;
+        cut.feature = cut_features[i];
+        cut.index = cut_indexes[i];
+        cut.valid = cut_valids[i];
+        cut.gain = cut_gains[i];
+        cuts.push_back(cut);
+      }
+      Tree<unsigned int> tree(cuts, nEntries, purities, boost_weights);
+      fForest->AddTree(removeFeatureBinningTransformationFromTree(tree, featureBinnings));
 
       trxml = TMVA::gTools().GetNextChild(trxml, "Tree");
    }
