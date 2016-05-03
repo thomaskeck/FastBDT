@@ -231,7 +231,7 @@ class WeightedFeatureBinningTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
             std::vector<float> data = {10.0f,8.0f,2.0f,NAN,NAN,NAN,NAN,7.0f,5.0f,6.0f,9.0f,NAN,4.0f,3.0f,11.0f,12.0f,1.0f,NAN};
-            std::vector<double> weights = {2.0f,0.1f,0.1f,3.0f,0.5f,1.0f,2.0f,0.1f,2.0f,3.0f,1.0f,0.1f,1.0f,2.0f,2.0f,1.0f,0.5f,12.0f};
+            std::vector<Weight> weights = {2.0f,0.1f,0.1f,3.0f,0.5f,1.0f,2.0f,0.1f,2.0f,3.0f,1.0f,0.1f,1.0f,2.0f,2.0f,1.0f,0.5f,12.0f};
             calculatedBinning = new WeightedFeatureBinning<float>(2, data, weights);
 
             binning = { 1.0f, 6.0f, 5.0f, 10.0f, 12.0f }; 
@@ -280,7 +280,7 @@ TEST_F(WeightedFeatureBinningTest, GetBinningIsCorrect) {
 
 TEST_F(WeightedFeatureBinningTest, SameAsUsualBinningWithoutWeights) {
     std::vector<float> data = {10.0f,8.0f,2.0f,NAN,NAN,NAN,NAN,7.0f,5.0f,6.0f,9.0f,NAN,4.0f,3.0f,11.0f,12.0f,1.0f,NAN};
-    std::vector<double> weights(data.size(), 1.0);
+    std::vector<Weight> weights(data.size(), 1.0);
     FeatureBinning<float> usualBinning(2, data);
     WeightedFeatureBinning<float> weightedBinning(2, data, weights);
     

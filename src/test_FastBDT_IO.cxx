@@ -36,6 +36,54 @@ TEST_F(IOTest, IOVector) {
 
 }
 
+TEST_F(IOTest, IOUsingSpecialValuesFloat) {
+
+    std::vector<float> before = {std::numeric_limits<float>::lowest(),
+                                  std::numeric_limits<float>::denorm_min(),
+                                  std::numeric_limits<float>::min(),
+                                  std::numeric_limits<float>::max(),
+                                  std::numeric_limits<float>::infinity(),
+                                  -std::numeric_limits<float>::infinity(),
+                                 std::numeric_limits<float>::quiet_NaN(),
+                                 std::numeric_limits<float>::signaling_NaN(),
+                                 0.0};
+
+    std::stringstream stream;
+    stream << before;
+
+    std::vector<float> after;
+    stream >> after;
+
+    EXPECT_EQ(before.size(), after.size());
+    for(unsigned int i = 0; i < before.size() and i < after.size(); ++i)
+        EXPECT_DOUBLE_EQ(before[i], after[i]);
+
+}
+
+TEST_F(IOTest, IOUsingSpecialValuesDouble) {
+
+    std::vector<double> before = {std::numeric_limits<double>::lowest(),
+                                  std::numeric_limits<double>::denorm_min(),
+                                  std::numeric_limits<double>::min(),
+                                  std::numeric_limits<double>::max(),
+                                  std::numeric_limits<double>::infinity(),
+                                  -std::numeric_limits<double>::infinity(),
+                                 std::numeric_limits<double>::quiet_NaN(),
+                                 std::numeric_limits<double>::signaling_NaN(),
+                                 0.0};
+
+    std::stringstream stream;
+    stream << before;
+
+    std::vector<double> after;
+    stream >> after;
+
+    EXPECT_EQ(before.size(), after.size());
+    for(unsigned int i = 0; i < before.size() and i < after.size(); ++i)
+        EXPECT_DOUBLE_EQ(before[i], after[i]);
+
+}
+
 TEST_F(IOTest, IOFeatureBinning) {
 
     std::vector<double> binning = { 1.0f, 7.0f, 4.0f, 10.0f, 12.0f }; 
@@ -103,6 +151,72 @@ TEST_F(IOTest, IOCut) {
     EXPECT_EQ(before.gain, after.gain);
     EXPECT_EQ(before.index, after.index);
     EXPECT_EQ(before.valid, after.valid);
+
+}
+
+TEST_F(IOTest, IOCutSpecialValuesFloat) {
+    
+    std::vector<float> values = {std::numeric_limits<float>::lowest(),
+                                 std::numeric_limits<float>::denorm_min(),
+                                 std::numeric_limits<float>::min(),
+                                 std::numeric_limits<float>::max(),
+                                 std::numeric_limits<float>::infinity(),
+                                 -std::numeric_limits<float>::infinity(),
+                                 std::numeric_limits<float>::quiet_NaN(),
+                                 std::numeric_limits<float>::signaling_NaN(),
+                                 0.0};
+
+    for(auto &f : values) {
+      Cut<float> before;
+      before.feature = 1;
+      before.gain = 3.4;
+      before.index = f;
+      before.valid = true;
+
+      std::stringstream stream;
+      stream << before;
+
+      Cut<float> after;
+      stream >> after;
+
+      EXPECT_EQ(before.feature, after.feature);
+      EXPECT_EQ(before.gain, after.gain);
+      EXPECT_EQ(before.index, after.index);
+      EXPECT_EQ(before.valid, after.valid);
+    }
+
+}
+
+TEST_F(IOTest, IOCutSpecialValuesDouble) {
+    
+    std::vector<double> values = {std::numeric_limits<double>::lowest(),
+                                 std::numeric_limits<double>::denorm_min(),
+                                 std::numeric_limits<double>::min(),
+                                 std::numeric_limits<double>::max(),
+                                 std::numeric_limits<double>::infinity(),
+                                 -std::numeric_limits<double>::infinity(),
+                                 std::numeric_limits<double>::quiet_NaN(),
+                                 std::numeric_limits<double>::signaling_NaN(),
+                                 0.0};
+
+    for(auto &f : values) {
+      Cut<double> before;
+      before.feature = 1;
+      before.gain = 3.4;
+      before.index = f;
+      before.valid = true;
+
+      std::stringstream stream;
+      stream << before;
+
+      Cut<double> after;
+      stream >> after;
+
+      EXPECT_EQ(before.feature, after.feature);
+      EXPECT_EQ(before.gain, after.gain);
+      EXPECT_EQ(before.index, after.index);
+      EXPECT_EQ(before.valid, after.valid);
+    }
 
 }
             

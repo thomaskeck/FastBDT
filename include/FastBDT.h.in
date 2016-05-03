@@ -19,7 +19,7 @@
 
 namespace FastBDT {
 
-  typedef double Weight;
+  typedef float Weight;
 
   /**
    * Compare function which sorts all NaN values to the left

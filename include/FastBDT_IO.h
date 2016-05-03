@@ -11,6 +11,22 @@
 #include <type_traits>
 
 namespace FastBDT {
+  
+  /**
+   * Converts from string to float safely
+   * Should behave similar to boost::lexical_cast<float>
+   * but does not signal if it fails!
+   * @param input string containing a float
+   */
+  float convert_to_float_safely(std::string &input);
+  
+  /**
+   * Converts from string to double safely
+   * Should behave similar to boost::lexical_cast<double>
+   * but does not signal if it fails!
+   * @param input string containing a float
+   */
+  double convert_to_double_safely(std::string &input);
 
   /**
    * This template saves a vector to an std::ostream
@@ -52,6 +68,12 @@ namespace FastBDT {
          stream >> vector[i];
      return stream;
   }
+  
+  template<>
+  std::istream& operator>>(std::istream& stream, std::vector<float> &vector);
+  
+  template<>
+  std::istream& operator>>(std::istream& stream, std::vector<double> &vector);
 
   /**
    * This function saves a Cut to an std::ostream
