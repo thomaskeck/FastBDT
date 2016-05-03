@@ -156,7 +156,7 @@ void TMVA::MethodFastBDT::Train()
       std::cerr << "Signal Correction " << signal_correction << std::endl;
       std::cerr << "Bckgrd Correction " << bckgrd_correction << std::endl;
 
-      std::vector<double> weights(nEvents,0);
+      std::vector<FastBDT::Weight> weights(nEvents,0);
       for (unsigned int iEvent=0; iEvent<nEvents; iEvent++) {
          if(DataInfo().IsSignal(GetTrainingEvent(iEvent))) {
             weights[iEvent] = GetTrainingEvent(iEvent)->GetWeight() * signal_correction;
