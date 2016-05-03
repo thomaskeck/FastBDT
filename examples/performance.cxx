@@ -228,7 +228,7 @@ Result measureFastBDT(const Data& train, const Data& test, const Config& config)
     for(unsigned int iFeature = 0; iFeature < train.numberOfFeatures; ++iFeature) {
         for(unsigned int iEvent = 0; iEvent < train.numberOfEvents; ++iEvent)
           feature[iEvent] = train.X[iEvent][iFeature];
-        featureBinnings[iFeature] = FastBDT::FeatureBinning<float>(config.nCutLevels, feature.begin(), feature.end());
+        featureBinnings[iFeature] = FastBDT::FeatureBinning<float>(config.nCutLevels, feature);
     }
 
     // Fill event Sample
@@ -246,7 +246,7 @@ Result measureFastBDT(const Data& train, const Data& test, const Config& config)
     std::chrono::high_resolution_clock::time_point trainingTime1 = std::chrono::high_resolution_clock::now();
     // Train classifier using training data
     FastBDT::ForestBuilder dt(eventSample, config.nTrees, config.shrinkage, config.subSampling, config.depth);
-    FastBDT::Forest<float> forest( dt.GetShrinkage(), dt.GetF0());
+    FastBDT::Forest<float> forest( dt.GetShrinkage(), dt.GetF0(), false);
     for( auto t : dt.GetForest() )
         forest.AddTree(FastBDT::removeFeatureBinningTransformationFromTree(t, featureBinnings));
     std::chrono::high_resolution_clock::time_point trainingTime2 = std::chrono::high_resolution_clock::now();
@@ -257,6 +257,8 @@ Result measureFastBDT(const Data& train, const Data& test, const Config& config)
     
     // Apply classifier on test data
     std::chrono::high_resolution_clock::time_point testTime1 = std::chrono::high_resolution_clock::now();
+    // Comment in for multi-core version
+    //# pragma omp parallel for
     for(unsigned int iEvent = 0; iEvent < test.numberOfEvents; ++iEvent) {
       result.probabilities[iEvent] = forest.Analyse(test.X[iEvent]);
     }
@@ -384,6 +386,7 @@ Result measureXGBoost(const Data& train, const Data& test, const Config& config)
     XGBoosterSetParam(booster, "eta", std::to_string(config.shrinkage).c_str());
     XGBoosterSetParam(booster, "silent", std::to_string(1).c_str());
     XGBoosterSetParam(booster, "subsample", std::to_string(config.subSampling).c_str());
+    // Comment out for multi-core version
     XGBoosterSetParam(booster, "nthread", std::to_string(1).c_str());
     XGBoosterSetParam(booster, "objective", "binary:logistic");
 
@@ -422,12 +425,13 @@ Result measureXGBoost(const Data& train, const Data& test, const Config& config)
     XGBoosterFree(booster);
     static_cast<xgboost::DMatrix*>(dmatrix)->info().Clear();
     XGDMatrixFree(dmatrix);
+    XGDMatrixFree(test_dmatrix);
 
     return result;
 
 }
 
-void measure(Config &config) {
+void measure(Config &config, unsigned int id) {
 
   std::chrono::high_resolution_clock::time_point loadTime1 = std::chrono::high_resolution_clock::now();
   Data train("data/train.csv", config.numberOfFeatures, config.numberOfEvents);
@@ -435,38 +439,38 @@ void measure(Config &config) {
   std::chrono::high_resolution_clock::time_point loadTime2 = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> loadTime = loadTime2 - loadTime1;
   std::cout << "LoadTime " << loadTime.count() << std::endl;
-  
-  std::chrono::high_resolution_clock::time_point measureSKLearnTime1 = std::chrono::high_resolution_clock::now();
-  Result resultSKLearn = measureSKLearn(train, test, config);
-  std::chrono::high_resolution_clock::time_point measureSKLearnTime2 = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> measureSKLearnTime = measureSKLearnTime2 - measureSKLearnTime1;
-  std::cout << "MeasureSKLearnTime " << measureSKLearnTime.count() << std::endl;
 
-  std::chrono::high_resolution_clock::time_point measureTMVATime1 = std::chrono::high_resolution_clock::now();
-  Result resultTMVA = measureTMVA(train, test, config);
-  std::chrono::high_resolution_clock::time_point measureTMVATime2 = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> measureTMVATime = measureTMVATime2 - measureTMVATime1;
-  std::cout << "MeasureTMVATime " << measureTMVATime.count() << std::endl;
+  // Repeat each measurement 5 times
+  for(unsigned int i = 0; i < 5; ++i) {
+    std::chrono::high_resolution_clock::time_point measureSKLearnTime1 = std::chrono::high_resolution_clock::now();
+    Result resultSKLearn = measureSKLearn(train, test, config);
+    std::chrono::high_resolution_clock::time_point measureSKLearnTime2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> measureSKLearnTime = measureSKLearnTime2 - measureSKLearnTime1;
+    std::cout << "MeasureSKLearnTime " << measureSKLearnTime.count() << std::endl;
 
-  std::chrono::high_resolution_clock::time_point measureFastBDTTime1 = std::chrono::high_resolution_clock::now();
-  Result resultFastBDT = measureFastBDT(train, test, config);
-  std::chrono::high_resolution_clock::time_point measureFastBDTTime2 = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> measureFastBDTTime = measureFastBDTTime2 - measureFastBDTTime1;
-  std::cout << "MeasureFastBDTTime " << measureFastBDTTime.count() << std::endl;
+    std::chrono::high_resolution_clock::time_point measureTMVATime1 = std::chrono::high_resolution_clock::now();
+    Result resultTMVA = measureTMVA(train, test, config);
+    std::chrono::high_resolution_clock::time_point measureTMVATime2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> measureTMVATime = measureTMVATime2 - measureTMVATime1;
+    std::cout << "MeasureTMVATime " << measureTMVATime.count() << std::endl;
 
-  std::chrono::high_resolution_clock::time_point measureXGBoostTime1 = std::chrono::high_resolution_clock::now();
-  Result resultXGBoost = measureXGBoost(train, test, config);
-  std::chrono::high_resolution_clock::time_point measureXGBoostTime2 = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> measureXGBoostTime = measureXGBoostTime2 - measureXGBoostTime1;
-  std::cout << "MeasureXGBoostTime " << measureXGBoostTime.count() << std::endl;
-  
-  static unsigned int id = 0;
-  ++id;
-  writeResults(std::string("result_") + std::to_string(id) + std::string(".txt"), {resultSKLearn, resultTMVA, resultFastBDT, resultXGBoost}, test, config);
+    std::chrono::high_resolution_clock::time_point measureXGBoostTime1 = std::chrono::high_resolution_clock::now();
+    Result resultXGBoost = measureXGBoost(train, test, config);
+    std::chrono::high_resolution_clock::time_point measureXGBoostTime2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> measureXGBoostTime = measureXGBoostTime2 - measureXGBoostTime1;
+    std::cout << "MeasureXGBoostTime " << measureXGBoostTime.count() << std::endl;
 
+    std::chrono::high_resolution_clock::time_point measureFastBDTTime1 = std::chrono::high_resolution_clock::now();
+    Result resultFastBDT = measureFastBDT(train, test, config);
+    std::chrono::high_resolution_clock::time_point measureFastBDTTime2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> measureFastBDTTime = measureFastBDTTime2 - measureFastBDTTime1;
+    std::cout << "MeasureFastBDTTime " << measureFastBDTTime.count() << std::endl;
+
+    writeResults(std::string("result_") + std::to_string(id+i) + std::string("_cpp.txt"), {resultFastBDT, resultXGBoost, resultSKLearn, resultTMVA}, test, config);
+  }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
 
   Py_Initialize();
   import_array();
@@ -479,12 +483,14 @@ int main() {
   config.nCutLevels = 8;
   config.numberOfEvents = 500000;
   config.numberOfFeatures = 35;
-
-  for(unsigned int i = 35; i <= 35; ++i) {
-    Config temp = config;
-    temp.numberOfFeatures = i;
-    measure(temp);
-  }
+ 
+  unsigned int id = atoi(argv[1]);
+  config.nTrees = id*10;
+  config.numberOfEvents = 500000 >> (id - 1);
+  config.numberOfFeatures = id;
+  config.depth = id;
+  config.subSampling = 0.05*id;
+  measure(config, id*10);
 
   Py_Finalize();
 
