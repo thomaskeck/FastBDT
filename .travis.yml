@@ -21,4 +21,4 @@ install:
   - cmake .
   - make VERBOSE=1
 script: 
-  - ./unittest
+  - ./unittests
