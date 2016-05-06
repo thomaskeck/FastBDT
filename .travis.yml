@@ -17,7 +17,7 @@ addons:
     - libgtest-dev
     - build-essential
     - cmake
-pre_install:
+before_install:
   - cd /usr/src/gtest && sudo cmake . && sudo make && sudo mv libg* /usr/lib/ && cd -
 install:
   - cmake .
