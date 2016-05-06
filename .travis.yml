@@ -17,6 +17,7 @@ addons:
     - libgtest-dev
     - build-essential
     - cmake
+    - htop
 install: 
   - cmake .
   - make VERBOSE=1
