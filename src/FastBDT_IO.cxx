@@ -44,9 +44,12 @@ namespace FastBDT {
   template<>
   std::ostream& operator<<(std::ostream& stream, const std::vector<float> &vector) {
      stream << vector.size();
+     stream.precision(std::numeric_limits<float>::max_digits10);
+     stream << std::scientific;
      for(const auto &value : vector) {
          stream << " " << value;
      }
+     stream.precision(6);
      stream << std::endl;
      return stream;
   }
@@ -54,9 +57,12 @@ namespace FastBDT {
   template<>
   std::ostream& operator<<(std::ostream& stream, const std::vector<double> &vector) {
      stream << vector.size();
+     stream.precision(std::numeric_limits<double>::max_digits10);
+     stream << std::scientific;
      for(const auto &value : vector) {
          stream << " " << value;
      }
+     stream.precision(6);
      stream << std::endl;
      return stream;
   }

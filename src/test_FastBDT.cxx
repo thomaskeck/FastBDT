@@ -38,10 +38,10 @@ class FeatureBinningTest : public ::testing::Test {
 
 TEST_F(FeatureBinningTest, MaximumAndMinimumValueAreCorrectlyIdentified) {
 
-    EXPECT_DOUBLE_EQ( calculatedBinning->GetMin(), 1.0f);
-    EXPECT_DOUBLE_EQ( calculatedBinning->GetMax(), 12.0f);
-    EXPECT_DOUBLE_EQ( predefinedBinning->GetMin(), 1.0f);
-    EXPECT_DOUBLE_EQ( predefinedBinning->GetMax(), 12.0f);
+    EXPECT_FLOAT_EQ( calculatedBinning->GetMin(), 1.0f);
+    EXPECT_FLOAT_EQ( calculatedBinning->GetMax(), 12.0f);
+    EXPECT_FLOAT_EQ( predefinedBinning->GetMin(), 1.0f);
+    EXPECT_FLOAT_EQ( predefinedBinning->GetMax(), 12.0f);
 
 }
 
@@ -255,10 +255,10 @@ class WeightedFeatureBinningTest : public ::testing::Test {
 
 TEST_F(WeightedFeatureBinningTest, MaximumAndMinimumValueAreCorrectlyIdentified) {
 
-    EXPECT_DOUBLE_EQ( calculatedBinning->GetMin(), 1.0f);
-    EXPECT_DOUBLE_EQ( calculatedBinning->GetMax(), 12.0f);
-    EXPECT_DOUBLE_EQ( predefinedBinning->GetMin(), 1.0f);
-    EXPECT_DOUBLE_EQ( predefinedBinning->GetMax(), 12.0f);
+    EXPECT_FLOAT_EQ( calculatedBinning->GetMin(), 1.0f);
+    EXPECT_FLOAT_EQ( calculatedBinning->GetMax(), 12.0f);
+    EXPECT_FLOAT_EQ( predefinedBinning->GetMin(), 1.0f);
+    EXPECT_FLOAT_EQ( predefinedBinning->GetMax(), 12.0f);
 
 }
 
@@ -309,8 +309,8 @@ class EquidistantFeatureBinningTest : public ::testing::Test {
 
 TEST_F(EquidistantFeatureBinningTest, MaximumAndMinimumValueAreCorrectlyIdentified) {
 
-    EXPECT_DOUBLE_EQ( calculatedBinning->GetMin(), 0.0f);
-    EXPECT_DOUBLE_EQ( calculatedBinning->GetMax(), 16.0f);
+    EXPECT_FLOAT_EQ( calculatedBinning->GetMin(), 0.0f);
+    EXPECT_FLOAT_EQ( calculatedBinning->GetMax(), 16.0f);
 
 }
 
@@ -341,9 +341,9 @@ class EventWeightsTest : public ::testing::Test {
 TEST_F(EventWeightsTest, WeightSumsAreCorrect) {
 
     auto sums = eventWeights->GetSums(5);
-    EXPECT_DOUBLE_EQ(sums[0], 15.0 * 2);
-    EXPECT_DOUBLE_EQ(sums[1], 40.0 * 2);
-    EXPECT_DOUBLE_EQ(sums[2], 385.0 * 2);
+    EXPECT_FLOAT_EQ(sums[0], 15.0 * 2);
+    EXPECT_FLOAT_EQ(sums[1], 40.0 * 2);
+    EXPECT_FLOAT_EQ(sums[2], 385.0 * 2);
 
 }
 
@@ -362,16 +362,16 @@ TEST_F(EventWeightsTest, WeightSumsAreNotInfluencedByZeroWeights) {
     auto newSums = newEventWeights->GetSums(10);
     delete newEventWeights;
 
-    EXPECT_DOUBLE_EQ(sums[0], newSums[0]);
-    EXPECT_DOUBLE_EQ(sums[1], newSums[1]);
-    EXPECT_DOUBLE_EQ(sums[2], newSums[2]);
+    EXPECT_FLOAT_EQ(sums[0], newSums[0]);
+    EXPECT_FLOAT_EQ(sums[1], newSums[1]);
+    EXPECT_FLOAT_EQ(sums[2], newSums[2]);
 
 }
 
 TEST_F(EventWeightsTest, GetterIsCorrect) {
 
     for(unsigned int i = 0; i < 10; ++i) {
-        EXPECT_DOUBLE_EQ( eventWeights->Get(i), static_cast<Weight>(i+1) * 2); 
+        EXPECT_FLOAT_EQ( eventWeights->Get(i), static_cast<Weight>(i+1) * 2); 
     }
     
 }
@@ -383,12 +383,12 @@ TEST_F(EventWeightsTest, WeightSumsAndGetterAreCorrectlyUpdated) {
     }
 
     auto sums = eventWeights->GetSums(5);
-    EXPECT_DOUBLE_EQ(sums[0], 25.0 * 2);
-    EXPECT_DOUBLE_EQ(sums[1], 50.0 * 2);
-    EXPECT_DOUBLE_EQ(sums[2], 645.0 * 2);
+    EXPECT_FLOAT_EQ(sums[0], 25.0 * 2);
+    EXPECT_FLOAT_EQ(sums[1], 50.0 * 2);
+    EXPECT_FLOAT_EQ(sums[2], 645.0 * 2);
     
     for(unsigned int i = 0; i < 10; ++i) {
-        EXPECT_DOUBLE_EQ( eventWeights->Get(i), static_cast<Weight>(i+3) * 2); 
+        EXPECT_FLOAT_EQ( eventWeights->Get(i), static_cast<Weight>(i+3) * 2); 
     }
 
 }
@@ -507,8 +507,8 @@ TEST_F(EventSampleTest, AddingEventsWorksCorrectly) {
    
     const auto &eventWeights = eventSample->GetWeights();
     auto sums = eventWeights.GetSums(5);
-    EXPECT_DOUBLE_EQ(sums[0], 2.0);
-    EXPECT_DOUBLE_EQ(sums[1], 0.0);
+    EXPECT_FLOAT_EQ(sums[0], 2.0);
+    EXPECT_FLOAT_EQ(sums[1], 0.0);
 
  
     // Add some more Signal and Background events   
@@ -519,8 +519,8 @@ TEST_F(EventSampleTest, AddingEventsWorksCorrectly) {
     EXPECT_EQ( eventSample->GetNBckgrds(), 5u);
     
     sums = eventWeights.GetSums(5);
-    EXPECT_DOUBLE_EQ(sums[0], 10.0);
-    EXPECT_DOUBLE_EQ(sums[1], 10.0);
+    EXPECT_FLOAT_EQ(sums[0], 10.0);
+    EXPECT_FLOAT_EQ(sums[1], 10.0);
     
     // Test some of the values, if they're correct
     // Remember that the events are NOT in the same order as they were added,
@@ -552,8 +552,8 @@ TEST_F(EventSampleTest, AddingEventsWithZeroWeightWorksCorrectly) {
     
     const auto &eventWeights = eventSample->GetWeights();
     const auto& sums = eventWeights.GetSums(5);
-    EXPECT_DOUBLE_EQ(sums[0], 5.0);
-    EXPECT_DOUBLE_EQ(sums[1], 4.0);
+    EXPECT_FLOAT_EQ(sums[0], 5.0);
+    EXPECT_FLOAT_EQ(sums[1], 4.0);
 
 }
 
@@ -579,23 +579,23 @@ TEST_F(CumulativeDistributionsTest, CheckIfLayer0IsCorrect) {
 
     CumulativeDistributions CDFsForLayer0(0, *eventSample);
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 1), 325.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 2), 663.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 3), 963.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 4), 1275.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 1), 325.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 2), 637.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 3), 937.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 4), 1275.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, 1), 325.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, 2), 663.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, 3), 963.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, 4), 1275.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 1, 1), 325.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 1, 2), 637.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 1, 3), 937.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 1, 4), 1275.0); 
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 1), 900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 2), 1812.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 3), 2787.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 4), 3775.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 1), 900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 2), 1888.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 3), 2863.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 4), 3775.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, 1), 900.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, 2), 1812.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, 3), 2787.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, 4), 3775.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 1, 1), 900.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 1, 2), 1888.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 1, 3), 2863.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 1, 4), 3775.0); 
 
 }
 
@@ -615,21 +615,21 @@ TEST_F(CumulativeDistributionsTest, NaNShouldBeIgnored) {
     delete newEventSample;
 
     for(unsigned int iBin = 1; iBin < 5; ++iBin) {
-      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, iBin), newCDFsForLayer0.GetSignal(0, 0, iBin)); 
-      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, iBin), newCDFsForLayer0.GetBckgrd(0, 0, iBin)); 
-      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, iBin), newCDFsForLayer0.GetSignal(0, 1, iBin)); 
-      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, iBin), newCDFsForLayer0.GetBckgrd(0, 1, iBin)); 
+      EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, iBin), newCDFsForLayer0.GetSignal(0, 0, iBin)); 
+      EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, iBin), newCDFsForLayer0.GetBckgrd(0, 0, iBin)); 
+      EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 1, iBin), newCDFsForLayer0.GetSignal(0, 1, iBin)); 
+      EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 1, iBin), newCDFsForLayer0.GetBckgrd(0, 1, iBin)); 
     }
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 0), 0.0);
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 0), 0.0);
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 0), 0.0);
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 0), 0.0);
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, 0), 0.0);
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, 0), 0.0);
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 1, 0), 0.0);
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 1, 0), 0.0);
     
-    EXPECT_DOUBLE_EQ( newCDFsForLayer0.GetSignal(0, 0, 0), 50.0);
-    EXPECT_DOUBLE_EQ( newCDFsForLayer0.GetBckgrd(0, 0, 0), 50.0);
-    EXPECT_DOUBLE_EQ( newCDFsForLayer0.GetSignal(0, 1, 0), 50.0);
-    EXPECT_DOUBLE_EQ( newCDFsForLayer0.GetBckgrd(0, 1, 0), 50.0);
+    EXPECT_FLOAT_EQ( newCDFsForLayer0.GetSignal(0, 0, 0), 50.0);
+    EXPECT_FLOAT_EQ( newCDFsForLayer0.GetBckgrd(0, 0, 0), 50.0);
+    EXPECT_FLOAT_EQ( newCDFsForLayer0.GetSignal(0, 1, 0), 50.0);
+    EXPECT_FLOAT_EQ( newCDFsForLayer0.GetBckgrd(0, 1, 0), 50.0);
 
 }
 
@@ -649,10 +649,10 @@ TEST_F(CumulativeDistributionsTest, ZeroWeightShouldBeIgnored) {
     delete newEventSample;
 
     for(unsigned int iBin = 0; iBin < 5; ++iBin) {
-      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, iBin), newCDFsForLayer0.GetSignal(0, 0, iBin)); 
-      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, iBin), newCDFsForLayer0.GetBckgrd(0, 0, iBin)); 
-      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, iBin), newCDFsForLayer0.GetSignal(0, 1, iBin)); 
-      EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, iBin), newCDFsForLayer0.GetBckgrd(0, 1, iBin)); 
+      EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, iBin), newCDFsForLayer0.GetSignal(0, 0, iBin)); 
+      EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, iBin), newCDFsForLayer0.GetBckgrd(0, 0, iBin)); 
+      EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 1, iBin), newCDFsForLayer0.GetSignal(0, 1, iBin)); 
+      EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 1, iBin), newCDFsForLayer0.GetBckgrd(0, 1, iBin)); 
     }
 
 }
@@ -670,41 +670,41 @@ TEST_F(CumulativeDistributionsTest, CheckIfLayer1IsCorrect) {
 
     CumulativeDistributions CDFsForLayer1(1, *eventSample);
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 0, 1), 325.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 0, 2), 325.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 0, 3), 625.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 0, 4), 625.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 1, 1), 325.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 1, 2), 325.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 1, 3), 625.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 1, 4), 625.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 0, 1), 325.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 0, 2), 325.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 0, 3), 625.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 0, 4), 625.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 1, 1), 325.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 1, 2), 325.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 1, 3), 625.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 1, 4), 625.0); 
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 0, 1), 900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 0, 2), 900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 0, 3), 1875.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 0, 4), 1875.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 1, 1), 900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 1, 2), 900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 1, 3), 1875.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 1, 4), 1875.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 0, 1), 900.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 0, 2), 900.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 0, 3), 1875.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 0, 4), 1875.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 1, 1), 900.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 1, 2), 900.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 1, 3), 1875.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 1, 4), 1875.0); 
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 1), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 2), 338.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 3), 338.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 0, 4), 650.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 1), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 2), 312.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 3), 312.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 1, 4), 650.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 0, 1), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 0, 2), 338.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 0, 3), 338.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 0, 4), 650.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 1, 1), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 1, 2), 312.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 1, 3), 312.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 1, 4), 650.0); 
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 1), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 2), 912.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 3), 912.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 0, 4), 1900.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 1), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 2), 988.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 3), 988.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 1, 4), 1900.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 0, 1), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 0, 2), 912.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 0, 3), 912.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 0, 4), 1900.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 1, 1), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 1, 2), 988.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 1, 3), 988.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 1, 4), 1900.0); 
 
 }
 
@@ -724,53 +724,53 @@ TEST_F(CumulativeDistributionsTest, DifferentBinningLevels) {
     
     CumulativeDistributions CDFsForLayer0(0, *sample);
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 1), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 2), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 3), 4.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 0, 4), 5.0);
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, 0), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, 1), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, 2), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, 3), 4.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 0, 4), 5.0);
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 1), 3.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 1, 2), 5.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 1, 0), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 1, 1), 3.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 1, 2), 5.0); 
     
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 2, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 2, 1), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 2, 2), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 2, 3), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 2, 4), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 2, 5), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 2, 6), 3.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 2, 7), 4.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 2, 8), 5.0);  
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 2, 0), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 2, 1), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 2, 2), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 2, 3), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 2, 4), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 2, 5), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 2, 6), 3.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 2, 7), 4.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 2, 8), 5.0);  
 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 3, 0), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 3, 1), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetSignal(0, 3, 2), 4.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, 0), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 3, 0), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 3, 1), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetSignal(0, 3, 2), 4.0); 
     
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 1), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 2), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 3), 4.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 0, 4), 5.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, 1), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, 2), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, 3), 4.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 0, 4), 5.0); 
     
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 1), 3.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 1, 2), 5.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 1, 0), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 1, 1), 3.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 1, 2), 5.0); 
     
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 2, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 2, 1), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 2, 2), 3.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 2, 3), 5.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 2, 4), 5.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 2, 5), 5.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 2, 6), 5.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 2, 7), 5.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 2, 8), 5.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 2, 0), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 2, 1), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 2, 2), 3.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 2, 3), 5.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 2, 4), 5.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 2, 5), 5.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 2, 6), 5.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 2, 7), 5.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 2, 8), 5.0); 
     
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 3, 0), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 3, 1), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer0.GetBckgrd(0, 3, 2), 4.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 3, 0), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 3, 1), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer0.GetBckgrd(0, 3, 2), 4.0); 
     
     auto &eventFlags = sample->GetFlags();
     for(unsigned int i = 0; i < 10; ++i) {
@@ -781,45 +781,45 @@ TEST_F(CumulativeDistributionsTest, DifferentBinningLevels) {
     // due to the different binning sizes this should influence this feature.
     CumulativeDistributions CDFsForLayer1(1, *sample);
     
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 2, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 2, 1), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 2, 2), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 2, 3), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 2, 4), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 2, 5), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 2, 6), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 2, 7), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(0, 2, 8), 3.0);  
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 2, 0), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 2, 1), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 2, 2), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 2, 3), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 2, 4), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 2, 5), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 2, 6), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 2, 7), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(0, 2, 8), 3.0);  
     
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 2, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 2, 1), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 2, 2), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 2, 3), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 2, 4), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 2, 5), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 2, 6), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 2, 7), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(0, 2, 8), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 2, 0), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 2, 1), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 2, 2), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 2, 3), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 2, 4), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 2, 5), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 2, 6), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 2, 7), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(0, 2, 8), 2.0); 
     
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 2, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 2, 1), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 2, 2), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 2, 3), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 2, 4), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 2, 5), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 2, 6), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 2, 7), 2.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetSignal(1, 2, 8), 2.0);  
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 2, 0), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 2, 1), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 2, 2), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 2, 3), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 2, 4), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 2, 5), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 2, 6), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 2, 7), 2.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetSignal(1, 2, 8), 2.0);  
     
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 2, 0), 0.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 2, 1), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 2, 2), 1.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 2, 3), 3.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 2, 4), 3.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 2, 5), 3.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 2, 6), 3.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 2, 7), 3.0); 
-    EXPECT_DOUBLE_EQ( CDFsForLayer1.GetBckgrd(1, 2, 8), 3.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 2, 0), 0.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 2, 1), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 2, 2), 1.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 2, 3), 3.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 2, 4), 3.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 2, 5), 3.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 2, 6), 3.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 2, 7), 3.0); 
+    EXPECT_FLOAT_EQ( CDFsForLayer1.GetBckgrd(1, 2, 8), 3.0); 
 
     delete sample;
 }
@@ -828,11 +828,11 @@ class LossFunctionTest : public ::testing::Test { };
 
 TEST_F(LossFunctionTest, GiniIndexIsCorrect) {
 
-    EXPECT_DOUBLE_EQ( LossFunction(4,4), 2.0);
-    EXPECT_DOUBLE_EQ( LossFunction(1,4), 0.8);
-    EXPECT_DOUBLE_EQ( LossFunction(4,1), 0.8);
-    EXPECT_DOUBLE_EQ( LossFunction(2,0), 0.0);
-    EXPECT_DOUBLE_EQ( LossFunction(0,2), 0.0);
+    EXPECT_FLOAT_EQ( LossFunction(4,4), 2.0);
+    EXPECT_FLOAT_EQ( LossFunction(1,4), 0.8);
+    EXPECT_FLOAT_EQ( LossFunction(4,1), 0.8);
+    EXPECT_FLOAT_EQ( LossFunction(2,0), 0.0);
+    EXPECT_FLOAT_EQ( LossFunction(0,2), 0.0);
 
 }
 
@@ -886,12 +886,12 @@ TEST_F(NodeTest, BoostWeightCalculation) {
 
     Node node(0,0);
     node.SetWeights({2.0, 2.0, 4.0});
-    EXPECT_DOUBLE_EQ(node.GetBoostWeight(), 0.0); 
+    EXPECT_FLOAT_EQ(node.GetBoostWeight(), 0.0); 
     node.SetWeights({0.0, 0.0, 0.0});
     node.AddSignalWeight(1.0, 1.0);
     node.AddSignalWeight(3.0, 1.0);
     node.AddBckgrdWeight(2.0, 1.0);
-    EXPECT_DOUBLE_EQ(node.GetBoostWeight(), -1.0);
+    EXPECT_FLOAT_EQ(node.GetBoostWeight(), -1.0);
 
 }
 
@@ -899,12 +899,12 @@ TEST_F(NodeTest, PurityCalculation) {
 
     Node node(0,0);
     node.SetWeights({2.0, 2.0, 4.0});
-    EXPECT_DOUBLE_EQ(node.GetPurity(), 0.5); 
+    EXPECT_FLOAT_EQ(node.GetPurity(), 0.5); 
     node.SetWeights({0.0, 0.0, 0.0});
     node.AddSignalWeight(2.0, 1.0);
     node.AddSignalWeight(4.0, 1.0);
     node.AddBckgrdWeight(4.0, 1.0);
-    EXPECT_DOUBLE_EQ(node.GetPurity(), 0.6);
+    EXPECT_FLOAT_EQ(node.GetPurity(), 0.6);
 
 }
 
@@ -915,16 +915,16 @@ TEST_F(NodeTest, NegativeWeightsAreHandledCorrectly) {
     node.AddSignalWeight(-2.0, -1.0);
     node.AddSignalWeight(-4.0, -1.0);
     node.AddBckgrdWeight(-4.0, -1.0);
-    EXPECT_DOUBLE_EQ(node.GetPurity(), 0.6);
-    EXPECT_DOUBLE_EQ(node.GetBoostWeight(), -0.125);
+    EXPECT_FLOAT_EQ(node.GetPurity(), 0.6);
+    EXPECT_FLOAT_EQ(node.GetBoostWeight(), -0.125);
     
     node.SetWeights({0.0, 0.0, 0.0});
     node.AddSignalWeight(-2.0, 1.0);
     node.AddSignalWeight(1.0, -2.0);
     node.AddBckgrdWeight(0.5, -0.5);
     // Purity above 1.0 can happen with negative weights
-    EXPECT_DOUBLE_EQ(node.GetPurity(), 2.0);
-    EXPECT_DOUBLE_EQ(node.GetBoostWeight(), 0.375);
+    EXPECT_FLOAT_EQ(node.GetPurity(), 2.0);
+    EXPECT_FLOAT_EQ(node.GetBoostWeight(), 0.375);
 
 }
 
@@ -960,8 +960,8 @@ TEST_F(NodeTest, AddZeroWeightDoesNotChangeAnything) {
     newNode.AddBckgrdWeight(0.5, 0.1);
     
 
-    EXPECT_DOUBLE_EQ(node.GetPurity(), newNode.GetPurity());
-    EXPECT_DOUBLE_EQ(node.GetBoostWeight(), newNode.GetBoostWeight());
+    EXPECT_FLOAT_EQ(node.GetPurity(), newNode.GetPurity());
+    EXPECT_FLOAT_EQ(node.GetBoostWeight(), newNode.GetBoostWeight());
 
 }
 
@@ -974,7 +974,7 @@ TEST_F(NodeTest, BestCut0Layer) {
     auto bestCut = node.CalculateBestCut(CDFs);
     EXPECT_EQ( bestCut.feature, 0u );
     EXPECT_EQ( bestCut.index, 2u );
-    EXPECT_DOUBLE_EQ( bestCut.gain, 1.875 );
+    EXPECT_FLOAT_EQ( bestCut.gain, 1.875 );
     EXPECT_TRUE( bestCut.valid );
 
 }
@@ -986,10 +986,10 @@ TEST_F(NodeTest, NaNIsIgnored) {
     node.SetWeights({10.0, 10.0, 68.0});
     auto bestCut = node.CalculateBestCut(CDFs);
     
-    EXPECT_DOUBLE_EQ(CDFs.GetSignal(0, 0, 0), 0.0);
-    EXPECT_DOUBLE_EQ(CDFs.GetBckgrd(0, 0, 0), 0.0);
-    EXPECT_DOUBLE_EQ(CDFs.GetSignal(0, 1, 0), 0.0);
-    EXPECT_DOUBLE_EQ(CDFs.GetBckgrd(0, 1, 0), 0.0);
+    EXPECT_FLOAT_EQ(CDFs.GetSignal(0, 0, 0), 0.0);
+    EXPECT_FLOAT_EQ(CDFs.GetBckgrd(0, 0, 0), 0.0);
+    EXPECT_FLOAT_EQ(CDFs.GetSignal(0, 1, 0), 0.0);
+    EXPECT_FLOAT_EQ(CDFs.GetBckgrd(0, 1, 0), 0.0);
     // I violate constness here because it's the simplest way to test the influence
     // of the 0th bin, which contains the weights for the NaN values.
     // Signal and Background are chosen extremly asymmetric for both features, so
@@ -1002,7 +1002,7 @@ TEST_F(NodeTest, NaNIsIgnored) {
 
     EXPECT_EQ( bestCut.feature, newBestCut.feature );
     EXPECT_EQ( bestCut.index, newBestCut.index );
-    EXPECT_DOUBLE_EQ( bestCut.gain, newBestCut.gain );
+    EXPECT_FLOAT_EQ( bestCut.gain, newBestCut.gain );
     EXPECT_EQ( bestCut.valid, newBestCut.valid );
 
 }
@@ -1026,7 +1026,7 @@ TEST_F(NodeTest, BestCut1Layer) {
     auto right_bestCut = right_node.CalculateBestCut(CDFs);
     EXPECT_EQ( right_bestCut.feature, 1u );
     EXPECT_EQ( right_bestCut.index, 2u );
-    EXPECT_DOUBLE_EQ( right_bestCut.gain, 0.375);
+    EXPECT_FLOAT_EQ( right_bestCut.gain, 0.375);
     EXPECT_TRUE( right_bestCut.valid );
     
     Node left_node(1,1);
@@ -1034,7 +1034,7 @@ TEST_F(NodeTest, BestCut1Layer) {
     auto left_bestCut = left_node.CalculateBestCut(CDFs);
     EXPECT_EQ( left_bestCut.feature, 1u );
     EXPECT_EQ( left_bestCut.index, 2u );
-    EXPECT_DOUBLE_EQ( left_bestCut.gain, 0.53571428571428581);
+    EXPECT_FLOAT_EQ( left_bestCut.gain, 0.53571428571428581);
     EXPECT_TRUE( left_bestCut.valid );
 
 }
@@ -1076,17 +1076,17 @@ TEST_F(TreeBuilderTest, DeterminedCutsAreCorrect) {
     const auto &cuts = dt.GetCuts();
     EXPECT_EQ( cuts[0].feature, 0u );
     EXPECT_EQ( cuts[0].index, 2u );
-    EXPECT_DOUBLE_EQ( cuts[0].gain, 1.875 );
+    EXPECT_FLOAT_EQ( cuts[0].gain, 1.875 );
     EXPECT_TRUE( cuts[0].valid );
     
     EXPECT_EQ( cuts[1].feature, 1u );
     EXPECT_EQ( cuts[1].index, 2u );
-    EXPECT_DOUBLE_EQ( cuts[1].gain, 0.375 );
+    EXPECT_FLOAT_EQ( cuts[1].gain, 0.375 );
     EXPECT_TRUE( cuts[1].valid );
     
     EXPECT_EQ( cuts[2].feature, 1u );
     EXPECT_EQ( cuts[2].index, 2u );
-    EXPECT_DOUBLE_EQ( cuts[2].gain, 0.53571428571428581 );
+    EXPECT_FLOAT_EQ( cuts[2].gain, 0.53571428571428581 );
     EXPECT_TRUE( cuts[2].valid );
 
 }
@@ -1110,13 +1110,13 @@ TEST_F(TreeBuilderTest, NEntriesOfNodesAreCorrectAfterTraining) {
     
     TreeBuilder dt(2, *eventSample);
     const auto &nEntries = dt.GetNEntries();
-    EXPECT_DOUBLE_EQ( nEntries[0], 20.0 );
-    EXPECT_DOUBLE_EQ( nEntries[1], 8.0 );
-    EXPECT_DOUBLE_EQ( nEntries[2], 12.0 );
-    EXPECT_DOUBLE_EQ( nEntries[3], 6.0 );
-    EXPECT_DOUBLE_EQ( nEntries[4], 2.0 );
-    EXPECT_DOUBLE_EQ( nEntries[5], 7.0 );
-    EXPECT_DOUBLE_EQ( nEntries[6], 5.0 );
+    EXPECT_FLOAT_EQ( nEntries[0], 20.0 );
+    EXPECT_FLOAT_EQ( nEntries[1], 8.0 );
+    EXPECT_FLOAT_EQ( nEntries[2], 12.0 );
+    EXPECT_FLOAT_EQ( nEntries[3], 6.0 );
+    EXPECT_FLOAT_EQ( nEntries[4], 2.0 );
+    EXPECT_FLOAT_EQ( nEntries[5], 7.0 );
+    EXPECT_FLOAT_EQ( nEntries[6], 5.0 );
 
 }
 
@@ -1125,13 +1125,13 @@ TEST_F(TreeBuilderTest, PuritiesOfNodesAreCorrectAfterTraining) {
     
     TreeBuilder dt(2, *eventSample);
     const auto &purities = dt.GetPurities();
-    EXPECT_DOUBLE_EQ( purities[0], 0.5 );
-    EXPECT_DOUBLE_EQ( purities[1], 0.875 );
-    EXPECT_DOUBLE_EQ( purities[2], 0.25 );
-    EXPECT_DOUBLE_EQ( purities[3], 1.0 );
-    EXPECT_DOUBLE_EQ( purities[4], 0.5 );
-    EXPECT_DOUBLE_EQ( purities[5], 0.42857142857142855 );
-    EXPECT_DOUBLE_EQ( purities[6], 0.0 );
+    EXPECT_FLOAT_EQ( purities[0], 0.5 );
+    EXPECT_FLOAT_EQ( purities[1], 0.875 );
+    EXPECT_FLOAT_EQ( purities[2], 0.25 );
+    EXPECT_FLOAT_EQ( purities[3], 1.0 );
+    EXPECT_FLOAT_EQ( purities[4], 0.5 );
+    EXPECT_FLOAT_EQ( purities[5], 0.42857142857142855 );
+    EXPECT_FLOAT_EQ( purities[6], 0.0 );
 
 }
 
@@ -1139,13 +1139,13 @@ TEST_F(TreeBuilderTest, BoostWeightsOfNodesAreCorrectAfterTraining) {
     
     TreeBuilder dt(2, *eventSample);
     const auto &boostWeights = dt.GetBoostWeights();
-    EXPECT_DOUBLE_EQ( boostWeights[0], 0.0 );
-    EXPECT_DOUBLE_EQ( boostWeights[1], -1.0 );
-    EXPECT_DOUBLE_EQ( boostWeights[2], 0.42857142857142855 );
-    EXPECT_DOUBLE_EQ( boostWeights[3], -0.75 );
-    EXPECT_DOUBLE_EQ( boostWeights[4], 0 );
-    EXPECT_DOUBLE_EQ( boostWeights[5], 0.090909090909090912 );
-    EXPECT_DOUBLE_EQ( boostWeights[6], 1.6666666666666667 );
+    EXPECT_FLOAT_EQ( boostWeights[0], 0.0 );
+    EXPECT_FLOAT_EQ( boostWeights[1], -1.0 );
+    EXPECT_FLOAT_EQ( boostWeights[2], 0.42857142857142855 );
+    EXPECT_FLOAT_EQ( boostWeights[3], -0.75 );
+    EXPECT_FLOAT_EQ( boostWeights[4], 0 );
+    EXPECT_FLOAT_EQ( boostWeights[5], 0.090909090909090912 );
+    EXPECT_FLOAT_EQ( boostWeights[6], 1.6666666666666667 );
 
 }
 

@@ -83,7 +83,10 @@ namespace FastBDT {
   template<class T>
   std::ostream& operator<<(std::ostream& stream, const Cut<T> &cut) {
      stream << cut.feature << std::endl;
+     stream.precision(std::numeric_limits<T>::max_digits10);
+     stream << std::scientific;
      stream << cut.index << std::endl;
+     stream.precision(6);
      stream << cut.valid << std::endl;
      stream << cut.gain;
      stream << std::endl;

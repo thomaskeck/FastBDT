@@ -20,6 +20,20 @@ class IOTest : public ::testing::Test {
 
 };
 
+
+template<typename T>
+::testing::AssertionResult CmpHelperFloatingPointEQNanSafe(const char* expected_expression, const char* actual_expression, T expected, T actual) {
+  if(std::isnan(expected) and std::isnan(actual)) {
+    return ::testing::AssertionSuccess();
+  }
+  return ::testing::internal::CmpHelperFloatingPointEQ(expected_expression, actual_expression, expected, actual);
+}
+
+
+#define EXPECT_FLOAT_EQ_NAN_SAFE(x, y)  EXPECT_PRED_FORMAT2(CmpHelperFloatingPointEQNanSafe<float>, x, y) 
+#define EXPECT_DOUBLE_EQ_NAN_SAFE(x, y)  EXPECT_PRED_FORMAT2(CmpHelperFloatingPointEQNanSafe<double>, x, y) 
+
+
 TEST_F(IOTest, IOVector) {
 
     std::vector<double> before = {0.0, 1.0, 2.5, 3.2, -1.4, 0.0};
@@ -32,7 +46,7 @@ TEST_F(IOTest, IOVector) {
 
     EXPECT_EQ(before.size(), after.size());
     for(unsigned int i = 0; i < before.size() and i < after.size(); ++i)
-        EXPECT_DOUBLE_EQ(before[i], after[i]);
+        EXPECT_FLOAT_EQ(before[i], after[i]);
 
 }
 
@@ -56,7 +70,7 @@ TEST_F(IOTest, IOUsingSpecialValuesFloat) {
 
     EXPECT_EQ(before.size(), after.size());
     for(unsigned int i = 0; i < before.size() and i < after.size(); ++i)
-        EXPECT_DOUBLE_EQ(before[i], after[i]);
+        EXPECT_FLOAT_EQ_NAN_SAFE(before[i], after[i]);
 
 }
 
@@ -80,7 +94,7 @@ TEST_F(IOTest, IOUsingSpecialValuesDouble) {
 
     EXPECT_EQ(before.size(), after.size());
     for(unsigned int i = 0; i < before.size() and i < after.size(); ++i)
-        EXPECT_DOUBLE_EQ(before[i], after[i]);
+        EXPECT_DOUBLE_EQ_NAN_SAFE(before[i], after[i]);
 
 }
 
@@ -99,7 +113,7 @@ TEST_F(IOTest, IOFeatureBinning) {
     EXPECT_EQ(before.GetNLevels(), after.GetNLevels());
     EXPECT_EQ(before_binning.size(), after_binning.size());
     for(unsigned int i = 0; i < before_binning.size() and i < after_binning.size(); ++i)
-        EXPECT_DOUBLE_EQ(before_binning[i], after_binning[i]);
+        EXPECT_FLOAT_EQ_NAN_SAFE(before_binning[i], after_binning[i]);
 
 }
 
@@ -127,7 +141,7 @@ TEST_F(IOTest, IOFeatureBinningVector) {
         EXPECT_EQ(before_featureBinning.GetNLevels(), after_featureBinning.GetNLevels());
         EXPECT_EQ(before_binning.size(), after_binning.size());
         for(unsigned int i = 0; i < before_binning.size() and i < after_binning.size(); ++i)
-            EXPECT_DOUBLE_EQ(before_binning[i], after_binning[i]);
+            EXPECT_FLOAT_EQ_NAN_SAFE(before_binning[i], after_binning[i]);
 
     }
 
@@ -180,8 +194,8 @@ TEST_F(IOTest, IOCutSpecialValuesFloat) {
       stream >> after;
 
       EXPECT_EQ(before.feature, after.feature);
-      EXPECT_EQ(before.gain, after.gain);
-      EXPECT_EQ(before.index, after.index);
+      EXPECT_FLOAT_EQ(before.gain, after.gain);
+      EXPECT_FLOAT_EQ_NAN_SAFE(before.index, after.index);
       EXPECT_EQ(before.valid, after.valid);
     }
 
@@ -213,8 +227,8 @@ TEST_F(IOTest, IOCutSpecialValuesDouble) {
       stream >> after;
 
       EXPECT_EQ(before.feature, after.feature);
-      EXPECT_EQ(before.gain, after.gain);
-      EXPECT_EQ(before.index, after.index);
+      EXPECT_FLOAT_EQ(before.gain, after.gain);
+      EXPECT_DOUBLE_EQ_NAN_SAFE(before.index, after.index);
       EXPECT_EQ(before.valid, after.valid);
     }
 
@@ -253,23 +267,23 @@ TEST_F(IOTest, IOTree) {
 
     EXPECT_EQ(before_cuts.size(), after_cuts.size());
     for(unsigned int i = 0; i < before_cuts.size() and i < after_cuts.size(); ++i) {
-        EXPECT_DOUBLE_EQ(before_cuts[i].feature, after_cuts[i].feature);
-        EXPECT_DOUBLE_EQ(before_cuts[i].valid, after_cuts[i].valid);
-        EXPECT_DOUBLE_EQ(before_cuts[i].index, after_cuts[i].index);
-        EXPECT_DOUBLE_EQ(before_cuts[i].gain, after_cuts[i].gain);
+        EXPECT_FLOAT_EQ(before_cuts[i].feature, after_cuts[i].feature);
+        EXPECT_FLOAT_EQ(before_cuts[i].valid, after_cuts[i].valid);
+        EXPECT_FLOAT_EQ(before_cuts[i].index, after_cuts[i].index);
+        EXPECT_FLOAT_EQ(before_cuts[i].gain, after_cuts[i].gain);
     }
     
     EXPECT_EQ(before_purities.size(), after_purities.size());
     for(unsigned int i = 0; i < before_purities.size() and i < after_purities.size(); ++i)
-        EXPECT_DOUBLE_EQ(before_purities[i], after_purities[i]);
+        EXPECT_FLOAT_EQ(before_purities[i], after_purities[i]);
     
     EXPECT_EQ(before_boostWeights.size(), after_boostWeights.size());
     for(unsigned int i = 0; i < before_boostWeights.size() and i < after_boostWeights.size(); ++i)
-        EXPECT_DOUBLE_EQ(before_boostWeights[i], after_boostWeights[i]);
+        EXPECT_FLOAT_EQ(before_boostWeights[i], after_boostWeights[i]);
     
     EXPECT_EQ(before_nEntries.size(), after_nEntries.size());
     for(unsigned int i = 0; i < before_nEntries.size() and i < after_nEntries.size(); ++i)
-        EXPECT_DOUBLE_EQ(before_nEntries[i], after_nEntries[i]);
+        EXPECT_FLOAT_EQ(before_nEntries[i], after_nEntries[i]);
 
 }
 
@@ -327,22 +341,22 @@ TEST_F(IOTest, IOForest) {
 
         EXPECT_EQ(before_cuts.size(), after_cuts.size());
         for(unsigned int i = 0; i < before_cuts.size() and i < after_cuts.size(); ++i) {
-            EXPECT_DOUBLE_EQ(before_cuts[i].feature, after_cuts[i].feature);
-            EXPECT_DOUBLE_EQ(before_cuts[i].valid, after_cuts[i].valid);
-            EXPECT_DOUBLE_EQ(before_cuts[i].index, after_cuts[i].index);
-            EXPECT_DOUBLE_EQ(before_cuts[i].gain, after_cuts[i].gain);
+            EXPECT_FLOAT_EQ(before_cuts[i].feature, after_cuts[i].feature);
+            EXPECT_FLOAT_EQ(before_cuts[i].valid, after_cuts[i].valid);
+            EXPECT_FLOAT_EQ(before_cuts[i].index, after_cuts[i].index);
+            EXPECT_FLOAT_EQ(before_cuts[i].gain, after_cuts[i].gain);
         }
         
         EXPECT_EQ(before_purities.size(), after_purities.size());
         for(unsigned int i = 0; i < before_purities.size() and i < after_purities.size(); ++i)
-            EXPECT_DOUBLE_EQ(before_purities[i], after_purities[i]);
+            EXPECT_FLOAT_EQ(before_purities[i], after_purities[i]);
         
         EXPECT_EQ(before_boostWeights.size(), after_boostWeights.size());
         for(unsigned int i = 0; i < before_boostWeights.size() and i < after_boostWeights.size(); ++i)
-            EXPECT_DOUBLE_EQ(before_boostWeights[i], after_boostWeights[i]);
+            EXPECT_FLOAT_EQ(before_boostWeights[i], after_boostWeights[i]);
         
         EXPECT_EQ(before_nEntries.size(), after_nEntries.size());
         for(unsigned int i = 0; i < before_nEntries.size() and i < after_nEntries.size(); ++i)
-            EXPECT_DOUBLE_EQ(before_nEntries[i], after_nEntries[i]);
+            EXPECT_FLOAT_EQ(before_nEntries[i], after_nEntries[i]);
     }
 }
