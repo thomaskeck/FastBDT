@@ -49,11 +49,11 @@ target_link_libraries(FastBDT_CInterface)
 add_library(FastBDT_shared SHARED ${FastBDT_SOURCES} ${FastBDT_HEADERS})
 target_link_libraries(FastBDT_shared)
 
-#install(TARGETS FastBDT_static FastBDT_shared FastBDTMain FastBDT_CInterface
-  #   LIBRARY DESTINATION lib
-   #   ARCHIVE DESTINATION lib
-   #   RUNTIME DESTINATION bin   
-   #)
+install(TARGETS FastBDT_static FastBDT_shared FastBDTMain FastBDT_CInterface
+     LIBRARY DESTINATION lib
+      ARCHIVE DESTINATION lib
+      RUNTIME DESTINATION bin   
+   )
 
 #install(FILES ${FastBDT_HEADERS} DESTINATION include)
 
