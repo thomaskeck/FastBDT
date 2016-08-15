@@ -816,7 +816,7 @@ namespace FastBDT {
 
   template<typename T>
   Forest<T> removeFeatureBinningTransformationFromForest(const Forest<unsigned int> &forest, const std::vector<FeatureBinning<T>> &featureBinnings) {
-      Forest<T> cleaned_forest(forest.GetShrinkage(), forest.GetF0());
+      Forest<T> cleaned_forest(forest.GetShrinkage(), forest.GetF0(), forest.GetTransform2Probability());
       for(auto &tree : forest.GetForest()) {
           cleaned_forest.AddTree(removeFeatureBinningTransformationFromTree(tree, featureBinnings));
       }
