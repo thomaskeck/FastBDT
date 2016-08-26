@@ -8,7 +8,7 @@
 #define ADDITIONAL_INCLUDE_GUARD_BECAUSE_ROOT_IS_SO_STUPID
 
 #define FastBDT_VERSION_MAJOR 3
-#define FastBDT_VERSION_MINOR 0
+#define FastBDT_VERSION_MINOR 1
 
 #include <iostream>
 #include <stdexcept>
@@ -70,19 +70,19 @@ namespace FastBDT {
                 first++;
             }
 
-            unsigned int size = last - first;
+            uint64_t size = last - first;
             
             // Need only Nbins, altough we store upper and lower boundary as well,
             // however GetNBins counts also the NaN bin, so it really is GetNBins() - 1 + 1
             binning.resize(GetNBins(), first[0]);
             binning[0] = first[0];
             binning[GetNBins()-1] = first[size-1];
-
-            unsigned long int numberOfDistinctValues = 1;
+            
+            uint64_t numberOfDistinctValues = 1;
             std::vector<Value> temp(GetNBins(), first[size-1]);
             temp[0] = first[0];
             temp[1] = first[0];
-            for(unsigned int iEvent = 1; iEvent < size; ++iEvent) {
+            for(uint64_t iEvent = 1; iEvent < size; ++iEvent) {
               if(first[iEvent] != first[iEvent-1]) {
                 if(numberOfDistinctValues < GetNBins() - 2) {
                   temp[numberOfDistinctValues+1] = first[iEvent];
@@ -99,10 +99,11 @@ namespace FastBDT {
 
             // TODO Choose nLevels automatically if nLevels == 0
 
-            unsigned int bin_index = 0;
-            for(unsigned int iLevel = 0; iLevel < nLevels; ++iLevel) {
-              const unsigned int nBins = (1 << iLevel);
-              for(unsigned int iBin = 0; iBin < nBins; ++iBin) {
+            uint64_t bin_index = 0;
+            for(uint64_t iLevel = 0; iLevel < nLevels; ++iLevel) {
+              const uint64_t nBins = (1 << iLevel);
+              for(uint64_t iBin = 0; iBin < nBins; ++iBin) {
+                // (nBins-1)*size overflow possible, therefore we use uint64_t in the whole function!
                 binning[++bin_index] = first[ (size >> (iLevel+1)) + ((iBin*size) >> iLevel) ];
               }
             }
@@ -128,14 +129,15 @@ namespace FastBDT {
           
           if( bin == 1 )
               return -std::numeric_limits<Value>::infinity();
-          
-          unsigned int index = bin + (1 << nLevels) - 1;
+
+		  unsigned int index = bin + (1 << nLevels) - 1;
           for(unsigned int iLevel = 0; iLevel < (nLevels-1) and index % 2 == 0; ++iLevel) {
             index /= 2;
           }
           index /= 2;
-
+ 
           return binning[index];
+          
         }
 
         const Value& GetMin() const { return binning.front(); }
