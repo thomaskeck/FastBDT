@@ -66,6 +66,20 @@ TEST_F(FeatureBinningTest, BinRoundTrip) {
       
 }
       
+TEST_F(FeatureBinningTest, BinToValueExtensive4Layer ) {
+
+    std::vector<float> test_binning = { 0.0f, 50.0f, 25.0f, 75.0f, 12.5f, 37.5f, 62.5f, 87.5f, 6.25f, 18.75f, 31.25f, 43.75, 56.25f, 68.75f, 81.25, 93.75, 100.0f  }; 
+    std::vector<float> test_inverse_binning = { 0.0f, 6.25f, 12.5f, 18.75f, 25.0f, 31.25f, 37.5f, 43.75, 50.0f, 56.25f, 62.5f, 68.75f, 75.0f, 81.25, 87.5f, 93.75, 100.0f  }; 
+    FeatureBinning<float> featureBinning(4, test_binning);
+
+    EXPECT_TRUE(std::isnan(featureBinning.BinToValue(0u)));
+    EXPECT_TRUE(std::isinf(featureBinning.BinToValue(1u)));
+    EXPECT_TRUE(featureBinning.BinToValue(1u) < 0.0f);
+    for(unsigned int i = 1; i < test_inverse_binning.size() - 1; ++i) {
+        EXPECT_EQ(featureBinning.BinToValue(i + 1u), test_inverse_binning[i]);
+    }
+
+}
 
 TEST_F(FeatureBinningTest, ValueToBinMapsNormalValuesCorrectly) {
 

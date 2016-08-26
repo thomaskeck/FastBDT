@@ -11,7 +11,7 @@ c_uint_p = ctypes.POINTER(ctypes.c_uint)
 FastBDT_library_path = ctypes.util.find_library('FastBDT_CInterface')
 print('Try to load ', FastBDT_library_path)
 #FastBDT_library = ctypes.cdll.LoadLibrary(FastBDT_library_path)
-FastBDT_library =  ctypes.cdll.LoadLibrary('/local/ssd-scratch/tkeck/FastBDT/libFastBDT_CInterface.so')
+FastBDT_library =  ctypes.cdll.LoadLibrary('/home/thomas/FastBDT/libFastBDT_CInterface.so')
 print('Loaded ', FastBDT_library)
 
 FastBDT_library.Create.restype = ctypes.c_void_p
