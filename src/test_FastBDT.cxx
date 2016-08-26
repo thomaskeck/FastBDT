@@ -55,6 +55,18 @@ TEST_F(FeatureBinningTest, NumberOfLevelsAndBinsIsCorrectlyIdentified) {
 
 }
 
+TEST_F(FeatureBinningTest, BinRoundTrip) {
+
+    std::vector<float> binning = { 0.0f, 0.25f, 0.5f, 0.75f, 1.0f }; 
+    FeatureBinning<float> featureBinning(2, binning);
+    std::vector<float> values = {-1.0f, -0.5f, 0.0f, 0.1f, 0.25f, 0.3f, 0.5f, 0.6f, 0.75f, 0.9f, 1.0f, 1.2f, std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), NAN, std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest()};
+    for(auto &x : values) {
+      EXPECT_FLOAT_EQ(featureBinning.ValueToBin(x), featureBinning.ValueToBin(featureBinning.BinToValue(featureBinning.ValueToBin(x))));
+    }
+      
+}
+      
+
 TEST_F(FeatureBinningTest, ValueToBinMapsNormalValuesCorrectly) {
 
     EXPECT_EQ( calculatedBinning->ValueToBin(1.0f), 1u);
@@ -1582,5 +1594,54 @@ TEST_F(TreeTest, LastCutOnTheRightWasNeverUsed) {
     EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({1,2}) ), 4u );
     EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({2,1}) ), 5u );
     EXPECT_EQ(tree.ValueToNode( std::vector<unsigned int>({2,2}) ), 6u );
+
+}
+
+class RewriteTest : public ::testing::Test {
+    protected:
+        virtual void SetUp() {
+            
+            std::vector<float> binning = { 0.0f, 0.25f, 0.5f, 0.75f, 1.0f }; 
+            featureBinning = new FeatureBinning<float>(2, binning);
+
+            Cut<unsigned int> cut1, cut2, cut3;
+            cut1.feature = 0;
+            cut1.index = 2;
+            cut1.valid = true;
+            cut1.gain = 1.0;
+            cut2.feature = 0;
+            cut2.index = 1;
+            cut2.valid = true;
+            cut2.gain = 1.0;
+            cut3.feature = 0;
+            cut3.index = 4;
+            cut3.valid = true;
+            cut3.gain = 1.0;
+            
+            std::vector<Cut<unsigned int>> cuts = {cut1, cut2, cut3};
+            std::vector<Weight> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
+            std::vector<Weight> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
+            std::vector<Weight> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+            Tree<unsigned int> tree(cuts, nEntries, purities, boostWeights);
+            forest = new Forest<unsigned int>(1.0, 0.0, true);
+            forest->AddTree(tree);
+        }
+
+        virtual void TearDown() {
+            delete forest;
+            delete featureBinning;
+        }
+        FeatureBinning<float> *featureBinning;
+        Forest<unsigned int> *forest;
+
+};
+
+TEST_F(RewriteTest, CheckSameResultForOriginalAndRewrittenFloatForest) {
+
+    auto rewritten_forest = removeFeatureBinningTransformationFromForest<float>(*forest, {*featureBinning});
+    std::vector<float> values = {-1.0f, -0.5f, 0.0f, 0.1f, 0.25f, 0.3f, 0.5f, 0.6f, 0.75f, 0.9f, 1.0f, 1.2f, std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), NAN, std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest()};
+    for(auto &x : values) {
+      EXPECT_FLOAT_EQ(forest->GetF(std::vector<unsigned int>({featureBinning->ValueToBin(x)})), rewritten_forest.GetF(std::vector<float>({x})));
+    }
 
 }
