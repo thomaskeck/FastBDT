@@ -8,7 +8,7 @@
 #define ADDITIONAL_INCLUDE_GUARD_BECAUSE_ROOT_IS_SO_STUPID
 
 #define FastBDT_VERSION_MAJOR 3
-#define FastBDT_VERSION_MINOR 1
+#define FastBDT_VERSION_MINOR 2
 
 #include <iostream>
 #include <stdexcept>
