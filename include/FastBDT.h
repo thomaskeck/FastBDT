@@ -581,6 +581,16 @@ namespace FastBDT {
         return nEntries; 
       }
 
+      /**
+       * Check if the built tree is valid.
+       * If we do too much boosting steps on a hard problem, the weights can become nan,
+       * and we won't find a optimal cut anymore. A Forest containing a tree without an optimal cut
+       * will always return NAN. Therefore this method indicates if we can still use this tree or not
+       * */
+      bool IsValid() const {
+        return cuts[0].valid and std::isfinite(nodes[0].GetBoostWeight());
+      }
+
     private: 
       void UpdateCuts(const CumulativeDistributions &CDFs, unsigned int iLayer);
       void UpdateFlags(EventSample &sample);

@@ -583,6 +583,13 @@ TEST_F(EventSampleTest, AddingEventsWithZeroWeightWorksCorrectly) {
 
 }
 
+TEST_F(EventSampleTest, AddingEventsWithNANWeightsTrhow) {
+ 
+    eventSample->AddEvent( std::vector<unsigned int>({2,3,5}), 1.0, true);
+    EXPECT_THROW(eventSample->AddEvent( std::vector<unsigned int>({2,3,5}), NAN, true), std::runtime_error);
+
+}
+
 class CumulativeDistributionsTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
