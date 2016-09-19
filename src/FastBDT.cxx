@@ -71,6 +71,10 @@ namespace FastBDT {
     if(nSignals + nBckgrds == nEvents) {
       throw std::runtime_error("Promised maximum number of events exceeded.");
     }
+    
+    if(std::isnan(weight)) {
+      throw std::runtime_error("NAN values as weights are not supported!");
+    }
 
     // Now add the weight and the features at the right position of the arrays.
     // To do so, we calculate the correct index of this event. If it's a signal
@@ -383,7 +387,14 @@ namespace FastBDT {
 
       // Create and train a new train on the sample
       TreeBuilder builder(nLayersPerTree, sample);
-      forest.push_back( Tree<unsigned int>( builder.GetCuts(), builder.GetNEntries(), builder.GetPurities(), builder.GetBoostWeights() ) );
+      if(builder.IsValid()) {
+        forest.push_back( Tree<unsigned int>( builder.GetCuts(), builder.GetNEntries(), builder.GetPurities(), builder.GetBoostWeights() ) );
+      } else {
+        std::cerr << "Terminated boosting at tree " << iTree << " out of " << nTrees << std::endl;
+        std::cerr << "Because the last tree was not valid, meaning it couldn't find an optimal cut." << std::endl;
+        std::cerr << "This can happen if you do a large number of boosting steps." << std::endl;
+        break;
+      }
     }
 
   }
