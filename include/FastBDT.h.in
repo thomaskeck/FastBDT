@@ -27,7 +27,13 @@ namespace FastBDT {
   template<class Value>
   bool compareIncludingNaN (Value i, Value j) {
       if( std::isnan(i) ) {
-          return true;
+          if(std::isnan(j)) {
+            // If both are NAN i is NOT smaller
+            return false;
+          } else {
+            // In all other cases i is smaller
+            return true;
+          }
       }
       // If j is NaN the following line will return false,
       // which is fine in our case.
