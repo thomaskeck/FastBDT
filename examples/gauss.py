@@ -9,11 +9,13 @@ import sklearn.metrics
 
 if __name__ == '__main__':
 
-    mean = [0.0, 1.0, 2.0, 3.0]
-    cov = [[1.0, 0.6, 0.4, 0.2],
-           [0.0, 1.0, 0.99, 0.0],
-           [0.0, 0.0, 1.0, 0.0],
-           [0.0, 0.0, 0.0, 1.0]]
+    mean = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+    cov = [[1.0, 0.8, 0.4, 0.2, 0.1, 0.0],
+           [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+           [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+           [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+           [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+           [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]]
     for i in range(len(mean)):
         for j in range(i+1, len(mean)):
             cov[j][i] = cov[i][j]
@@ -24,20 +26,11 @@ if __name__ == '__main__':
 
     clf = FastBDT.Classifier().fit(X=X_train, y=y_train)
     p = clf.predict(X_test)
-    print(clf.variableRanking())
     global_auc = sklearn.metrics.roc_auc_score(y_test, p)
     print("Global AUC", global_auc)
 
-    for i in range(3):
-        print("Without feature", i)
-        X_train_temp = np.delete(X_train, i, axis=1)
-        X_test_temp = np.delete(X_test, i, axis=1)
-        clf = FastBDT.Classifier().fit(X=X_train_temp, y=y_train)
-        p = clf.predict(X_test_temp)
-        print(clf.variableRanking())
-        auc = sklearn.metrics.roc_auc_score(y_test, p)
-        print("AUC", auc, (global_auc - auc)/global_auc)
-
+    print(clf.internFeatureImportance())
+    print(clf.externFeatureImportance(X_train, y_train, None, X_test, y_test, None))
 
     #plt.plot(fpr, tpr, lw=4, label='ROC Integral = {:.3}'.format(auc))
     #plt.xlabel('False Positive Rate (Type I Error)')

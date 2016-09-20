@@ -8,10 +8,14 @@ c_double_p = ctypes.POINTER(ctypes.c_double)
 c_float_p = ctypes.POINTER(ctypes.c_float)
 c_uint_p = ctypes.POINTER(ctypes.c_uint)
 
-FastBDT_library_path = ctypes.util.find_library('FastBDT_CInterface')
-print('Try to load ', FastBDT_library_path)
+import os
+
+# Apparently find_library does not work as I expected
+#FastBDT_library_path = ctypes.util.find_library('FastBDT_CInterface')
+#print('Try to load ', FastBDT_library_path)
 #FastBDT_library = ctypes.cdll.LoadLibrary(FastBDT_library_path)
-FastBDT_library =  ctypes.cdll.LoadLibrary('/home/thomas/FastBDT/libFastBDT_CInterface.so')
+
+FastBDT_library =  ctypes.cdll.LoadLibrary(os.getcwd() + '/libFastBDT_CInterface.so')
 print('Loaded ', FastBDT_library)
 
 FastBDT_library.Create.restype = ctypes.c_void_p
@@ -36,20 +40,48 @@ FastBDT_library.ExtractNumberOfVariablesFromVariableRanking.restype = ctypes.c_u
 FastBDT_library.ExtractImportanceOfVariableFromVariableRanking.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.ExtractImportanceOfVariableFromVariableRanking.restype = ctypes.c_double
 
+
 def PrintVersion():
     FastBDT_library.PrintVersion()
 
 
+def calculate_roc_auc(p, t, w=None):
+    """
+    Calculates the area under the receiver oeprating characteristic curve (AUC ROC)
+    @param p np.array filled with the probability output of a classifier
+    @param t np.array filled with the target (0 or 1)
+    """
+    if w is None:
+        w = np.ones(len(t))
+    N = w.sum()
+    T = np.sum(t*w)
+    t = t*w
+    index = np.argsort(p)
+    efficiency = (T - np.cumsum(t[index])) / float(T)
+    purity = (T - np.cumsum(t[index])) / (N - np.cumsum(w))
+    purity = np.where(np.isnan(purity), 0, purity)
+    return np.abs(np.trapz(purity, efficiency))
+
+
 class Classifier(object):
     def __init__(self, nBinningLevels=4, nTrees=100, nLayersPerTree=3, shrinkage=0.1, randRatio=0.5, transform2probability=True):
-        self.forest = FastBDT_library.Create()
+        self.nBinningLevels = nBinningLevels
+        self.nTrees = nTrees
+        self.nLayersPerTree = nLayersPerTree
+        self.shrinkage = shrinkage
+        self.randRatio = randRatio
+        self.transform2probability = transform2probability
+        self.forest = self.create_forest()
 
-        FastBDT_library.SetNBinningLevels(self.forest, int(nBinningLevels))
-        FastBDT_library.SetNTrees(self.forest, int(nTrees))
-        FastBDT_library.SetNLayersPerTree(self.forest, int(nLayersPerTree))
-        FastBDT_library.SetShrinkage(self.forest, float(shrinkage))
-        FastBDT_library.SetRandRatio(self.forest, float(randRatio))
-        FastBDT_library.SetTransform2Probability(self.forest, bool(transform2probability))
+    def create_forest(self):
+        forest = FastBDT_library.Create()
+        FastBDT_library.SetNBinningLevels(forest, int(self.nBinningLevels))
+        FastBDT_library.SetNTrees(forest, int(self.nTrees))
+        FastBDT_library.SetNLayersPerTree(forest, int(self.nLayersPerTree))
+        FastBDT_library.SetShrinkage(forest, float(self.shrinkage))
+        FastBDT_library.SetRandRatio(forest, float(self.randRatio))
+        FastBDT_library.SetTransform2Probability(forest, bool(self.transform2probability))
+        return forest
 
     def fit(self, X, y, weights=None):
         X_temp = np.require(X, dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
@@ -78,13 +110,49 @@ class Classifier(object):
     def load(self, weightfile):
         FastBDT_library.Load(self.forest, bytes(weightfile, 'utf-8'))
 
-    def variableRanking(self):
+    def internFeatureImportance(self):
         _ranking = FastBDT_library.GetVariableRanking(self.forest)
-        ranking = []
+        ranking = dict()
         for i in range(FastBDT_library.ExtractNumberOfVariablesFromVariableRanking(_ranking)):
-            ranking.append((i,FastBDT_library.ExtractImportanceOfVariableFromVariableRanking(_ranking, int(i))))
+            ranking[i] = FastBDT_library.ExtractImportanceOfVariableFromVariableRanking(_ranking, int(i))
         FastBDT_library.DeleteVariableRanking(_ranking)
-        return list(reversed(sorted(ranking, key=lambda x: x[1])))
+        return ranking
+
+    def externFeatureImportance(self, X, y, weights=None, X_test=None, y_test=None, weights_test=None):
+        if X_test is None:
+            X_test = X
+        if y_test is None:
+            y_test = y
+        if weights_test is None:
+            weights_test = weights
+        numberOfEvents, numberOfFeatures = X.shape
+        global_auc = calculate_roc_auc(self.predict(X_test), y_test, weights_test)
+        forest = self.forest
+        self.forest = self.create_forest()
+        importances = self._externFeatureImportance(list(range(numberOfFeatures)), global_auc, X, y, weights, X_test, y_test, weights_test)
+        FastBDT_library.Delete(self.forest)
+        self.forest = forest
+        return importances
+
+    def _externFeatureImportance(self, features, global_auc, X, y, weights, X_test, y_test, weights_test):
+        importances = dict()
+        for i in features:
+            remaining_features = [f for f in features if f != i]
+            X_temp = X[:, remaining_features]
+            X_test_temp = X_test[:, remaining_features]
+            self.fit(X_temp, y, weights)
+            auc = calculate_roc_auc(self.predict(X_test_temp), y_test, weights_test)
+            importances[i] = global_auc - auc
+   
+        most_important = max(importances.keys(), key=lambda x: importances[x])
+        remaining_features = [v for v in features if v != most_important]
+        if len(remaining_features) == 1:
+            return importances
+    
+        importances = {most_important: importances[most_important]}
+        rest = self._externFeatureImportance(remaining_features, global_auc - importances[most_important], X, y, weights, X_test, y_test, weights_test)
+        importances.update(rest)
+        return importances
 
     def __del__(self):
         FastBDT_library.Delete(self.forest)
