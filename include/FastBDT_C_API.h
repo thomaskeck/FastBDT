@@ -51,6 +51,8 @@ extern "C" {
 
     void* GetVariableRanking(void* ptr);
     
+    void* GetIndividualVariableRanking(void* ptr, double *array);
+    
     unsigned int ExtractNumberOfVariablesFromVariableRanking(void* ptr);
     
     double ExtractImportanceOfVariableFromVariableRanking(void* ptr, unsigned int iFeature);

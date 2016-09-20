@@ -87,6 +87,8 @@ def calculate_splot_weights(pdfs, yields):
         for j in range(N_components):
             inverse_covariance[i, j] = numpy.nansum(pdfs[i] * pdfs[j] / norm)
     covariance = numpy.linalg.inv(inverse_covariance)
+    print(inverse_covariance)
+    print(covariance)
 
     # Return list of sPlot weights for each component
     return [sum(covariance[n, k] * pdfs[k] for k in range(N_components)) /
@@ -110,10 +112,10 @@ def combine_probabilities(p1, p2):
 
 
 if __name__ == '__main__':
-    train_datafile = '../files/D0Test.txt'
+    train_datafile = '../files/D0_2.txt'
     data = pandas.DataFrame.from_csv(train_datafile, sep=' ', index_col=None)
     df = data[data['distance'] < 0.1]
-    N = len(df) / 2
+    N = len(df) // 2
     train_df = df.iloc[:N]
     print("Length training data", len(train_df))
     test_df = df.iloc[N:]

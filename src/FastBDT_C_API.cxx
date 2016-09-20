@@ -127,6 +127,13 @@ extern "C" {
       return ranking;
     }
     
+    void* GetIndividualVariableRanking(void* ptr, double *array) {
+      Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
+      VariableRanking *ranking = new(std::nothrow) VariableRanking;
+      ranking->ranking = expertise->forest.GetIndividualVariableRanking(array);
+      return ranking;
+    }
+    
     unsigned int ExtractNumberOfVariablesFromVariableRanking(void* ptr) {
       VariableRanking *ranking = reinterpret_cast<VariableRanking*>(ptr);
       unsigned int max = 0;

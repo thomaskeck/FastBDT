@@ -109,6 +109,15 @@ class Classifier(object):
 
     def load(self, weightfile):
         FastBDT_library.Load(self.forest, bytes(weightfile, 'utf-8'))
+    
+    def individualFeatureImportance(self, X):
+        X_temp = np.require(X, dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
+        _ranking = FastBDT_library.GetIndividualVariableRanking(self.forest, X_temp.ctypes.data_as(c_double_p))
+        ranking = dict()
+        for i in range(FastBDT_library.ExtractNumberOfVariablesFromVariableRanking(_ranking)):
+            ranking[i] = FastBDT_library.ExtractImportanceOfVariableFromVariableRanking(_ranking, int(i))
+        FastBDT_library.DeleteVariableRanking(_ranking)
+        return ranking
 
     def internFeatureImportance(self):
         _ranking = FastBDT_library.GetVariableRanking(self.forest)
