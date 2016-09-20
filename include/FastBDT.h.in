@@ -658,6 +658,29 @@ namespace FastBDT {
           // with the position node in the last layer.
           return node - 1;
       }
+      
+      /**
+       * Returns the node-path of a given event - copy & pasted from ValueToNode!
+       * @param values the feature values of the event in an arbitrary iterator supporting operator[]
+       */
+      template<class Iterator> std::vector<unsigned int> ValueToNodePath(const Iterator &values) const {
+          
+          // TODO Do reserve here, to speed up push_back
+          std::vector<unsigned int> node_path;
+          unsigned int node = 1;
+          while( node <= cuts.size() ) {
+            auto &cut = cuts[node-1];
+            if(not cut.valid)
+              break;
+            const T &value = values[cut.feature];
+            if(is_nan<T>(value))
+              break;
+            node_path.push_back(node-1);
+            node = (node << 1) + static_cast<unsigned int>(value >= cut.index);
+          }
+
+          return node_path;
+      }
 
       unsigned int GetNNodes() const { return boostWeights.size(); }
       const Weight& GetNEntries(unsigned int iNode) const { return nEntries[iNode]; }
@@ -774,12 +797,41 @@ namespace FastBDT {
           return 1.0/(1.0+std::exp(-2*GetF(values)));
 
       }
+      
+      /**
+       * Calculates importance ranking of variables, based on the total separation gain along the path of the event
+       */
+      template<class Iterator>
+      std::map<unsigned int, double> GetIndividualVariableRanking(const Iterator &values) const {
+        std::map<unsigned int, double> ranking;
+        for(auto &tree : forest) {
+          auto node_path = tree.ValueToNodePath(values);
+          for(auto & node : node_path) {
+            const auto &cut = tree.GetCut(node);
+            if( cut.valid ) {
+              if ( ranking.find( cut.feature ) == ranking.end() )
+                ranking[ cut.feature ] = 0;
+              ranking[ cut.feature ] += cut.gain;
+            }
+          }
+        }
+
+        double norm = 0;
+        for(auto &pair : ranking) {
+            norm += pair.second;
+        }
+        for(auto &pair : ranking) {
+            pair.second /= norm;
+        }
+
+        return ranking;
+      }
 
 
       /**
        * Calculates importance ranking of variables, based on the total separation Gain introduced by this variable.
        */
-      std::map<unsigned int, double> GetVariableRanking() {
+      std::map<unsigned int, double> GetVariableRanking() const {
         std::map<unsigned int, double> ranking;
         for(auto &tree : forest) {
           for(unsigned int iNode = 0; iNode < tree.GetNNodes()/2; ++iNode) {

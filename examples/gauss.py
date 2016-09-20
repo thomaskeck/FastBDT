@@ -29,9 +29,26 @@ if __name__ == '__main__':
     global_auc = sklearn.metrics.roc_auc_score(y_test, p)
     print("Global AUC", global_auc)
 
+    print("Intern Feature Importance")
     print(clf.internFeatureImportance())
+    print("Extern Feature Importance")
     print(clf.externFeatureImportance(X_train, y_train, None, X_test, y_test, None))
 
+    events = [ np.array([1.0, 2.0, 3.0, 4.0, 5.0]),
+               np.array([2.0, 2.0, 3.0, 4.0, 5.0]),
+               np.array([0.0, 2.0, 3.0, 4.0, 5.0]),
+               np.array([1.0, 3.0, 3.0, 4.0, 5.0]),
+               np.array([1.0, 1.0, 3.0, 4.0, 5.0]),
+               np.array([1.0, 2.0, 4.0, 4.0, 5.0]),
+               np.array([1.0, 2.0, 2.0, 4.0, 5.0]),
+               np.array([1.0, 2.0, 3.0, 5.0, 5.0]),
+               np.array([1.0, 2.0, 3.0, 3.0, 5.0]),
+               np.array([1.0, 2.0, 3.0, 4.0, 6.0]),
+               np.array([1.0, 2.0, 3.0, 4.0, 4.0]) ]
+
+    print("Individual Feature Importance")
+    for event in events:
+        print(clf.individualFeatureImportance(event))
     #plt.plot(fpr, tpr, lw=4, label='ROC Integral = {:.3}'.format(auc))
     #plt.xlabel('False Positive Rate (Type I Error)')
     #plt.ylabel('True Positive Rate (Efficiency)')

@@ -1410,6 +1410,37 @@ TEST_F(VariableRankingTest, Standard) {
 
 } 
 
+TEST_F(VariableRankingTest, Individual) {
+    
+    Cut<unsigned int> cut1, cut2, cut3;
+    cut1.feature = 0;
+    cut1.index = 5;
+    cut1.valid = true;
+    cut1.gain = 2.0;
+    cut2.feature = 1;
+    cut2.index = 9;
+    cut2.valid = true;
+    cut2.gain = 1.0;
+    cut3.valid = false;
+
+    std::vector<Cut<unsigned int>> cuts = {cut1, cut2, cut3};
+    std::vector<Weight> nEntries = { 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0 };
+    std::vector<Weight> purities = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 };
+    std::vector<Weight> boostWeights = { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+    Tree<unsigned int> tree(cuts, nEntries, purities, boostWeights);            
+    forest->AddTree(tree);
+    std::vector<unsigned int> event = {4, 8};
+    auto map = forest->GetIndividualVariableRanking(event);
+    EXPECT_FLOAT_EQ(map[0], 2.0/3.0);
+    EXPECT_FLOAT_EQ(map[1], 1.0/3.0);
+    
+    std::vector<unsigned int> event2 = {6, 8};
+    auto map2 = forest->GetIndividualVariableRanking(event2);
+    EXPECT_FLOAT_EQ(map2[0], 1.0);
+    EXPECT_FLOAT_EQ(map2[1], 0.0);
+
+} 
+
 
 class CornerCasesTest : public ::testing::Test { };
 
