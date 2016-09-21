@@ -11,23 +11,25 @@ Stochastic gradient-boosted decision trees are widely employed for multivariate 
 
 # Installation
 
-cmake .
-make
-make install
+  * cmake .
+  * make
+  * make install
+
 
 # Usage
 
 Before you do anything you want to execute the unittests:
-./unittest
+  * ./unittest
+
 
 There are multiple ways to use FastBDT. 
 I prepared some standalone executables
+  * ./FastBDTMain 
+  * or python3 examples/FastBDTMain.py
 
-./FastBDTMain 
-or
-python3 examples/FastBDTMain.py
 
 for the python3 version you probably have to set the LD_LIBRARY_PATH
+
 
 But usually it should be more convinient to use FastBDT as a library
 and integrate FastBDT directly into your application using
