@@ -93,9 +93,26 @@ else()
   message(STATUS "Could not find ROOT 6 installation, skip building TMVA interface.")
 endif()
 
+find_program(PYTHON "python3")
+
+if (PYTHON)
+    configure_file(
+        "${PROJECT_SOURCE_DIR}/setup.py.in"
+        "${PROJECT_SOURCE_DIR}/setup.py"
+    )
+
+    add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp"
+                       COMMAND ${PYTHON} "${CMAKE_CURRENT_BINARY_DIR}/setup.py" build
+                       COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp"
+                       DEPENDS ${DEPS})
+
+    add_custom_target(target ALL DEPENDS ${OUTPUT})
+
+    install(CODE "execute_process(COMMAND ${PYTHON} ${PROJECT_SOURCE_DIR}/setup.py install)")
+endif()
 
 set(CPACK_PACKAGE_VERSION "${FastBDT_VERSION_MAJOR}.${FastBDT_VERSION_MINOR}")
-set(CPACK_GENERATOR "RPM;DEB")
+set(CPACK_GENERATOR "RPM;DEB;TGZ")
 set(CPACK_PACKAGE_NAME "FastBDT")
 set(CPACK_PACKAGE_RELEASE 1)
 set(CPACK_PACKAGE_CONTACT "thomas.keck2@kit.edu")
