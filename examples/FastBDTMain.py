@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 import sys
-sys.path.append('./python')
 
 import numpy as np
 
-import FastBDT
+from PyFastBDT import FastBDT
 
 def readDataFile(datafile):
     data = np.loadtxt(datafile, skiprows=1, dtype=np.float64)
