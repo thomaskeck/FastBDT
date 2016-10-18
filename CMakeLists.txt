@@ -55,7 +55,7 @@ install(TARGETS FastBDT_static FastBDT_shared FastBDTMain FastBDT_CInterface
       RUNTIME DESTINATION bin   
    )
 
-#install(FILES ${FastBDT_HEADERS} DESTINATION include)
+install(FILES ${FastBDT_HEADERS} DESTINATION include)
 
 find_package(GTest)
 if(GTEST_FOUND)
@@ -63,6 +63,7 @@ if(GTEST_FOUND)
   target_link_libraries(unittests ${GTEST_BOTH_LIBRARIES} FastBDT_static pthread)
   message(STATUS  ${GTEST_INCLUDE_DIRS})
   target_include_directories(unittests PUBLIC ${GTEST_INCLUDE_DIRS})
+  install(TARGETS unittests DESTINATION bin)
 else()
   message(STATUS "Could not find gtest installation, skip building unittests.")
 endif()
@@ -91,3 +92,19 @@ if(ROOT_FOUND)
 else()
   message(STATUS "Could not find ROOT 6 installation, skip building TMVA interface.")
 endif()
+
+
+set(CPACK_PACKAGE_VERSION "${FastBDT_VERSION_MAJOR}.${FastBDT_VERSION_MINOR}")
+set(CPACK_GENERATOR "RPM;DEB")
+set(CPACK_PACKAGE_NAME "FastBDT")
+set(CPACK_PACKAGE_RELEASE 1)
+set(CPACK_PACKAGE_CONTACT "thomas.keck2@kit.edu")
+set(CPACK_PACKAGE_VENDOR "Private")
+set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
+
+SET(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+SET(CPACK_DEBIAN_PACKAGE_SECTION "libs")
+SET(CPACK_DEBIAN_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
+
+include(CPack)
