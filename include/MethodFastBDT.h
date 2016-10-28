@@ -7,7 +7,9 @@
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
-
+#ifndef ROOT_RVersion
+#include "RVersion.h"
+#endif
 
 #include "FastBDT.h"
 
@@ -27,23 +29,35 @@ namespace TMVA {
        * @param methodTitle title of the method
        * @param theData data which was added to the TMVA Factory
        * @param theOption options string passed by the user to this method
-       * @param theTargetDir target directory in ROOT file which stores the information about the training 
+       * @param theTargetDir target directory in ROOT file which stores the information about the training (removed in ROOT 6.08.00)
        */
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,8,0)
+      MethodFastBDT( const TString& jobName,
+                 const TString& methodTitle,
+                 DataSetInfo& theData,
+                 const TString& theOption = "");
+#else
       MethodFastBDT( const TString& jobName,
                  const TString& methodTitle,
                  DataSetInfo& theData,
                  const TString& theOption = "",
                  TDirectory* theTargetDir = 0 );
+#endif
 
       /**
        * Constructor for calculating BDT-MVA using previously generated decision trees
        * @param theData data which should be classified
        * @param theWeightFile the xml file from which the method reads the weights
-       * @param theTargetDir target directory in ROOT file which stores information about the training
+       * @param theTargetDir target directory in ROOT file which stores information about the training (removed in ROOT 6.08.00)
        */
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,8,0)
+      MethodFastBDT( DataSetInfo& theData,
+                 const TString& theWeightFile);
+#else
       MethodFastBDT( DataSetInfo& theData,
                  const TString& theWeightFile,
                  TDirectory* theTargetDir = NULL );
+#endif
 
       /**
        * Destroys method by deleteting the forest and the transformer
