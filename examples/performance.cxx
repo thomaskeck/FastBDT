@@ -1,5 +1,18 @@
 /**
  * Thomas Keck 2016
+ *
+ * This is the performance measurment program I used in the paper,
+ * it is probably pretty complicated for someone else to compile it
+ * because you require xgboost, sklearn, python-dev, numpy-dev, FastBDT and ROOT
+ * all in one environment.
+ *
+ * But the individual sections should give a good idea how I tested the the different libraries
+ * and which parameters I used.
+ *
+ * In addition you will need the dataset, which is too big to push into the repo.
+ * However, I can provide the dataset if you ask me.
+ * It is planned to also publish some Belle II datasets on the IML website
+ * (yes this is maybe one of the comments people will read in 10 years and realise that this never happened...)
  */
 
 #include "FastBDT.h"
