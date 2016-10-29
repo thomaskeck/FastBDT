@@ -21,12 +21,20 @@ ClassImp(TMVA::MethodFastBDT)
 
 using namespace FastBDT;
 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,8,0)
+TMVA::MethodFastBDT::MethodFastBDT( const TString& jobName,
+                            const TString& methodTitle,
+                            DataSetInfo& theData,
+                            const TString& theOption ) :
+   TMVA::MethodBase( jobName, Types::kPlugins, methodTitle, theData, theOption)
+#else
 TMVA::MethodFastBDT::MethodFastBDT( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData,
                             const TString& theOption,
                             TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kPlugins, methodTitle, theData, theOption, theTargetDir )
+#endif
    , fNTrees(0)
    , fShrinkage(0)
    , fRandRatio(0)
@@ -40,10 +48,16 @@ TMVA::MethodFastBDT::MethodFastBDT( const TString& jobName,
 {
 }
 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,8,0)
+TMVA::MethodFastBDT::MethodFastBDT( DataSetInfo& theData,
+                            const TString& theWeightFile)
+   : TMVA::MethodBase( Types::kPlugins, theData, theWeightFile)
+#else
 TMVA::MethodFastBDT::MethodFastBDT( DataSetInfo& theData,
                             const TString& theWeightFile,
                             TDirectory* theTargetDir )
    : TMVA::MethodBase( Types::kPlugins, theData, theWeightFile, theTargetDir )
+#endif
    , fNTrees(0)
    , fShrinkage(0)
    , fRandRatio(0)
