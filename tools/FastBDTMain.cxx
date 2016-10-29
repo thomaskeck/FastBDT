@@ -142,7 +142,7 @@ int train(int argc, char *argv[]) {
      *
      * Basically you just create the FeatureBinning using its constructor:
      *  First argument is the 'binning-level'. In total 2^n bins are used for the feature, in this case 2^4 = 16 (all FeatureBinnings need the SAME binning-level)
-     *  Second and third arguments are STL RandomAccess iterators (raw pointers should work also I guess)
+     *  Second argument is an STL container
      */
     std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
     std::vector<unsigned int> nBinningLevels;
