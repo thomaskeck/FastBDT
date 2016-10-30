@@ -99,22 +99,45 @@ def combine_probabilities(p1, p2):
     return p1*p2 / (p1*p2 + (1-p1)*(1-p2))
 
 
+
+def acticvate_post_mortem_debugger():
+    import sys 
+
+    def info(type, value, tb):
+        if hasattr(sys, 'ps1') or not sys.stderr.isatty():
+            # we are in interactive mode or we don't have a tty-like
+            # device, so we call the default hook
+            sys.__excepthook__(type, value, tb) 
+        else:
+            import traceback, pdb 
+            # we are NOT in interactive mode, print the exception...
+            traceback.print_exception(type, value, tb) 
+            # ...then start the debugger in post-mortem mode.
+            pdb.post_mortem(tb)
+
+    sys.excepthook = info
+
+acticvate_post_mortem_debugger()
+
+
 def evaluation(label, X_test, y_test, p, p_prior):
     print(label, sklearn.metrics.roc_auc_score(y_test, p))
     print(label + " with prior", sklearn.metrics.roc_auc_score(y_test, combine_probabilities(p, p_prior)))
-    plt.scatter(X_test[[y_test == 1], 0], p, c='r', label=label + " (Signal)")
-    plt.scatter(X_test[[y_test == 0], 0], p, c='b', label=label + " (Background)")
+    plt.scatter(X_test[y_test == 1, 0], p[y_test == 1], c='r', label=label + " (Signal)", alpha=0.2)
+    plt.scatter(X_test[y_test == 0, 0], p[y_test == 0], c='b', label=label + " (Background)", alpha=0.2)
+    plt.xlabel("Feature")
+    plt.ylabel("Probability")
     plt.show()
 
 
 if __name__ == '__main__':
     # Create some Monte Carlo data using a multidimensional gaussian distribution
     # The 0th row of the coveriance matrix describes the correlation to the target variable
-    for cor in np.linspace(-0.5, 0.5, 3):
+    for cor in np.linspace(-0.2, 0.2, 3):
         print("Correlation ", cor)
         mean = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
         cov = [[1.0, 0.6, 0.4, 0.2, 0.1, 0.0],
-               [0.0, 1.0, cor, 0.0, 0.0, 0.0],
+               [0.0, 1.0, cor, cor, cor, 0.0],
                [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
@@ -124,13 +147,13 @@ if __name__ == '__main__':
             for j in range(i+1, len(mean)):
                 cov[j][i] = cov[i][j]
 
-        N_train, N_test = 100000, 100000
+        N_train, N_test = 100000, 2000
         data = np.random.multivariate_normal(mean, cov, N_train + N_test)
         X_train, y_train = data[:N_train, 1:], data[:N_train, 0] > 0 
         X_test, y_test = data[N_train:, 1:], data[N_train:, 0] > 0 
         
         # First variable is the variable we want to have independent of our network output
-        prior = Prior(X_train[y_train == 1][:, 0], X_train[y_train == 0][:, 0])
+        prior = Prior(X_train[y_train == 1, 0], X_train[y_train == 0, 0])
         p_prior = prior.get_prior(X_test[:, 0])
         evaluation("Prior", X_test, y_test, p_prior, p_prior)
         
