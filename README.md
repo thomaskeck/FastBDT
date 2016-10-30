@@ -14,7 +14,7 @@ Stochastic gradient-boosted decision trees are widely employed for multivariate 
   * cmake .
   * make
   * make install
-
+  * make package (optional to build rpm, deb packages)
 
 # Usage
 
@@ -25,15 +25,21 @@ Before you do anything you want to execute the unittests:
 There are multiple ways to use FastBDT. 
 I prepared some standalone executables
   * ./FastBDTMain 
-  * or python3 examples/FastBDTMain.py
-
+  * or python3 tools/FastBDTMain.py
 
 for the python3 version you probably have to set the LD_LIBRARY_PATH
 
 
 But usually it should be more convinient to use FastBDT as a library
 and integrate FastBDT directly into your application using
-  * the C++ shared/static library,
+  * the C++ shared/static library (see example/CPPExample.cxx),
   * the C shared library,
-  * the TMVA plugin if you're using ROOT ( root examples/TMVAExample.C\(\"files/TMVA.root\"\) ),
-  * or the Python3 library python/FastBDT.py.
+  * the TMVA plugin if you're using ROOT (see root examples/TMVAExample.C ),
+  * or the Python3 library python/FastBDT.py (see example/PythonExample.py ).
+
+
+# Further reading
+This work is mostly based on the papers by Jerome H. Friedman
+  * https://statweb.stanford.edu/~jhf/ftp/trebst.pdf
+  * https://statweb.stanford.edu/~jhf/ftp/stobst.pdf
+
