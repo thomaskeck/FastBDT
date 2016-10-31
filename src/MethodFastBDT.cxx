@@ -92,6 +92,7 @@ void TMVA::MethodFastBDT::DeclareOptions()
    DeclareOptionRef(fShrinkage=1.0, "Shrinkage", "Learning rate for Gradient Boost algorithm");
    DeclareOptionRef(fRandRatio=1.0, "RandRatio", "Ratio for Stochastic Gradient Boost algorithm");
    DeclareOptionRef(fsPlot=false, "sPlot", "Keep signal and background event pairs together during stochastic bagging, should improve an sPlot training, but frankly said: There was no difference in my tests");
+   DeclareOptionRef(standaloneWeightfileName=TString(""), "standaloneWeightfileName", "Write out a standalone weightfile for FastBDT in addition to the TMVA weightfile.");
    DeclareOptionRef(transform2probability=true, "transform2probability", "Use sigmoid function to transform output to probability");
    DeclareOptionRef(useWeightedFeatureBinning=false, "useWeightedFeatureBinning", "Use weighted feature binning for equal frequency binning.");
    DeclareOptionRef(useEquidistantFeatureBinning=false, "useEquidistantFeatureBinning", "Use equidistant binning instead of equal frequency binning.");
@@ -235,6 +236,17 @@ void TMVA::MethodFastBDT::Train()
       fForest->AddTree(removeFeatureBinningTransformationFromTree(tree, featureBinnings));
   
   Log() << kINFO << "Finished training" << Endl;
+
+  if( standaloneWeightfileName.Length() > 0 ) {
+    Log() << kINFO << "Write out additional standalone weightfile to " << standaloneWeightfileName << Endl;
+    std::fstream file(standaloneWeightfileName.Data(), std::ios_base::out | std::ios_base::trunc);
+    if(file.is_open() {
+        file << (*fForest) << std::endl;
+        file.close();
+    } else {
+        Log() << kINFO << "Failed to open standalone weightfile for writing" << Endl;
+    }
+  }
 
 }
 

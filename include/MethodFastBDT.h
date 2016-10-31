@@ -219,6 +219,11 @@ namespace TMVA {
       bool useEquidistantFeatureBinning;
 
       /**
+       * Standalone weightfile name
+       */
+      TString standaloneWeightfileName;
+
+      /**
        * Binning levels used, determines cuts applied in node splitting
        */
       Int_t fNCutLevel;           
