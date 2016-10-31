@@ -16,6 +16,7 @@
 #include <fstream>
 #include <sstream>
 #include <random>
+#include <chrono>
 
 std::vector<double> MultiGauss(const std::vector<float>&means,
                                const std::vector<float> &eigenvalues, const std::vector<std::vector<float>> &eigenvectors,
@@ -73,6 +74,7 @@ int main() {
 
 
 
+    std::chrono::high_resolution_clock::time_point measureTTime1 = std::chrono::high_resolution_clock::now();
     /*
      * The FastBDT expects binned data! You can use a FeatureBinning for each feature to bin your data.
      * The binning is an equal statistics binning. So the shape of the input data doesn't matter! (So noramlisation or gaussianisation is not necessary)
@@ -133,6 +135,10 @@ int main() {
          */
         forest.AddTree(FastBDT::removeFeatureBinningTransformationFromTree(t, featureBinnings));
     
+    std::chrono::high_resolution_clock::time_point measureTTime2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> measureTTime = measureTTime2 - measureTTime1;
+    std::cout << "Finished training in " << measureTTime.count() << " ms " << std::endl;
+    
     /**
      * Saving featureBinnings and forest into a file:
      */
@@ -149,6 +155,7 @@ int main() {
      * We don't need to apply the binning here, because we remved the binning transformation from the tree
      * earlier, if we hadn't done this, we would need to provide binned data again!
      */
+    std::chrono::high_resolution_clock::time_point measureATime1 = std::chrono::high_resolution_clock::now();
     unsigned int correct = 0;
     for(auto &event : data) {
         int _class = int(event.back());
@@ -157,6 +164,9 @@ int main() {
             correct++;
         }
     }
+    std::chrono::high_resolution_clock::time_point measureATime2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> measureATime = measureATime2 - measureATime1;
+    std::cout << "Finished application in " << measureATime.count() << " ms " << std::endl;
 
     std::cout << "The forest classified " << correct / static_cast<float>(data.size()) << " % of the samples correctly" << std::endl;
 

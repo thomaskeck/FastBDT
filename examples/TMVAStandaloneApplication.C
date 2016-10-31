@@ -22,6 +22,7 @@
 #include <fstream>
 #include <sstream>
 #include <random>
+#include <chrono>
 
 #include "weights/TMVAClassification_FastBDT.class.C"
 
@@ -84,6 +85,7 @@ int main() {
   std::vector<std::string> features = { "FeatureA", "FeatureB", "FeatureC", "FeatureD", "FeatureE" };
   ReadFastBDT fbdt(features);
     
+  std::chrono::high_resolution_clock::time_point measureATime1 = std::chrono::high_resolution_clock::now();
   unsigned int correct = 0;
   for(auto &event : data) {
       int _class = int(event.back());
@@ -92,6 +94,9 @@ int main() {
           correct++;
       }
   }
+  std::chrono::high_resolution_clock::time_point measureATime2 = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> measureATime = measureATime2 - measureATime1;
+  std::cout << "Finished application in " << measureATime.count() << " ms " << std::endl;
 
   std::cout << "The forest classified " << correct / static_cast<float>(data.size()) << " % of the samples correctly" << std::endl;
 
