@@ -17,6 +17,8 @@
 #include "TMVA/Results.h"
 #include "TMVA/ResultsMulticlass.h"
 
+#include "FastBDT_IO.h"
+
 ClassImp(TMVA::MethodFastBDT)
 
 using namespace FastBDT;
@@ -240,7 +242,7 @@ void TMVA::MethodFastBDT::Train()
   if( standaloneWeightfileName.Length() > 0 ) {
     Log() << kINFO << "Write out additional standalone weightfile to " << standaloneWeightfileName << Endl;
     std::fstream file(standaloneWeightfileName.Data(), std::ios_base::out | std::ios_base::trunc);
-    if(file.is_open() {
+    if(file.is_open()) {
         file << (*fForest) << std::endl;
         file.close();
     } else {

@@ -89,7 +89,7 @@ void TMVAExample()
 
    gPluginMgr->AddHandler("TMVA@@MethodBase", ".*_FastBDT.*", "TMVA::MethodFastBDT", "TMVAFastBDT", "MethodFastBDT(TMVA::DataSetInfo&,TString)");
    gPluginMgr->AddHandler("TMVA@@MethodBase", ".*FastBDT.*", "TMVA::MethodFastBDT", "TMVAFastBDT", "MethodFastBDT(TString&,TString&,TMVA::DataSetInfo&,TString&)");
-   factory->BookMethod(TMVA::Types::kPlugins, "FastBDT", "H:V:NTrees=100:Shrinkage=0.1:RandRatio=0.5:NTreeLayers=3:NCutLevel=10");
+   factory->BookMethod(TMVA::Types::kPlugins, "FastBDT", "H:V:NTrees=100:Shrinkage=0.1:RandRatio=0.5:NTreeLayers=3:NCutLevel=10:standaloneWeightfileName=additionalWeightfile.fbdt");
 
    factory->TrainAllMethods();
    factory->TestAllMethods();
