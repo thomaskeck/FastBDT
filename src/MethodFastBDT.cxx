@@ -529,3 +529,39 @@ void TMVA::MethodFastBDT::GetHelpMessage() const
 }
 
 
+void createCStatementsForCuts(std::ostream& fout, const std::vector<Cut<double>> &cuts, const std::vector<Weight> &boostWeights, unsigned int iCut) {
+      
+  if(iCut < cuts.size() && cuts[iCut].valid) {
+    fout << " if( std::isnan(inputValues[" << cuts[iCut].feature << "]) ) { " << std::endl;
+    fout << "   F += " << boostWeights[iCut] << ";" << std::endl;
+    fout << "  } " << std::endl;
+    fout << "  else if(inputValues[" << cuts[iCut].feature << "] >= " << cuts[iCut].index << ") { " << std::endl;
+    createCStatementsForCuts(fout, cuts, boostWeights, 2*(iCut+1) + 1 - 1);
+    fout << "  } else { " << std::endl;
+    createCStatementsForCuts(fout, cuts, boostWeights, 2*(iCut+1) - 1);
+    fout << "  } " << std::endl;
+  } else {
+    fout << "   F += " << boostWeights[iCut] << ";" << std::endl; 
+  }
+
+}
+
+void TMVA::MethodFastBDT::MakeClassSpecific( std::ostream& fout, const TString& className ) const
+{
+   fout << "};" << std::endl << std::endl;
+   fout << "double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   double F = " << (fForest->GetF0() / fForest->GetShrinkage()) << ";" << std::endl;
+   for(auto &tree : fForest->GetForest()) {
+      createCStatementsForCuts(fout, tree.GetCuts(), tree.GetBoostWeights(), 0);
+    }
+    fout << " F *= " << std::to_string(fForest->GetShrinkage()) << ";" << std::endl;
+    if(fForest->GetTransform2Probability()) {
+        fout << " F = 1.0/(1.0+std::exp(-2*F)); " << std::endl;
+    }
+   fout << "   return F;" << std::endl;
+   fout << "};" << std::endl << std::endl;
+   fout << "void " << className << "::Initialize() { };" << std::endl;
+   fout << "inline void " << className << "::Clear() { };" << std::endl;
+}
+
