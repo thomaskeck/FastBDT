@@ -180,6 +180,11 @@ namespace TMVA {
        * Prints a help message for this method
        */
       void GetHelpMessage() const;
+      
+      /*
+       * make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+       */
+      void MakeClassSpecific( std::ostream&, const TString& ) const;
 
    private:
 
