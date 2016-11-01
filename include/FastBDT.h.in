@@ -105,6 +105,32 @@ namespace FastBDT {
 
             // TODO Choose nLevels automatically if nLevels == 0
 
+            /**
+             * We build up our binning in form of a binary tree.
+             * Hence we can perform a fast binary tree search later.
+             *
+             * The first and the last entry in the binning vector contain the minimum and maximum.
+             * The remaining entries in binning contain the boundaries of the search tree layer by layer.
+             * 
+             * Next we calculate the binary tree layer by layer (each layer has 1 << iLevel bin boundaries,
+             * so 1, 2, 4, ...). Keep in mind the the feature-data was sorted.
+             *
+             * First layer:
+             * nBins = 1
+             * iLevel = 0
+             *
+             * So the term (size >> 1) is just the middle of our sorted value, hence
+             * we use the median as our first boundary and store it in binning[1].
+             *
+             * Second layer:
+             * nBins = 2
+             * iLevel = 1
+             *
+             * (size >> 2) corresponds to the 1. quartile which we store in binning[2]
+             * (size >> 2) + (size >> 1) is the 3. quartile which we store in binning[3]
+             *
+             * We repeat this procedure until we reached the desired number of layers (nLevels) in our tree.
+             */
             uint64_t bin_index = 0;
             for(uint64_t iLevel = 0; iLevel < nLevels; ++iLevel) {
               const uint64_t nBins = (1 << iLevel);
@@ -115,6 +141,33 @@ namespace FastBDT {
             }
           }
 
+        /**
+         * Calculate the bin which corresponds to the given value.
+         * Our binning is organized in a binary tree, hence we need O(N_bins) operations to do this
+         *
+         * We start at index = 1 of the binary tree saved in the binning vector.
+         * The boundary saved at position 1 is the median of the distribution.
+         * 
+         * If the value is lower than the median we traverse to the left side of the binary tree,
+         * by multiplying the index with 2
+         * If the value is higher than the median we traverse to the right side of the binary tree,
+         * by multiplying the index with 2 and adding 1
+         *
+         * The next position in the binary tree we look at is either 2 (the 1. quartile of the distribution)
+         * or 3 (the 3. quartile of the distribution)
+         *
+         * Hence the binary tree (here shown with 3 layers) is saved using the following indices in the binning vector:
+         *                             1
+         *              2                             3
+         *      4               5             6                7
+         *
+         *  Now we want to get the bins, so we imagine other layer:
+         *  8       9     10        11   12       13     14        15
+         *
+         *  And shift it by (1 << nLevels) - 1 (the highest index in the binary tree! in the example above this is 7)
+         *  1       2      3         4    5        6      7         8
+         *
+         */
         unsigned int ValueToBin(const Value &value) const {
 
           if( std::isnan(value) )
@@ -129,6 +182,24 @@ namespace FastBDT {
 
         }
 
+        /**
+         * Calculate the value (here left boundary) which corresponds to a given bin.
+         *
+         * This one is a little tricky.
+         * 0 bin is reserverd for NAN values, so we return NAN
+         * 1 is the underflow bin, so we're return the left boundary which is -inf
+         *
+         * For other values we do the reverse of the ValueToBin function (obviously :-) )
+         *
+         * So with start with our bins (see example above for a 3-layer binary tree)
+         *  1       2      3         4    5        6      7         8
+         *
+         * Shift them by (1 << nLevels) - 1 so they look like an additional layer of the binary tree
+         *  8       9     10        11   12       13     14        15
+         *
+         * And divide them by 2 as long as this is possible without a remained! And then once more.
+         * This projects our "additional layer" onto the indices in the tree which correspond to the nearest left boundary.
+         */
         Value BinToValue(unsigned int bin) const {
           if( bin == 0 )
               return NAN;
@@ -167,8 +238,21 @@ namespace FastBDT {
 
       protected:
         /**
-         * The binning boundaries of the feature. First and last element contain minimum and maximum encountered
-         * value of the feature. Everything in between marks the boundaries for the bins. In total 2^nLevels bins are used.
+         * The binning boundaries of the feature. The bin boundaries are organized in binary tree structure.
+         * First and last element contain the minimum and maximum encountered value of the feature.
+         * Everything in between marks the boundaries for the bins. In total 2^nLevels bins are used.
+         *
+         * So an example binning for some values uniformely distributed between 0 and 1 looks like this:
+         *                                          0.5
+         *
+         *                         0.25                           0.75
+         *
+         *                0.125            0.375          0.625          0.875
+         *
+         * The final binning vector contains the binary tree layer by layer like this:
+         * binning = {0,  0.5,   0.25,   0.75,   0.125,  0.375,  0.625,  0.875,  1.0}
+         *
+         * Hence we require only log(N_bins) operations to find the correct bin of a value instead of O(N_bins)
          */
         std::vector<Value> binning;
         unsigned int nLevels;
