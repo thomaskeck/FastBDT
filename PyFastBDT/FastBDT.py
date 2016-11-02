@@ -31,6 +31,7 @@ FastBDT_library.SetNTrees.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.SetNBinningLevels.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.SetNLayersPerTree.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.SetTransform2Probability.argtypes = [ctypes.c_void_p, ctypes.c_bool]
+FastBDT_library.SetPurityTransformation.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 
 FastBDT_library.GetVariableRanking.argtypes = [ctypes.c_void_p]
 FastBDT_library.GetVariableRanking.restype = ctypes.c_void_p
@@ -64,13 +65,14 @@ def calculate_roc_auc(p, t, w=None):
 
 
 class Classifier(object):
-    def __init__(self, nBinningLevels=4, nTrees=100, nLayersPerTree=3, shrinkage=0.1, randRatio=0.5, transform2probability=True):
+    def __init__(self, nBinningLevels=4, nTrees=100, nLayersPerTree=3, shrinkage=0.1, randRatio=0.5, transform2probability=True, purityTransformation=0):
         self.nBinningLevels = nBinningLevels
         self.nTrees = nTrees
         self.nLayersPerTree = nLayersPerTree
         self.shrinkage = shrinkage
         self.randRatio = randRatio
         self.transform2probability = transform2probability
+        self.purityTransformation = purityTransformation
         self.forest = self.create_forest()
 
     def create_forest(self):
@@ -81,6 +83,7 @@ class Classifier(object):
         FastBDT_library.SetShrinkage(forest, float(self.shrinkage))
         FastBDT_library.SetRandRatio(forest, float(self.randRatio))
         FastBDT_library.SetTransform2Probability(forest, bool(self.transform2probability))
+        FastBDT_library.SetPurityTransformation(forest, int(self.purityTransformation))
         return forest
 
     def fit(self, X, y, weights=None):

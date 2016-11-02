@@ -237,6 +237,11 @@ namespace TMVA {
        * Depth of decision trees
        */
       Int_t fNTreeLayers;          
+      
+      /**
+       * Use purity transformation for all features
+       */
+      Int_t fPurityTransformation;          
 
       /**
        * Pointer to the Forest trained by this method

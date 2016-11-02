@@ -43,6 +43,7 @@ TMVA::MethodFastBDT::MethodFastBDT( const TString& jobName,
    , fsPlot(false)
    , transform2probability(false)
    , useWeightedFeatureBinning(false)
+   , fPurityTransformation(0)
    , useEquidistantFeatureBinning(false)
    , fNCutLevel(0)
    , fNTreeLayers(0)
@@ -66,6 +67,7 @@ TMVA::MethodFastBDT::MethodFastBDT( DataSetInfo& theData,
    , fsPlot(false)
    , transform2probability(false)
    , useWeightedFeatureBinning(false)
+   , fPurityTransformation(0)
    , useEquidistantFeatureBinning(false)
    , fNCutLevel(0)
    , fNTreeLayers(0)
@@ -94,6 +96,7 @@ void TMVA::MethodFastBDT::DeclareOptions()
    DeclareOptionRef(fShrinkage=1.0, "Shrinkage", "Learning rate for Gradient Boost algorithm");
    DeclareOptionRef(fRandRatio=1.0, "RandRatio", "Ratio for Stochastic Gradient Boost algorithm");
    DeclareOptionRef(fsPlot=false, "sPlot", "Keep signal and background event pairs together during stochastic bagging, should improve an sPlot training, but frankly said: There was no difference in my tests");
+   DeclareOptionRef(fPurityTransformation=0, "purityTransformation", "Transform the variables into purity space before building the tree, this will slow down the training a little bit, and the application a lot (Not implemented in the TMVA method yet, only in FastBDT)");
    DeclareOptionRef(standaloneWeightfileName=TString(""), "standaloneWeightfileName", "Write out a standalone weightfile for FastBDT in addition to the TMVA weightfile.");
    DeclareOptionRef(transform2probability=true, "transform2probability", "Use sigmoid function to transform output to probability");
    DeclareOptionRef(useWeightedFeatureBinning=false, "useWeightedFeatureBinning", "Use weighted feature binning for equal frequency binning.");
@@ -115,6 +118,7 @@ void TMVA::MethodFastBDT::Init()
    fShrinkage       = 1.0;
    fRandRatio       = 1.0;
    fsPlot           = false;
+   fPurityTransformation = 0;
    transform2probability = true;
    useWeightedFeatureBinning = false;
    useEquidistantFeatureBinning = false;

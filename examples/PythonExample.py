@@ -26,7 +26,7 @@ if __name__ == '__main__':
     X_test, y_test = data[N_train:, 1:], data[N_train:, 0] > 0 
 
     # Train FastBDT using its PythonInterface, which is based on the SKLearn classifiers
-    clf = FastBDT.Classifier()
+    clf = FastBDT.Classifier(purityTransformation=1)
     clf.fit(X=X_train, y=y_train)
     p = clf.predict(X_test)
     global_auc = sklearn.metrics.roc_auc_score(y_test, p)

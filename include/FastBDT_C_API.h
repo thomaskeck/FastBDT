@@ -11,11 +11,15 @@ extern "C" {
 
     struct Expertise {
       FastBDT::Forest<double> forest;
+      FastBDT::Forest<unsigned> binned_forest;
+      std::vector<FastBDT::FeatureBinning<double>> featureBinnings;
+      std::vector<FastBDT::PurityTransformation> purityTransformations;
       unsigned int nBinningLevels;
       unsigned int nTrees;
       double shrinkage;
       double randRatio;
       bool transform2probability;
+      unsigned int purityTransformation;
       unsigned int nLayersPerTree;
     };
 
@@ -32,6 +36,11 @@ extern "C" {
     void SetRandRatio(void *ptr, double randRatio);
     
     void SetTransform2Probability(void *ptr, bool transform2probability);
+    
+    // 0 means deactivate purity transformation
+    // 1 means transform all features in place
+    // 2 means transform all features and store the transformation as new features
+    void SetPurityTransformation(void *ptr, unsigned int purityTransformation);
 
     void Delete(void *ptr);
     
