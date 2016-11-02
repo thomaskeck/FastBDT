@@ -209,6 +209,21 @@ namespace FastBDT {
   }
   
   /**
+   * This function saves a PurityTransformation to an std::ostream
+   * @param stream an std::ostream reference
+   * @param purityTransformation the purity transformation which shall be stored
+   */
+  std::ostream& operator<<(std::ostream& stream, const PurityTransformation &purityTransformation);
+  
+  /**
+   * This function reads a PurityTransformation from an std::istream
+   * @param stream an std::istream reference
+   * @param purityTransformation the purity transformation which shall be stored
+   */
+  std::istream& operator>>(std::istream& stream, PurityTransformation &purityTransformation);
+  
+  
+  /**
    * This function saves a FeatureBinning to an std::ostream
    * @param stream an std::ostream reference
    * @param featureBinning the FeatureBinning which shall be stored

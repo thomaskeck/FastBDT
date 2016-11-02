@@ -130,5 +130,18 @@ namespace FastBDT {
      stream >> cut.gain;
      return stream;
   }
+  
+  std::ostream& operator<<(std::ostream& stream, const PurityTransformation &purityTransformation) {
+      stream << purityTransformation.GetMapping() << std::endl;
+      return stream;
+  }
+  
+  std::istream& operator>>(std::istream& stream, PurityTransformation &purityTransformation) {
+
+      std::vector<unsigned int> mapping;
+      stream >> mapping;
+      purityTransformation.SetMapping(mapping);
+      return stream;
+  }
 
 }

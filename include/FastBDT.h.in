@@ -57,8 +57,7 @@ namespace FastBDT {
         /**
          * Creates a new FeatureBinning which maps the values of a feature to bins
          * @param nLevels number of binning levels, in total 2^nLevels bins are used
-         * @param first RandomAccessIterator to the begin of the range of values
-         * @param last RandomAcessIterator to the end of the range of values
+         * @param values values of this features
          */
           FeatureBinning(unsigned int nLevels, std::vector<Value> &values) : nLevels(nLevels) {
     
@@ -393,6 +392,81 @@ namespace FastBDT {
             this->binning = temp.GetBinning();
 
           }
+    };
+    
+    /**
+     * Compare function which sorts given some values and keeps track of original position
+     */
+    template<class Value>
+    struct ValueWithIndex {
+        Value value;
+        unsigned int index;
+    };
+
+    template<class Value>
+    bool compareWithIndex (ValueWithIndex<Value> i, ValueWithIndex<Value> j) {
+        if( std::isnan(i.value) ) {
+            return true;
+        }
+        // If j is NaN the following line will return false,
+        // which is fine in our case.
+        return i.value < j.value;
+    }
+  
+    class PurityTransformation {
+
+      public:
+        /**
+         * Remaps the bins, so that they are ordered with increasing purity
+         * @param nLevels number of binning levels, in total 2^nLevels bins are used, must be the same as given to the FeatureBinning!
+         * @param values binned values of this features
+         * @param weights event weights
+         * @param isSignal truth of each event
+         */
+          PurityTransformation(unsigned int nLevels, const std::vector<unsigned int> &values, const std::vector<Weight> &weights, const std::vector<bool> &isSignal) {
+
+            nBins =  (1 << nLevels)+1;
+            mapping.resize(nBins, 0);
+
+            // Count of signal and background events
+            std::vector<Weight> counts(2*nBins, 0);
+
+            for(unsigned int iEvent = 0; iEvent < values.size(); ++iEvent) {
+                counts[values[iEvent] + static_cast<int>(isSignal[iEvent])*nBins] += weights[iEvent];
+            }
+            
+            std::vector<ValueWithIndex<Weight>> index_with_purities(nBins);
+            for(unsigned int iBin = 0; iBin < nBins; ++iBin) {
+                index_with_purities[iBin].index = iBin;
+                index_with_purities[iBin].value = counts[iBin + nBins] / (counts[iBin] + counts[iBin + nBins]);
+            }
+            // We ignore the first bin which contains NaN values, which indicate missing not learned!
+            std::sort(index_with_purities.begin() + 1, index_with_purities.end(), compareWithIndex<Weight>);
+
+            // NaN Bin always stays at 0 because it has a special meaning (missing not learned)! 
+            mapping[0] = 0;
+            for(unsigned int iBin = 1; iBin < nBins; ++iBin) {
+                mapping[index_with_purities[iBin].index] = iBin;
+            }
+
+          }
+
+          PurityTransformation() {
+            nBins = 0;
+          }
+        
+          unsigned int BinToPurityBin(unsigned int bin) const {
+            return mapping[bin];
+          }
+        
+          std::vector<unsigned int> GetMapping() const { return mapping; }
+
+          void SetMapping(const std::vector<unsigned int> &_mapping) { mapping = _mapping; }
+
+      private:
+          unsigned int nBins;
+          std::vector<unsigned int> mapping;
+
     };
 
   class EventWeights {

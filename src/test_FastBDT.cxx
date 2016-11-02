@@ -346,6 +346,50 @@ TEST_F(EquidistantFeatureBinningTest, GetBinningIsCorrect) {
 }
 
 
+class PurityTransformationTest : public ::testing::Test {
+    protected:
+        virtual void SetUp() {
+
+            binned_data = {0, 0, 0, 0, 0,
+                           1, 1, 1, 1,
+                           2, 2, 2, 2, 2,
+                           3, 3, 3,
+                           4, 4};
+            weights = {1.0, 2.0, 3.0, 4.0, 5.0,
+                       1.0, 2.0, 3.0, 4.0,
+                       1.0, 2.0, 3.0, 4.0, 5.0,
+                       1.0, 2.0, 3.0,
+                       1.0, 2.0};
+            isSignal = {true, false, true, false, true, // 9 / 15
+                        false, false, true, true, // 7 / 10
+                        true, true, true, true, false, // 10 / 15
+                        true, true, false, // 3 / 6
+                        true, false, // 1 / 3
+            };
+
+        }
+
+        virtual void TearDown() {
+        }
+
+        std::vector<unsigned int> binned_data;
+        std::vector<float> weights;
+        std::vector<bool> isSignal;
+
+};
+
+TEST_F(PurityTransformationTest, TestPurityTransformation) {
+
+    PurityTransformation pt(2, binned_data, weights, isSignal);
+
+    EXPECT_EQ(pt.BinToPurityBin(0), 0u);
+    EXPECT_EQ(pt.BinToPurityBin(1), 4u);
+    EXPECT_EQ(pt.BinToPurityBin(2), 3u);
+    EXPECT_EQ(pt.BinToPurityBin(3), 2u);
+    EXPECT_EQ(pt.BinToPurityBin(4), 1u);
+
+}
+
 class EventWeightsTest : public ::testing::Test {
 
     protected:
