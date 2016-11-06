@@ -209,7 +209,7 @@ int train(int argc, char *argv[]) {
 int apply(int argc, char *argv[]) {
 
 	if( argc < 4 ) {
-		std::cerr << "Usage: " << argv[0] << " train datafile weightfile" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " apply datafile weightfile" << std::endl;
 		return 1;
 	}
 
