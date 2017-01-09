@@ -78,9 +78,12 @@ extern "C" {
       }
           
       unsigned int nFeaturesFinal = nFeatures;
+      expertise->purityTransformations.clear();
       if( expertise->purityTransformation > 0 ) {
           if( expertise->purityTransformation == 2 ) {
             nFeaturesFinal = 2*nFeatures;
+            for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature)
+              nLevels.push_back(expertise->nBinningLevels);
           }
           std::vector<float> v_weights(nEvents, 1.0);
           if(weights != nullptr)
