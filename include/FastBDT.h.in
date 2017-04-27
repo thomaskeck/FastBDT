@@ -71,7 +71,7 @@ namespace FastBDT {
             std::sort(first, last, compareIncludingNaN<Value>);
 
             // Wind iterator forward until first finite value
-            while( std::isnan(*first) ) {
+            while( std::isnan(*first) and first != last ) {
                 first++;
             }
 
@@ -322,7 +322,7 @@ namespace FastBDT {
             std::sort(first, last, compareWithWeightsIncludingNaN<Value>);
 
             // Wind iterator forward until first finite value
-            while( std::isnan(first->value) ) {
+            while( std::isnan(first->value) and first != last ) {
                 first++;
             }
 
@@ -389,7 +389,7 @@ namespace FastBDT {
             auto first = values.begin();
             auto last = values.end();
             // Wind iterator forward until first finite value
-            while( std::isnan(*first) ) {
+            while( std::isnan(*first) and first != last ) {
                 first++;
             }
 
