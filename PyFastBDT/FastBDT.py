@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import numpy as np
 
 import ctypes
@@ -8,15 +9,7 @@ c_double_p = ctypes.POINTER(ctypes.c_double)
 c_float_p = ctypes.POINTER(ctypes.c_float)
 c_uint_p = ctypes.POINTER(ctypes.c_uint)
 
-import os
-
-# Apparently find_library does not work as I expected
-#FastBDT_library_path = ctypes.util.find_library('FastBDT_CInterface')
-#print('Try to load ', FastBDT_library_path)
-#FastBDT_library = ctypes.cdll.LoadLibrary(FastBDT_library_path)
-
-FastBDT_library =  ctypes.cdll.LoadLibrary(os.getcwd() + '/libFastBDT_CInterface.so')
-print('Loaded ', FastBDT_library)
+FastBDT_library =  ctypes.cdll.LoadLibrary(os.path.join(os.path.dirname(__file__),'libFastBDT_CInterface.so'))
 
 FastBDT_library.Create.restype = ctypes.c_void_p
 FastBDT_library.Delete.argtypes = [ctypes.c_void_p]
