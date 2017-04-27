@@ -76,6 +76,14 @@ namespace FastBDT {
             }
 
             uint64_t size = last - first;
+
+            // If there was no finite data provided (e.g. all values are NaN)
+            // We can (and must) choose an arbitrary binning
+            // In this case all boundaries are set to 0 and we return
+            if(size == 0) {
+              binning.resize(GetNBins(), 0);
+              return;
+            }
             
             // Need only Nbins, altough we store upper and lower boundary as well,
             // however GetNBins counts also the NaN bin, so it really is GetNBins() - 1 + 1
@@ -320,6 +328,14 @@ namespace FastBDT {
 
             unsigned int size = last - first;
             
+            // If there was no finite data provided (e.g. all values are NaN)
+            // We can (and must) choose an arbitrary binning
+            // In this case all boundaries are set to 0 and we return
+            if(size == 0) {
+              this->binning.resize(this->GetNBins(), 0);
+              return;
+            }
+            
             // Need only Nbins, altough we store upper and lower boundary as well,
             // however GetNBins counts also the NaN bin, so it really is GetNBins() - 1 + 1
             this->binning.resize(this->GetNBins(), 0);
@@ -369,8 +385,26 @@ namespace FastBDT {
           EquidistantFeatureBinning(unsigned int _nLevels, std::vector<Value> &values) {
 
             this->nLevels = _nLevels;
-            Value min = values[0];
-            Value max = values[0];
+            
+            auto first = values.begin();
+            auto last = values.end();
+            // Wind iterator forward until first finite value
+            while( std::isnan(*first) ) {
+                first++;
+            }
+
+            unsigned int size = last - first;
+            
+            // If there was no finite data provided (e.g. all values are NaN)
+            // We can (and must) choose an arbitrary binning
+            // In this case all boundaries are set to 0 and we return
+            if(size == 0) {
+              this->binning.resize(this->GetNBins(), 0);
+              return;
+            }
+
+            Value min = *first;
+            Value max = *first;
             for(unsigned int iEvent = 1; iEvent < values.size(); ++iEvent) {
                 if(values[iEvent] > max)
                   max = values[iEvent];

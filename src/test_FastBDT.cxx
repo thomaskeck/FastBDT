@@ -184,6 +184,21 @@ TEST_F(FeatureBinningTest, ConstantFeatureIsHandledCorrectly) {
 
 }
 
+TEST_F(FeatureBinningTest, ConstantNaNFeatureIsHandledCorrectly) {
+
+    std::vector<float> data = { NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN }; 
+    FeatureBinning<float> featureBinning(3, data);
+
+    std::vector<float> binning = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }; 
+    EXPECT_EQ( featureBinning.GetNBins(), 9u);
+    EXPECT_EQ( featureBinning.GetBinning(), binning);
+    EXPECT_EQ( featureBinning.ValueToBin(100.0f), 8u); // Last Bin
+    EXPECT_EQ( featureBinning.ValueToBin(-100.0f), 1u); // First Bin
+    EXPECT_EQ( featureBinning.ValueToBin(1.0f), 8u); // Last Bin
+    EXPECT_EQ( featureBinning.ValueToBin(NAN), 0u);
+
+}
+
 TEST_F(FeatureBinningTest, FewDistinctValuesIsHandledCorrectly) {
 
     std::vector<float> data = { 1.0f, 1.0f, 7.0, 6.0, 1.0f, 3.0f, 3.0f, 5.0f, 2.0f, 2.0f, 2.0f, 4.0f, 1.0f, 1.0f }; 
@@ -279,6 +294,22 @@ class WeightedFeatureBinningTest : public ::testing::Test {
 
 };
 
+TEST_F(WeightedFeatureBinningTest, ConstantNaNFeatureIsHandledCorrectly) {
+
+    std::vector<float> data = { NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN }; 
+    std::vector<Weight> weights = {2.0f,0.1f,0.1f,3.0f,0.5f,1.0f,2.0f,0.1f,2.0f};
+    WeightedFeatureBinning<float> featureBinning(3, data, weights);
+
+    std::vector<float> binning = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }; 
+    EXPECT_EQ( featureBinning.GetNBins(), 9u);
+    EXPECT_EQ( featureBinning.GetBinning(), binning);
+    EXPECT_EQ( featureBinning.ValueToBin(100.0f), 8u); // Last Bin
+    EXPECT_EQ( featureBinning.ValueToBin(-100.0f), 1u); // First Bin
+    EXPECT_EQ( featureBinning.ValueToBin(1.0f), 8u); // Last Bin
+    EXPECT_EQ( featureBinning.ValueToBin(NAN), 0u);
+
+}
+
 TEST_F(WeightedFeatureBinningTest, MaximumAndMinimumValueAreCorrectlyIdentified) {
 
     EXPECT_FLOAT_EQ( calculatedBinning->GetMin(), 1.0f);
@@ -332,6 +363,21 @@ class EquidistantFeatureBinningTest : public ::testing::Test {
         EquidistantFeatureBinning<float> *calculatedBinning;
 
 };
+
+TEST_F(EquidistantFeatureBinningTest, ConstantNaNFeatureIsHandledCorrectly) {
+
+    std::vector<float> data = { NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN, NAN }; 
+    EquidistantFeatureBinning<float> featureBinning(3, data);
+
+    std::vector<float> binning = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }; 
+    EXPECT_EQ( featureBinning.GetNBins(), 9u);
+    EXPECT_EQ( featureBinning.GetBinning(), binning);
+    EXPECT_EQ( featureBinning.ValueToBin(100.0f), 8u); // Last Bin
+    EXPECT_EQ( featureBinning.ValueToBin(-100.0f), 1u); // First Bin
+    EXPECT_EQ( featureBinning.ValueToBin(1.0f), 8u); // Last Bin
+    EXPECT_EQ( featureBinning.ValueToBin(NAN), 0u);
+
+}
 
 TEST_F(EquidistantFeatureBinningTest, MaximumAndMinimumValueAreCorrectlyIdentified) {
 
