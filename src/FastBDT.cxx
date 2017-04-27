@@ -121,7 +121,7 @@ namespace FastBDT {
     const auto &flags = sample.GetFlags();
     const auto &weights = sample.GetWeights();
 
-    std::vector<Weight> bins( nNodes*nFeatures*nBinSums.back() );
+    std::vector<Weight> bins( nNodes*nBinSums.back() );
 
     // Fill Cut-PDFs for all nodes in this layer and for every feature
     for(unsigned int iEvent = firstEvent; iEvent < lastEvent; ++iEvent) {
