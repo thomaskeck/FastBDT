@@ -27,6 +27,7 @@ set(FastBDT_SOURCES
 set(FastBDT_TESTS
   "${PROJECT_SOURCE_DIR}/src/test_all.cxx"
   "${PROJECT_SOURCE_DIR}/src/test_FastBDT.cxx"
+  "${PROJECT_SOURCE_DIR}/src/test_Performance.cxx"
   "${PROJECT_SOURCE_DIR}/src/test_FastBDT_IO.cxx"
   "${PROJECT_SOURCE_DIR}/src/test_FastBDT_C_API.cxx"
 )
