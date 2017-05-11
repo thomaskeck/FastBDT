@@ -115,6 +115,7 @@ if (PYTHON)
                        DEPENDS ${DEPS})
 
     add_custom_target(target ALL DEPENDS ${OUTPUT})
+    add_custom_command(TARGET FastBDT_shared FastBDT_CInterface POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:FastBDT_shared> $<TARGET_FILE:FastBDT_CInterface> "${PROJECT_SOURCE_DIR}/PyFastBDT/")
 
     install(CODE "execute_process(COMMAND ${PYTHON} ${PROJECT_SOURCE_DIR}/setup.py install --prefix=${CMAKE_INSTALL_PREFIX})")
 endif()
