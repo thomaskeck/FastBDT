@@ -202,6 +202,11 @@ namespace TMVA {
        * Ratio for stochastic gradient boost
        */
       Double_t fRandRatio;   
+
+      /**
+       * Flatness Loss
+       */
+      Double_t fFlatnessLoss;   
       
       /**
        * sPlot flag, needed for stochastic bagging when we perform an sPlot training
@@ -217,6 +222,11 @@ namespace TMVA {
        * Use weighted feature binning
        */
       bool useWeightedFeatureBinning;
+      
+      /**
+       * Use purity transformation for all features
+       */
+      Int_t fPurityTransformation;          
       
       /**
        * Use equidistant feature binning
@@ -237,11 +247,6 @@ namespace TMVA {
        * Depth of decision trees
        */
       Int_t fNTreeLayers;          
-      
-      /**
-       * Use purity transformation for all features
-       */
-      Int_t fPurityTransformation;          
 
       /**
        * Pointer to the Forest trained by this method

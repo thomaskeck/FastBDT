@@ -19,7 +19,6 @@
 
 #include "FastBDT_IO.h"
 
-ClassImp(TMVA::MethodFastBDT)
 
 using namespace FastBDT;
 
