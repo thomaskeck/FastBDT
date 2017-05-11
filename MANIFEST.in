@@ -1,0 +1,2 @@
+include libFastBDT_CInterface.so
+include libFastBDT_shared.so
