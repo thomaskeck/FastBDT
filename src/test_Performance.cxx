@@ -115,7 +115,7 @@ TEST_F(PerformanceTreeBuilderTest, TreeBuilderScalesLinearInNumberOfDataPoints) 
       std::vector<unsigned int> row(nFeatures);
       std::vector<unsigned int> binning_levels(nFeatures, 4);
 
-      EventSample sample(nDataPoints, nFeatures, binning_levels);
+      EventSample sample(nDataPoints, nFeatures, 0, binning_levels);
       for(unsigned int i = 0; i < nDataPoints; ++i) {
         std::generate_n(row.begin(), nFeatures, random_source); 
         sample.AddEvent( row, 1.0, i % 2 == 0);
@@ -159,7 +159,7 @@ TEST_F(PerformanceTreeBuilderTest, TreeBuilderScalesLinearInNumberOfFeatures) {
       std::vector<unsigned int> row(nFeatures);
       std::vector<unsigned int> binning_levels(nFeatures, 4);
 
-      EventSample sample(nDataPoints, nFeatures, binning_levels);
+      EventSample sample(nDataPoints, nFeatures, 0, binning_levels);
       for(unsigned int i = 0; i < nDataPoints; ++i) {
         std::generate_n(row.begin(), nFeatures, random_source); 
         sample.AddEvent( row, 1.0, i % 2 == 0);
@@ -204,7 +204,7 @@ TEST_F(PerformanceTreeBuilderTest, TreeBuilderScalesLinearForSmallNumberOfLayers
       
     std::vector<unsigned int> row(nFeatures);
     std::vector<unsigned int> binning_levels(nFeatures, 4);
-    EventSample sample(nDataPoints, nFeatures, binning_levels);
+    EventSample sample(nDataPoints, nFeatures, 0, binning_levels);
     for(unsigned int i = 0; i < nDataPoints; ++i) {
       std::generate_n(row.begin(), nFeatures, random_source); 
       sample.AddEvent( row, 1.0, i % 2 == 0);

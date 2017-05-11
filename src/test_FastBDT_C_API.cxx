@@ -25,8 +25,10 @@ TEST_F(CInterfaceTest, CreateDefaultValuesAreCorrect) {
     EXPECT_EQ( expertise->nBinningLevels, 8u);
     EXPECT_EQ( expertise->nTrees, 100u);
     EXPECT_EQ( expertise->nLayersPerTree, 3u);
+    EXPECT_EQ( expertise->sPlot, false);
     EXPECT_DOUBLE_EQ( expertise->shrinkage, 0.1);
     EXPECT_DOUBLE_EQ( expertise->randRatio, 0.5);
+    EXPECT_DOUBLE_EQ( expertise->flatnessLoss, -1.0);
 
 }
 
@@ -48,6 +50,15 @@ TEST_F(CInterfaceTest, SetNTreesWorks ) {
 
 }
 
+TEST_F(CInterfaceTest, SetSPlot ) {
+    
+    SetSPlot(expertise, false);
+    EXPECT_EQ( expertise->sPlot, false);
+    SetSPlot(expertise, true);
+    EXPECT_EQ( expertise->sPlot, true);
+
+}
+
 TEST_F(CInterfaceTest, SetTransform2Probability ) {
     
     SetTransform2Probability(expertise, false);
@@ -63,6 +74,15 @@ TEST_F(CInterfaceTest, SetNLayersPerTreeWorks ) {
     EXPECT_EQ( expertise->nLayersPerTree, 5u);
     SetNLayersPerTree(expertise, 2u);
     EXPECT_EQ( expertise->nLayersPerTree, 2u);
+
+}
+
+TEST_F(CInterfaceTest, SetFlatnessLossWorks ) {
+    
+    SetFlatnessLoss(expertise, 0.2);
+    EXPECT_DOUBLE_EQ( expertise->flatnessLoss, 0.2);
+    SetFlatnessLoss(expertise, 0.4);
+    EXPECT_DOUBLE_EQ( expertise->flatnessLoss, 0.4);
 
 }
 
@@ -100,7 +120,43 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithoutWeights ) {
 
     double data_ptr[] = {1.0, 2.6, 1.6, 2.5, 1.1, 2.0, 1.9, 2.1, 1.6, 2.9, 1.9, 2.9, 1.5, 2.0};
     unsigned int target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
-    Train(expertise, data_ptr, nullptr, target_ptr, 7, 2);
+    Train(expertise, data_ptr, nullptr, target_ptr, 7, 2, 0);
+
+    EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
+    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
+    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
+    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 1.6f);
+    EXPECT_TRUE(expertise->forest.GetForest()[0].GetCuts()[0].valid);
+    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 1.7142857f);
+
+    double test_ptr[] = {1.0, 2.6};
+    EXPECT_LE(Analyse(expertise, test_ptr), 0.001);
+}
+
+
+TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithSpectators ) {
+
+    // Use just one branch instead of a whole forest for testing
+    // We only test if the ForestBuilder is called correctly,
+    // the builder itself is tested elsewhere.
+    //
+    // Spectators shouldn't influence anything
+    SetNTrees(expertise, 10u);
+    SetNLayersPerTree(expertise, 1u);
+    SetRandRatio(expertise, 1.0);
+    SetShrinkage(expertise, 1.0);
+    SetNBinningLevels(expertise, 2u);
+    SetTransform2Probability(expertise, true);
+
+    double data_ptr[] = {1.0, 2.6, 0.0, -10.0, 
+                         1.6, 2.5, 99.0, 0.0,
+                         1.1, 2.0, -500.0, 12.1,
+                         1.9, 2.1, 0.0, 0.0,
+                         1.6, 2.9, 23.0, 42.0,
+                         1.9, 2.9, 0.0, 1.0,
+                         1.5, 2.0, 1.0, -1.0};
+    unsigned int target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
+    Train(expertise, data_ptr, nullptr, target_ptr, 7, 2, 2);
 
     EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
@@ -128,7 +184,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithWeights ) {
     double data_ptr[] = {1.0, 2.6, 1.6, 2.5, 1.1, 2.0, 1.9, 2.1, 1.6, 2.9, 1.9, 2.9, 1.5, 2.0};
     float weight_ptr[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
     unsigned int target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
-    Train(expertise, data_ptr, weight_ptr, target_ptr, 7, 2);
+    Train(expertise, data_ptr, weight_ptr, target_ptr, 7, 2, 0);
 
     EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
@@ -141,7 +197,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithWeights ) {
     EXPECT_LE(Analyse(expertise, test_ptr), 0.001);
     
     float weight_ptr2[] = {2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
-    Train(expertise, data_ptr, weight_ptr2, target_ptr, 7, 2);
+    Train(expertise, data_ptr, weight_ptr2, target_ptr, 7, 2, 0);
     EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
@@ -152,7 +208,7 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithWeights ) {
     EXPECT_LE(Analyse(expertise, test_ptr), 0.001);
     
     float weight_ptr3[] = {1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0};
-    Train(expertise, data_ptr, weight_ptr3, target_ptr, 7, 2);
+    Train(expertise, data_ptr, weight_ptr3, target_ptr, 7, 2, 0);
     EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
     EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);

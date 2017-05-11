@@ -544,7 +544,7 @@ class EventValuesTest : public ::testing::Test {
 
     protected:
         virtual void SetUp() {
-            eventValues = new EventValues(8, 4, {3, 4, 2, 3});
+            eventValues = new EventValues(8, 4, 1, {3, 4, 2, 3, 3});
         }
 
         virtual void TearDown() {
@@ -557,26 +557,29 @@ class EventValuesTest : public ::testing::Test {
 TEST_F(EventValuesTest, SetterAndGetterWorkCorrectly) {
     
     for(unsigned int i = 0; i < 8; ++i) {
-        std::vector<unsigned int> features = { i, static_cast<unsigned int>(4 + (1-2*((int)i%2))*((int)i+1)/2), static_cast<unsigned int>((int)(i) % 4 + 1),  7-i };
+        std::vector<unsigned int> features = { i, static_cast<unsigned int>(4 + (1-2*((int)i%2))*((int)i+1)/2), static_cast<unsigned int>((int)(i) % 4 + 1),  7-i, i };
         eventValues->Set(i, features);
     }
-    EXPECT_THROW( eventValues->Set(1, {1,2,3,4,5}), std::runtime_error );
-    EXPECT_THROW( eventValues->Set(1, {1,20,3,1}), std::runtime_error );
+    EXPECT_THROW( eventValues->Set(1, {1,2,3,4,5,6}), std::runtime_error );
+    EXPECT_THROW( eventValues->Set(1, {1,20,3,1,1}), std::runtime_error );
     
     for(unsigned int i = 0; i < 8; ++i) {
-        std::vector<unsigned int> features = { i, static_cast<unsigned int>(4 + (1-2*((int)(i)%2))*((int)(i)+1)/2), static_cast<unsigned int>((int)(i) % 4 + 1),  7-i };
+        std::vector<unsigned int> features = { i, static_cast<unsigned int>(4 + (1-2*((int)(i)%2))*((int)(i)+1)/2), static_cast<unsigned int>((int)(i) % 4 + 1),  7-i, i };
         const auto *array = &eventValues->Get(i);
         for(unsigned int j = 0; j < 3; ++j) {
             EXPECT_EQ( eventValues->Get(i,j), features[j]);
             EXPECT_EQ( array[j], features[j]);
         }
+        EXPECT_EQ( eventValues->GetSpectator(i,0), features[4]);
+        EXPECT_EQ( array[4], features[4]);
     }
 }
 
 
 TEST_F(EventValuesTest, ThrowOnMismatchBetweenNFeaturesAndNBinsSize) {
     
-  EXPECT_THROW( EventValues(8, 3, {1, 2}), std::runtime_error );
+  EXPECT_THROW( EventValues(8, 3, 0, {1, 2}), std::runtime_error );
+  EXPECT_THROW( EventValues(8, 3, 1, {1, 2, 2}), std::runtime_error );
 
 }
 
@@ -585,26 +588,30 @@ TEST_F(EventValuesTest, GetSizesWorkCorrectly) {
 
     EXPECT_EQ( eventValues->GetNFeatures(), 4u);
     const auto& nBins = eventValues->GetNBins();
-    EXPECT_EQ( nBins.size(), 4u);
+    EXPECT_EQ( nBins.size(), 5u);
     EXPECT_EQ( nBins[0], 9u);
     EXPECT_EQ( nBins[1], 17u);
     EXPECT_EQ( nBins[2], 5u);
     EXPECT_EQ( nBins[3], 9u);
+    EXPECT_EQ( nBins[4], 9u);
     
     const auto& nBinSums = eventValues->GetNBinSums();
-    EXPECT_EQ( nBinSums.size(), 5u);
+    EXPECT_EQ( nBinSums.size(), 6u);
     EXPECT_EQ( nBinSums[0], 0u);
     EXPECT_EQ( nBinSums[1], 9u);
     EXPECT_EQ( nBinSums[2], 9u + 17u);
     EXPECT_EQ( nBinSums[3], 9u + 17u + 5u);
     EXPECT_EQ( nBinSums[4], 9u + 17u + 5u + 9u);
+    EXPECT_EQ( nBinSums[5], 9u + 17u + 5u + 9u + 9u);
+    
+    EXPECT_EQ( eventValues->GetNSpectators(), 1u);
 
 }
 
 class EventSampleTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            eventSample = new EventSample(10, 3, {8, 8, 8});
+            eventSample = new EventSample(10, 3, 1, {8, 8, 8, 4});
         }
 
         virtual void TearDown() {
@@ -617,7 +624,7 @@ class EventSampleTest : public ::testing::Test {
 
 TEST_F(EventSampleTest, AddingEventsWorksCorrectly) {
 
-    eventSample->AddEvent( std::vector<unsigned int>({1,2,3}), 2.0, true );
+    eventSample->AddEvent( std::vector<unsigned int>({1,2,3,4}), 2.0, true );
     EXPECT_EQ( eventSample->GetNSignals(), 1u);
     EXPECT_EQ( eventSample->GetNBckgrds(), 0u);
    
@@ -629,7 +636,7 @@ TEST_F(EventSampleTest, AddingEventsWorksCorrectly) {
  
     // Add some more Signal and Background events   
     for(unsigned int i = 1; i < 10; ++i) { 
-        eventSample->AddEvent( std::vector<unsigned int>({2*i,3*i,5*i}), 2.0, i % 2 == 0 );
+        eventSample->AddEvent( std::vector<unsigned int>({2*i,3*i,5*i,1}), 2.0, i % 2 == 0 );
     }
     EXPECT_EQ( eventSample->GetNSignals(), 5u);
     EXPECT_EQ( eventSample->GetNBckgrds(), 5u);
@@ -653,7 +660,7 @@ TEST_F(EventSampleTest, AddingEventsWorksCorrectly) {
     }
 
     // Test throw if number of promised events is exceeded
-    EXPECT_THROW( eventSample->AddEvent( std::vector<unsigned int>({1,2,3}), 2.0, true ), std::runtime_error);
+    EXPECT_THROW( eventSample->AddEvent( std::vector<unsigned int>({1,2,3,4}), 2.0, true ), std::runtime_error);
     
 }
 
@@ -661,7 +668,7 @@ TEST_F(EventSampleTest, AddingEventsWithZeroWeightWorksCorrectly) {
  
     // Add some more Signal and Background events   
     for(unsigned int i = 0; i < 10; ++i) { 
-        eventSample->AddEvent( std::vector<unsigned int>({2*i,3*i,5*i}), i % 3, i % 2 == 0 );
+        eventSample->AddEvent( std::vector<unsigned int>({2*i,3*i,5*i,1}), i % 3, i % 2 == 0 );
     }
     EXPECT_EQ( eventSample->GetNSignals(), 5u);
     EXPECT_EQ( eventSample->GetNBckgrds(), 5u);
@@ -673,10 +680,10 @@ TEST_F(EventSampleTest, AddingEventsWithZeroWeightWorksCorrectly) {
 
 }
 
-TEST_F(EventSampleTest, AddingEventsWithNANWeightsTrhow) {
+TEST_F(EventSampleTest, AddingEventsWithNANWeightsThrow) {
  
-    eventSample->AddEvent( std::vector<unsigned int>({2,3,5}), 1.0, true);
-    EXPECT_THROW(eventSample->AddEvent( std::vector<unsigned int>({2,3,5}), NAN, true), std::runtime_error);
+    eventSample->AddEvent( std::vector<unsigned int>({2,3,5,1}), 1.0, true);
+    EXPECT_THROW(eventSample->AddEvent( std::vector<unsigned int>({2,3,5,1}), NAN, true), std::runtime_error);
 
 }
 
@@ -684,10 +691,10 @@ class CumulativeDistributionsTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
             const unsigned int numberOfEvents = 100;
-            eventSample = new EventSample(numberOfEvents, 2, {2, 2});
+            eventSample = new EventSample(numberOfEvents, 2, 2, {2, 2, 3, 3});
             for(unsigned int i = 0; i < numberOfEvents; ++i) {
                 bool isSignal = i < (numberOfEvents/2);
-                eventSample->AddEvent( std::vector<unsigned int>({i % 4 + 1, (numberOfEvents-i) % 4 + 1}), static_cast<Weight>(i+1), isSignal);
+                eventSample->AddEvent( std::vector<unsigned int>({i % 4 + 1, (numberOfEvents-i) % 4 + 1, 1, i % 3}), static_cast<Weight>(i+1), isSignal);
             }
         }
 
@@ -726,13 +733,15 @@ TEST_F(CumulativeDistributionsTest, NaNShouldBeIgnored) {
 
     CumulativeDistributions CDFsForLayer0(0, *eventSample);
             
-    std::vector<unsigned int> v(2);
-    EventSample *newEventSample = new EventSample(200, 2, {2, 2});
+    std::vector<unsigned int> v(4);
+    EventSample *newEventSample = new EventSample(200, 2, 2, {2, 2, 3, 3});
     for(unsigned int i = 0; i < 100; ++i) {
         v[0] = eventSample->GetValues().Get(i, 0);
         v[1] = eventSample->GetValues().Get(i, 1);
+        v[2] = eventSample->GetValues().GetSpectator(i, 0);
+        v[3] = eventSample->GetValues().GetSpectator(i, 1);
         newEventSample->AddEvent(v, eventSample->GetWeights().GetOriginal(i), eventSample->IsSignal(i));
-        newEventSample->AddEvent(std::vector<unsigned int>({0, 0}), 1.0, i < 50);
+        newEventSample->AddEvent(std::vector<unsigned int>({0, 0, 1, 2}), 1.0, i < 50);
     }
     CumulativeDistributions newCDFsForLayer0(0, *newEventSample);
     delete newEventSample;
@@ -760,13 +769,15 @@ TEST_F(CumulativeDistributionsTest, ZeroWeightShouldBeIgnored) {
 
     CumulativeDistributions CDFsForLayer0(0, *eventSample);
             
-    std::vector<unsigned int> v(2);
-    EventSample *newEventSample = new EventSample(200, 2, {2, 2});
+    std::vector<unsigned int> v(4);
+    EventSample *newEventSample = new EventSample(200, 2, 2, {2, 2, 3, 3});
     for(unsigned int i = 0; i < 100; ++i) {
         v[0] = eventSample->GetValues().Get(i, 0);
         v[1] = eventSample->GetValues().Get(i, 1);
+        v[2] = eventSample->GetValues().GetSpectator(i, 0);
+        v[3] = eventSample->GetValues().GetSpectator(i, 1);
         newEventSample->AddEvent(v, eventSample->GetWeights().GetOriginal(i), eventSample->IsSignal(i));
-        newEventSample->AddEvent(std::vector<unsigned int>({i%2 + 1, i%3 + 1}), 0.0, i < 50);
+        newEventSample->AddEvent(std::vector<unsigned int>({i%2 + 1, i%3 + 1, 1, 2}), 0.0, i < 50);
     }
     CumulativeDistributions newCDFsForLayer0(0, *newEventSample);
     delete newEventSample;
@@ -833,7 +844,7 @@ TEST_F(CumulativeDistributionsTest, CheckIfLayer1IsCorrect) {
 
 TEST_F(CumulativeDistributionsTest, DifferentBinningLevels) {
     const unsigned int numberOfEvents = 10;
-    EventSample *sample = new EventSample(numberOfEvents, 4, {2, 1, 3, 1});
+    EventSample *sample = new EventSample(numberOfEvents, 4, 0, {2, 1, 3, 1});
     sample->AddEvent(std::vector<unsigned int>{3, 1, 8, 2}, 1.0, true); 
     sample->AddEvent(std::vector<unsigned int>{4, 2, 7, 2}, 1.0, true); 
     sample->AddEvent(std::vector<unsigned int>{3, 2, 6, 0}, 1.0, true); 
@@ -962,7 +973,7 @@ TEST_F(LossFunctionTest, GiniIndexIsCorrect) {
 class NodeTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            eventSample = new EventSample(8, 2, {1, 1});
+            eventSample = new EventSample(8, 2, 0, {1, 1});
             eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 4.0, true);
             eventSample->AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, true);
             eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 4.0, false);
@@ -1165,7 +1176,7 @@ TEST_F(NodeTest, BestCut1Layer) {
 class TreeBuilderTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            eventSample = new EventSample(8, 2, {1, 1});
+            eventSample = new EventSample(8, 2, 0, {1, 1});
             eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
             eventSample->AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, true);
             eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, false);
@@ -1344,27 +1355,27 @@ TEST_F(TreeTest, BoostWeights) {
 class ForestBuilderTest : public ::testing::Test {
     protected:
         virtual void SetUp() {
-            eventSample = new EventSample(20, 2, {1, 1});
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
-            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
+            eventSample = new EventSample(20, 2, 2, {1, 1, 1, 1});
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1, 1, 1}), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1, 1, 2 }), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1, 2, 1}), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1, 2, 2}), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 2, 1, 2}), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1, 1, 1}), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1, 2, 1}), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1, 1, 2}), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1, 2, 2}), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2, 2, 2}), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2, 2, 2}), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2, 1, 1}), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1, 1, 2}), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 1, 1, 1}), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 1, 2, 1, 1}), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1, 1, 2}), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1, 2, 1}), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 1, 2, 1}), 1.0, true);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2, 1, 2}), 1.0, false);
+            eventSample->AddEvent( std::vector<unsigned int>({ 2, 2, 2, 1}), 1.0, false);
         }
 
         virtual void TearDown() {
@@ -1536,7 +1547,7 @@ class CornerCasesTest : public ::testing::Test { };
 
 TEST_F(CornerCasesTest, OnlySignalGivesReasonableResult) {
 
-    EventSample eventSample(5, 2, {1, 1});
+    EventSample eventSample(5, 2, 0, {1, 1});
     eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
     eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
     eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
@@ -1564,7 +1575,7 @@ TEST_F(CornerCasesTest, OnlySignalGivesReasonableResult) {
 
 TEST_F(CornerCasesTest, OnlyBackgroundGivesReasonableResult) {
 
-    EventSample eventSample(5, 2, {1, 1});
+    EventSample eventSample(5, 2, 0, {1, 1});
     eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
     eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
     eventSample.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, false);
@@ -1592,7 +1603,7 @@ TEST_F(CornerCasesTest, OnlyBackgroundGivesReasonableResult) {
 
 TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
     
-    EventSample eventSample1(6, 2, {1, 1});
+    EventSample eventSample1(6, 2, 0, {1, 1});
     eventSample1.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
     eventSample1.AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
     eventSample1.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
@@ -1600,7 +1611,7 @@ TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
     eventSample1.AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, false);
     eventSample1.AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
 
-    EventSample eventSample2(6, 2, {1, 1});
+    EventSample eventSample2(6, 2, 0, {1, 1});
     eventSample2.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
     eventSample2.AddEvent( std::vector<unsigned int>({ 2, 1 }), 2.0, true);
     eventSample2.AddEvent( std::vector<unsigned int>({ 1, 1 }), 3.0, true);
@@ -1608,7 +1619,7 @@ TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
     eventSample2.AddEvent( std::vector<unsigned int>({ 1, 2 }), 2.0, false);
     eventSample2.AddEvent( std::vector<unsigned int>({ 2, 2 }), 3.0, false);
 
-    EventSample eventSample3(7, 2, {1, 1});
+    EventSample eventSample3(7, 2, 0, {1, 1});
     eventSample3.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
     eventSample3.AddEvent( std::vector<unsigned int>({ 2, 1 }), 1.0, true);
     eventSample3.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
@@ -1617,7 +1628,7 @@ TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
     eventSample3.AddEvent( std::vector<unsigned int>({ 1, 2 }), 1.0, false);
     eventSample3.AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
 
-    EventSample eventSample4(7, 2, {1, 1});
+    EventSample eventSample4(7, 2, 0, {1, 1});
     eventSample4.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
     eventSample4.AddEvent( std::vector<unsigned int>({ 2, 1 }), 2.0, true);
     eventSample4.AddEvent( std::vector<unsigned int>({ 1, 1 }), 3.0, true);
@@ -1626,7 +1637,7 @@ TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
     eventSample4.AddEvent( std::vector<unsigned int>({ 1, 2 }), 2.0, false);
     eventSample4.AddEvent( std::vector<unsigned int>({ 2, 2 }), 3.0, false);
 
-    EventSample eventSample5(7, 2, {1, 1});
+    EventSample eventSample5(7, 2, 0, {1, 1});
     eventSample5.AddEvent( std::vector<unsigned int>({ 1, 1 }), 1.0, true);
     eventSample5.AddEvent( std::vector<unsigned int>({ 2, 1 }), 2.0, true);
     eventSample5.AddEvent( std::vector<unsigned int>({ 1, 1 }), 3.0, true);

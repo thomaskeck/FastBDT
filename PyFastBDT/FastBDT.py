@@ -27,10 +27,12 @@ FastBDT_library.Analyse.restype = ctypes.c_double
 FastBDT_library.AnalyseArray.argtypes = [ctypes.c_void_p, c_double_p, c_double_p, ctypes.c_uint, ctypes.c_uint]
 FastBDT_library.SetRandRatio.argtypes = [ctypes.c_void_p, ctypes.c_double]
 FastBDT_library.SetShrinkage.argtypes = [ctypes.c_void_p, ctypes.c_double]
+FastBDT_library.SetFlatnessLoss.argtypes = [ctypes.c_void_p, ctypes.c_double]
 FastBDT_library.SetNTrees.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.SetNBinningLevels.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.SetNLayersPerTree.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.SetTransform2Probability.argtypes = [ctypes.c_void_p, ctypes.c_bool]
+FastBDT_library.SetSPlot.argtypes = [ctypes.c_void_p, ctypes.c_bool]
 FastBDT_library.SetPurityTransformation.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 
 FastBDT_library.GetVariableRanking.argtypes = [ctypes.c_void_p]
@@ -40,6 +42,9 @@ FastBDT_library.ExtractNumberOfVariablesFromVariableRanking.argtypes = [ctypes.c
 FastBDT_library.ExtractNumberOfVariablesFromVariableRanking.restype = ctypes.c_uint
 FastBDT_library.ExtractImportanceOfVariableFromVariableRanking.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.ExtractImportanceOfVariableFromVariableRanking.restype = ctypes.c_double
+    
+FastBDT_library.GetIndividualVariableRanking.argtypes = [ctypes.c_void_p, c_double_p]
+FastBDT_library.GetIndividualVariableRanking.restype = ctypes.c_void_p
 
 
 def PrintVersion():
@@ -65,7 +70,7 @@ def calculate_roc_auc(p, t, w=None):
 
 
 class Classifier(object):
-    def __init__(self, nBinningLevels=4, nTrees=100, nLayersPerTree=3, shrinkage=0.1, randRatio=0.5, transform2probability=True, purityTransformation=0):
+    def __init__(self, nBinningLevels=4, nTrees=100, nLayersPerTree=3, shrinkage=0.1, randRatio=0.5, transform2probability=True, purityTransformation=0, sPlot=False, flatnessLoss=-1.0):
         self.nBinningLevels = nBinningLevels
         self.nTrees = nTrees
         self.nLayersPerTree = nLayersPerTree
@@ -73,6 +78,8 @@ class Classifier(object):
         self.randRatio = randRatio
         self.transform2probability = transform2probability
         self.purityTransformation = purityTransformation
+        self.sPlot = sPlot
+        self.flatnessLoss = flatnessLoss
         self.forest = self.create_forest()
 
     def create_forest(self):
@@ -82,11 +89,13 @@ class Classifier(object):
         FastBDT_library.SetNLayersPerTree(forest, int(self.nLayersPerTree))
         FastBDT_library.SetShrinkage(forest, float(self.shrinkage))
         FastBDT_library.SetRandRatio(forest, float(self.randRatio))
+        FastBDT_library.SetFlatnessLoss(forest, float(self.flatnessLoss))
         FastBDT_library.SetTransform2Probability(forest, bool(self.transform2probability))
+        FastBDT_library.SetSPlot(forest, bool(self.sPlot))
         FastBDT_library.SetPurityTransformation(forest, int(self.purityTransformation))
         return forest
 
-    def fit(self, X, y, weights=None):
+    def fit(self, X, y, weights=None, nSpectators=0):
         X_temp = np.require(X, dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
         y_temp = np.require(y, dtype=np.uint32, requirements=['A', 'W', 'C', 'O'])
         if weights is not None:
@@ -94,7 +103,7 @@ class Classifier(object):
         numberOfEvents, numberOfFeatures = X_temp.shape
         FastBDT_library.Train(self.forest, X_temp.ctypes.data_as(c_double_p),
                               w_temp.ctypes.data_as(c_float_p) if weights is not None else None,
-                              y_temp.ctypes.data_as(c_uint_p), int(numberOfEvents), int(numberOfFeatures))
+                              y_temp.ctypes.data_as(c_uint_p), int(numberOfEvents), int(numberOfFeatures-nSpectators), int(nSpectators))
         return self
 
     def predict(self, X):

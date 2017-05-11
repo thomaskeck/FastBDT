@@ -165,7 +165,7 @@ int train(int argc, char *argv[]) {
      * In the example below the data is now binned using the FeatureBinning's ValueToBin method
      * and afterwards added (each row seperatly) into the EventSample using its AddEvent method.
      */
-    FastBDT::EventSample eventSample(data.size(), numberOfFeatures, nBinningLevels);
+    FastBDT::EventSample eventSample(data.size(), numberOfFeatures, 0, nBinningLevels);
     for(auto &event : data) {
         int _class = int(event.back());
         std::vector<unsigned int> bins(numberOfFeatures);

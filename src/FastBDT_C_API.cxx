@@ -22,6 +22,8 @@ extern "C" {
       expertise->nTrees = 100;
       expertise->shrinkage = 0.1;
       expertise->randRatio = 0.5;
+      expertise->flatnessLoss = -1.0;
+      expertise->sPlot = false;
       expertise->nLayersPerTree = 3;
       expertise->transform2probability = true;
       expertise->purityTransformation = 0;
@@ -55,12 +57,20 @@ extern "C" {
     void SetPurityTransformation(void *ptr, unsigned int purityTransformation) {
       reinterpret_cast<Expertise*>(ptr)->purityTransformation = purityTransformation;
     }
+    
+    void SetFlatnessLoss(void *ptr, double flatnessLoss) {
+      reinterpret_cast<Expertise*>(ptr)->flatnessLoss = flatnessLoss;
+    }
+    
+    void SetSPlot(void *ptr, bool sPlot) {
+      reinterpret_cast<Expertise*>(ptr)->sPlot = sPlot;
+    }
 
     void Delete(void *ptr) {
       delete reinterpret_cast<Expertise*>(ptr);
     }
     
-    void Train(void *ptr, void *data_ptr, void *weight_ptr, void *target_ptr, unsigned int nEvents, unsigned int nFeatures) {
+    void Train(void *ptr, void *data_ptr, void *weight_ptr, void *target_ptr, unsigned int nEvents, unsigned int nFeatures, unsigned int nSpectators) {
       Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
       double *data = reinterpret_cast<double*>(data_ptr);
       float *weights = reinterpret_cast<float*>(weight_ptr);
@@ -68,7 +78,7 @@ extern "C" {
 
       std::vector<unsigned int> nLevels;
       expertise->featureBinnings.clear();
-      for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
+      for(unsigned int iFeature = 0; iFeature < nFeatures+nSpectators; ++iFeature) {
         std::vector<double> feature(nEvents);
         for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
           feature[iEvent] = *(data + iEvent*nFeatures + iFeature);
@@ -101,21 +111,28 @@ extern "C" {
           }
       }
 
-      EventSample eventSample(nEvents, nFeaturesFinal, nLevels);
-      std::vector<unsigned int> bins(nFeaturesFinal);
+      EventSample eventSample(nEvents, nFeaturesFinal, nSpectators, nLevels);
+      std::vector<unsigned int> bins(nFeaturesFinal+nSpectators);
       for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
         for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature) {
-          bins[iFeature] = expertise->featureBinnings[iFeature].ValueToBin(data[iEvent*nFeatures + iFeature]);
+          bins[iFeature] = expertise->featureBinnings[iFeature].ValueToBin(data[iEvent*(nFeatures+nSpectators) + iFeature]);
           if( expertise->purityTransformation == 1 ) {
               bins[iFeature] = expertise->purityTransformations[iFeature].BinToPurityBin(bins[iFeature]);
           } else if (expertise->purityTransformation == 2) {
               bins[iFeature + nFeatures] = expertise->purityTransformations[iFeature].BinToPurityBin(bins[iFeature]);
           }
         }
+        for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
+          bins[iSpectator + nFeaturesFinal] = expertise->featureBinnings[iSpectator + nFeatures].ValueToBin(data[iEvent*(nFeatures+nSpectators) + nFeatures + iSpectator]);
+        }
         eventSample.AddEvent(bins, (weight_ptr != nullptr) ? weights[iEvent] : 1.0, target[iEvent] == 1);
       }
 
-      ForestBuilder df(eventSample, expertise->nTrees, expertise->shrinkage, expertise->randRatio, expertise->nLayersPerTree);
+      // Remove spectator feature binnings
+      // there are not used anymore and shouldn't be saved
+      expertise->featureBinnings.resize(nFeatures);
+
+      ForestBuilder df(eventSample, expertise->nTrees, expertise->shrinkage, expertise->randRatio, expertise->nLayersPerTree, expertise->sPlot, expertise->flatnessLoss);
       if( expertise->purityTransformation > 0) {
           Forest<unsigned int> forest( df.GetShrinkage(), df.GetF0(), expertise->transform2probability);
           for( auto t : df.GetForest() ) {

@@ -19,6 +19,8 @@ extern "C" {
       double shrinkage;
       double randRatio;
       bool transform2probability;
+      bool sPlot;
+      double flatnessLoss;
       unsigned int purityTransformation;
       unsigned int nLayersPerTree;
     };
@@ -35,7 +37,11 @@ extern "C" {
     
     void SetRandRatio(void *ptr, double randRatio);
     
+    void SetFlatnessLoss(void *ptr, double flatnessLoss);
+    
     void SetTransform2Probability(void *ptr, bool transform2probability);
+    
+    void SetSPlot(void *ptr, bool sPlot);
     
     // 0 means deactivate purity transformation
     // 1 means transform all features in place
@@ -44,7 +50,7 @@ extern "C" {
 
     void Delete(void *ptr);
     
-    void Train(void *ptr, void *data_ptr, void *weight_ptr, void *target_ptr, unsigned int nEvents, unsigned int nFeatures);
+    void Train(void *ptr, void *data_ptr, void *weight_ptr, void *target_ptr, unsigned int nEvents, unsigned int nFeatures, unsigned int nSpectators);
 
     void Load(void* ptr, char *weightfile);
 

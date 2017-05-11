@@ -509,6 +509,7 @@ namespace FastBDT {
       EventWeights(unsigned int nEvents) : weights(nEvents, 1), original_weights(nEvents, 0) { }
 
       inline Weight Get(unsigned int iEvent) const { return weights[iEvent] * original_weights[iEvent]; }
+      inline Weight GetWithoutOriginal(unsigned int iEvent) const { return weights[iEvent]; }
       void Set(unsigned int iEvent, const Weight& weight) {  weights[iEvent] = weight; } 
       
       inline const Weight& GetOriginal(unsigned int iEvent) const { return original_weights[iEvent]; }
@@ -548,7 +549,7 @@ namespace FastBDT {
   class EventValues {
 
     public:
-      EventValues(unsigned int nEvents, unsigned int nFeatures, const std::vector<unsigned int> &nLevels);
+      EventValues(unsigned int nEvents, unsigned int nFeatures, unsigned int nSpectators, const std::vector<unsigned int> &nLevels);
 
       /**
        * Returns a reference to the iFeature feature of the event at position iEvent. The features of one
@@ -557,10 +558,12 @@ namespace FastBDT {
        * @param iEvent position of the event
        * @param iFeature position of feature of the event
        */
-      inline const unsigned int& Get(unsigned int iEvent, unsigned int iFeature=0) const { return values[iEvent*nFeatures + iFeature]; }
+      inline const unsigned int& Get(unsigned int iEvent, unsigned int iFeature=0) const { return values[iEvent*(nFeatures+nSpectators) + iFeature]; }
       void Set(unsigned int iEvent, const std::vector<unsigned int> &features); 
+      inline const unsigned int& GetSpectator(unsigned int iEvent, unsigned int iSpectator=0) const { return values[iEvent*(nFeatures+nSpectators) + nFeatures + iSpectator]; }
 
       inline unsigned int GetNFeatures() const { return nFeatures; }
+      inline unsigned int GetNSpectators() const { return nSpectators; }
 
       inline const std::vector<unsigned int>& GetNBins() const { return nBins; }
       inline const std::vector<unsigned int>& GetNBinSums() const { return nBinSums; }
@@ -571,7 +574,8 @@ namespace FastBDT {
        * you can use a pointer to the first feature of a given event, as an array holding all features of a given event.
        */
       std::vector<unsigned int> values;
-      unsigned int nFeatures; /* <* Amount of features per event*/
+      unsigned int nFeatures; /**< Amount of features per event */
+      unsigned int nSpectators; /**< Amount of spectators per event */
       std::vector<unsigned int> nBins; /**< Number of bins for each feature, therefore maximum numerical value of a feature, 0 bin is reserved for NaN values */
       std::vector<unsigned int> nBinSums; /**< Total number of bins up to this feature, including all bins of previous features, excluding first feature  */
 
@@ -598,10 +602,11 @@ namespace FastBDT {
        * The memory for all the data is allocated once in this constructor.
        * @param nEvents number of events
        * @param nFeatures number of features per event
+       * @param nSpectators number of spectators per event
        * @param nLevels number of bin levels
        */
-      EventSample(unsigned int nEvents, unsigned int nFeatures, const std::vector<unsigned int> &nLevels) : nEvents(nEvents), nSignals(0), nBckgrds(0),
-      weights(nEvents), flags(nEvents), values(nEvents,nFeatures,nLevels) { }
+      EventSample(unsigned int nEvents, unsigned int nFeatures, unsigned int nSpectators, const std::vector<unsigned int> &nLevels) : nEvents(nEvents), nSignals(0), nBckgrds(0),
+      weights(nEvents), flags(nEvents), values(nEvents,nFeatures,nSpectators,nLevels) { }
 
       void AddEvent(const std::vector<unsigned int> &features, Weight weight, bool isSignal);
 
@@ -643,8 +648,8 @@ namespace FastBDT {
     public:
       CumulativeDistributions(unsigned int iLayer, const EventSample& sample);
 
-      inline const Weight& GetSignal(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return signalCDFs[iNode*nBinSums.back() + nBinSums[iFeature] + iBin]; }
-      inline const Weight& GetBckgrd(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return bckgrdCDFs[iNode*nBinSums.back() + nBinSums[iFeature] + iBin]; }
+      inline const Weight& GetSignal(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return signalCDFs[iNode*nBinSums[nFeatures] + nBinSums[iFeature] + iBin]; }
+      inline const Weight& GetBckgrd(unsigned int iNode, unsigned int iFeature, unsigned int iBin) const { return bckgrdCDFs[iNode*nBinSums[nFeatures] + nBinSums[iFeature] + iBin]; }
 
       unsigned int GetNFeatures() const { return nFeatures; } 
       unsigned int GetNNodes() const { return nNodes; }
@@ -920,7 +925,7 @@ namespace FastBDT {
   class ForestBuilder {
 
     public:
-      ForestBuilder(EventSample &eventSample, unsigned int nTrees, double shrinkage, double randRatio, unsigned int nLayersPerTree, bool sPlot=false);
+      ForestBuilder(EventSample &eventSample, unsigned int nTrees, double shrinkage, double randRatio, unsigned int nLayersPerTree, bool sPlot=false, double flatnessLoss=-1.0);
       void print();
 
       const std::vector<Tree<unsigned int>>& GetForest() const { return forest; }
@@ -930,13 +935,19 @@ namespace FastBDT {
     private:
       void calculateBoostWeights(EventSample &eventSample);
       void updateEventWeights(EventSample &eventSample);
+      void updateEventWeightsWithFlatnessPenalty(EventSample &eventSample);
       void prepareEventSample(EventSample &eventSample, double randRatio, bool sPlot);
 
     private:
       double shrinkage; /**< The config struct for this DecisionForest*/
+      double flatnessLoss; /**< Flatness loss constant, if <=0 no flatness boost ist used */
       double F0; /** The initial F value. Which basically rewights signal and background events based on their initial proportion in the eventSample. */
       std::vector<double> FCache; /**< Caches the F values for the training events, to spare some time.*/
       std::vector<Tree<unsigned int>> forest; /**< Contains all the trees trained by the stochastic gradient boost algorithm*/
+      std::vector<double> uniform_bin_weight; /**< Weight of each uniform bin */
+      std::vector<double> weight_below_current_F_per_uniform_bin; /**< Weight below the current F value in each uniform bin */
+      std::vector<ValueWithIndex<double>> event_index_sorted_by_F; /**< The event indices sorted by F */
+      double global_weight_below_current_F; /**< The global weight below the current F value */
   };
 
   template<typename T>
