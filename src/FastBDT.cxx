@@ -384,24 +384,32 @@ namespace FastBDT {
         auto &nBins = values.GetNBins();
         auto &nBinSums = values.GetNBinSums();
         const unsigned int nEvents = sample.GetNEvents();
+        const unsigned int nSignals = sample.GetNSignals();
         uint64_t nUniformBins = 1;
         for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator)
             nUniformBins *= nBins[nFeatures + iSpectator];
 
-        uniform_bin_weight.resize(nUniformBins, 0.0);
+        uniform_bin_weight_signal.resize(nUniformBins, 0.0);
+        uniform_bin_weight_bckgrd.resize(nUniformBins, 0.0);
         weight_below_current_F_per_uniform_bin.resize(nUniformBins, 0.0);
-        event_index_sorted_by_F.resize(nEvents);
-        global_weight_below_current_F = 0;
+        signal_event_index_sorted_by_F.resize(nSignals);
+        bckgrd_event_index_sorted_by_F.resize(nEvents-nSignals);
 
         for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
           uint64_t uniformBin = 0;
           for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
             uniformBin += (nBinSums[nFeatures + iSpectator] - nBinSums[nFeatures]) * iSpectator + values.GetSpectator(iEvent, iSpectator);
           } 
-          uniform_bin_weight[uniformBin] += weights.GetOriginal(iEvent);
+          if (iEvent < nSignals)
+            uniform_bin_weight_signal[uniformBin] += weights.GetOriginal(iEvent);
+          else
+            uniform_bin_weight_bckgrd[uniformBin] += weights.GetOriginal(iEvent);
         }
-        for(uint64_t iUniformBin = 0; iUniformBin < uniform_bin_weight.size(); ++iUniformBin) {
-            uniform_bin_weight[iUniformBin] /= (sums[0] + sums[1]);
+        for(uint64_t iUniformBin = 0; iUniformBin < uniform_bin_weight_signal.size(); ++iUniformBin) {
+            uniform_bin_weight_signal[iUniformBin] /= sums[0];
+        }
+        for(uint64_t iUniformBin = 0; iUniformBin < uniform_bin_weight_bckgrd.size(); ++iUniformBin) {
+            uniform_bin_weight_bckgrd[iUniformBin] /= sums[1];
         }
 
     }
@@ -489,6 +497,7 @@ namespace FastBDT {
   void ForestBuilder::updateEventWeightsWithFlatnessPenalty(EventSample &eventSample) {
 
     const unsigned int nEvents = eventSample.GetNEvents();
+    const unsigned int nSignals = eventSample.GetNSignals();
 
     const auto &values = eventSample.GetValues();
     auto &weights = eventSample.GetWeights();
@@ -498,15 +507,28 @@ namespace FastBDT {
     auto nSpectators = values.GetNSpectators();
     
     // Sort events in order of increasing F Value
-    for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
-        event_index_sorted_by_F[iEvent] = {FCache[iEvent], iEvent};
+    for(unsigned int iEvent = 0; iEvent < nSignals; ++iEvent) {
+        signal_event_index_sorted_by_F[iEvent] = {FCache[iEvent], iEvent};
     }
-    auto first = event_index_sorted_by_F.begin();
-    auto last = event_index_sorted_by_F.end();
-    std::sort(first, last, compareWithIndex<double>);
+    for(unsigned int iEvent = 0; iEvent < nEvents-nSignals; ++iEvent) {
+        bckgrd_event_index_sorted_by_F[iEvent] = {FCache[iEvent], iEvent};
+    }
 
-    for(unsigned int iIndex = 0; iIndex < nEvents; ++iIndex) {
-        unsigned int iEvent = event_index_sorted_by_F[iIndex].index;
+    {
+        auto first = signal_event_index_sorted_by_F.begin();
+        auto last = signal_event_index_sorted_by_F.end();
+        std::sort(first, last, compareWithIndex<double>);
+    }
+    
+    {
+        auto first = bckgrd_event_index_sorted_by_F.begin();
+        auto last = bckgrd_event_index_sorted_by_F.end();
+        std::sort(first, last, compareWithIndex<double>);
+    }
+
+    double global_weight_below_current_F = 0;
+    for(unsigned int iIndex = 0; iIndex < signal_event_index_sorted_by_F.size(); ++iIndex) {
+        unsigned int iEvent = signal_event_index_sorted_by_F[iIndex].index;
 
         uint64_t uniformBin = 0;
         for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
@@ -516,16 +538,37 @@ namespace FastBDT {
         weight_below_current_F_per_uniform_bin[uniformBin] += weights.GetOriginal(iEvent);
         global_weight_below_current_F += weights.GetOriginal(iEvent);
 
-        double F = global_weight_below_current_F / (sums[0] + sums[1]);
-        double F_bin = weight_below_current_F_per_uniform_bin[uniformBin] / (uniform_bin_weight[uniformBin] * (sums[0] + sums[1]));
+        double F = global_weight_below_current_F / sums[0];
+        double F_bin = weight_below_current_F_per_uniform_bin[uniformBin] / (uniform_bin_weight_signal[uniformBin] * sums[0]);
 
-        weights.Set(iEvent, weights.GetWithoutOriginal(iEvent) - flatnessLoss * uniform_bin_weight[uniformBin] * (F_bin - F));
+        weights.Set(iEvent, weights.GetWithoutOriginal(iEvent) - flatnessLoss * uniform_bin_weight_signal[uniformBin] * (F_bin - F));
     }
 
     for(uint64_t iUniformBin = 0; iUniformBin < weight_below_current_F_per_uniform_bin.size(); ++iUniformBin) {
         weight_below_current_F_per_uniform_bin[iUniformBin] = 0.0;
     }
+    
     global_weight_below_current_F = 0;
+    for(unsigned int iIndex = 0; iIndex < bckgrd_event_index_sorted_by_F.size(); ++iIndex) {
+        unsigned int iEvent = bckgrd_event_index_sorted_by_F[iIndex].index;
+
+        uint64_t uniformBin = 0;
+        for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
+          uniformBin += (nBinSums[nFeatures + iSpectator] - nBinSums[nFeatures]) * iSpectator + values.GetSpectator(iEvent, iSpectator);
+        }
+
+        weight_below_current_F_per_uniform_bin[uniformBin] += weights.GetOriginal(iEvent);
+        global_weight_below_current_F += weights.GetOriginal(iEvent);
+
+        double F = global_weight_below_current_F / sums[1];
+        double F_bin = weight_below_current_F_per_uniform_bin[uniformBin] / (uniform_bin_weight_bckgrd[uniformBin] * sums[1]);
+
+        weights.Set(iEvent, weights.GetWithoutOriginal(iEvent) - flatnessLoss * uniform_bin_weight_bckgrd[uniformBin] * (F_bin - F));
+    }
+
+    for(uint64_t iUniformBin = 0; iUniformBin < weight_below_current_F_per_uniform_bin.size(); ++iUniformBin) {
+        weight_below_current_F_per_uniform_bin[iUniformBin] = 0.0;
+    }
 
   }
 
