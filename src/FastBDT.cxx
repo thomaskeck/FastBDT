@@ -353,7 +353,7 @@ namespace FastBDT {
   ForestBuilder::ForestBuilder(EventSample &sample, unsigned int nTrees, double shrinkage, double randRatio, unsigned int nLayersPerTree, bool sPlot, double flatnessLoss) : shrinkage(shrinkage), flatnessLoss(flatnessLoss) {
 
     auto &weights = sample.GetWeights();
-    auto sums = weights.GetSums(sample.GetNSignals()); 
+    sums = weights.GetSums(sample.GetNSignals()); 
     // Calculating the initial F value from the proportion of the number of signal and background events in the sample
     double average = (sums[0] - sums[1])/(sums[0] + sums[1]);
     F0 = 0.5*std::log((1+average)/(1-average));
@@ -396,10 +396,14 @@ namespace FastBDT {
         for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
           uint64_t uniformBin = 0;
           for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
-            uniformBin = (nBinSums[nFeatures + iSpectator] - nBinSums[nFeatures]) * values.GetSpectator(iEvent, iSpectator);
+            uniformBin += (nBinSums[nFeatures + iSpectator] - nBinSums[nFeatures]) * iSpectator + values.GetSpectator(iEvent, iSpectator);
           } 
           uniform_bin_weight[uniformBin] += weights.GetOriginal(iEvent);
         }
+        for(uint64_t iUniformBin = 0; iUniformBin < uniform_bin_weight.size(); ++iUniformBin) {
+            uniform_bin_weight[iUniformBin] /= (sums[0] + sums[1]);
+        }
+
     }
 
     // Now train config.nTrees!
@@ -488,9 +492,8 @@ namespace FastBDT {
 
     const auto &values = eventSample.GetValues();
     auto &weights = eventSample.GetWeights();
-    auto sums = weights.GetSums(eventSample.GetNSignals()); 
 
-    auto &nBins = values.GetNBins();
+    auto &nBinSums = values.GetNBinSums();
     auto nFeatures = values.GetNFeatures();
     auto nSpectators = values.GetNSpectators();
     
@@ -507,14 +510,14 @@ namespace FastBDT {
 
         uint64_t uniformBin = 0;
         for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
-          uniformBin = (nBins[nFeatures + iSpectator] - nBins[nFeatures]) * values.GetSpectator(iEvent, iSpectator);
+          uniformBin += (nBinSums[nFeatures + iSpectator] - nBinSums[nFeatures]) * iSpectator + values.GetSpectator(iEvent, iSpectator);
         }
 
         weight_below_current_F_per_uniform_bin[uniformBin] += weights.GetOriginal(iEvent);
         global_weight_below_current_F += weights.GetOriginal(iEvent);
 
         double F = global_weight_below_current_F / (sums[0] + sums[1]);
-        double F_bin = weight_below_current_F_per_uniform_bin[uniformBin] / uniform_bin_weight[uniformBin];
+        double F_bin = weight_below_current_F_per_uniform_bin[uniformBin] / (uniform_bin_weight[uniformBin] * (sums[0] + sums[1]));
 
         weights.Set(iEvent, weights.GetWithoutOriginal(iEvent) - flatnessLoss * uniform_bin_weight[uniformBin] * (F_bin - F));
     }

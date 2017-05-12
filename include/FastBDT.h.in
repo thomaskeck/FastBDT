@@ -942,6 +942,7 @@ namespace FastBDT {
       double shrinkage; /**< The config struct for this DecisionForest*/
       double flatnessLoss; /**< Flatness loss constant, if <=0 no flatness boost ist used */
       double F0; /** The initial F value. Which basically rewights signal and background events based on their initial proportion in the eventSample. */
+      std::vector<Weight> sums; /**< Sum of the original weights for signal and background */
       std::vector<double> FCache; /**< Caches the F values for the training events, to spare some time.*/
       std::vector<Tree<unsigned int>> forest; /**< Contains all the trees trained by the stochastic gradient boost algorithm*/
       std::vector<double> uniform_bin_weight; /**< Weight of each uniform bin */

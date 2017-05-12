@@ -62,7 +62,7 @@ def evaluation(label, X_test, y_test, p, p_prior):
 if __name__ == '__main__':
     # Create some Monte Carlo data using a multidimensional gaussian distribution
     # The 0th row of the coveriance matrix describes the correlation to the target variable
-    for cor in np.linspace(-0.2, 0.2, 3):
+    for cor in np.linspace(-0.7, 0.7, 3):
         print("Correlation ", cor)
         mean = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
         cov = [[1.0, 0.6, 0.4, 0.2, 0.1, 0.0],
@@ -84,14 +84,14 @@ if __name__ == '__main__':
         # First variable is the variable we want to have independent of our network output
         prior = Prior(X_train[y_train == 1, 0], X_train[y_train == 0, 0])
         p_prior = prior.get_prior(X_test[:, 0])
-        #evaluation("Prior", X_test, y_test, p_prior, p_prior)
+        evaluation("Prior", X_test, y_test, p_prior, p_prior)
         
-        #p = FastBDT.Classifier().fit(X=X_train, y=y_train).predict(X_test)
-        #evaluation("Full", X_test, y_test, p, p_prior)
+        p = FastBDT.Classifier().fit(X=X_train, y=y_train).predict(X_test)
+        evaluation("Full", X_test, y_test, p, p_prior)
 
-        #p = FastBDT.Classifier().fit(X=X_train[:, 1:], y=y_train).predict(X_test[:, 1:])
-        #evaluation("Restricted", X_test, y_test, p, p_prior)
+        p = FastBDT.Classifier().fit(X=X_train[:, 1:], y=y_train).predict(X_test[:, 1:])
+        evaluation("Restricted", X_test, y_test, p, p_prior)
         
-        p = FastBDT.Classifier(flatnessLoss=0.0001).fit(X=np.c_[X_train[:, 1:], X_train[:, 0]], y=y_train, nSpectators=1).predict(X_test[:, 1:])
+        p = FastBDT.Classifier(flatnessLoss=10.0).fit(X=np.c_[X_train[:, 1:], X_train[:, 0]], y=y_train, nSpectators=1).predict(X_test[:, 1:])
         print(p)
         evaluation("UBoost", X_test, y_test, p, p_prior)
