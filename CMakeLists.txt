@@ -21,6 +21,7 @@ include_directories("${PROJECT_SOURCE_DIR}/include/" "${PROJECT_BINARY_DIR}/incl
 
 set(FastBDT_SOURCES
   "${PROJECT_SOURCE_DIR}/src/FastBDT.cxx"
+  "${PROJECT_SOURCE_DIR}/src/Classifier.cxx"
   "${PROJECT_SOURCE_DIR}/src/FastBDT_IO.cxx"
 )
 
@@ -28,12 +29,14 @@ set(FastBDT_TESTS
   "${PROJECT_SOURCE_DIR}/src/test_all.cxx"
   "${PROJECT_SOURCE_DIR}/src/test_FastBDT.cxx"
   "${PROJECT_SOURCE_DIR}/src/test_Performance.cxx"
+  "${PROJECT_SOURCE_DIR}/src/test_Classifier.cxx"
   "${PROJECT_SOURCE_DIR}/src/test_FastBDT_IO.cxx"
   "${PROJECT_SOURCE_DIR}/src/test_FastBDT_C_API.cxx"
 )
 
 set(FastBDT_HEADERS
   "${PROJECT_BINARY_DIR}/include/FastBDT.h"
+  "${PROJECT_BINARY_DIR}/include/Classifier.h"
   "${PROJECT_SOURCE_DIR}/include/FastBDT_IO.h"
 )
 

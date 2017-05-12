@@ -64,8 +64,11 @@ namespace FastBDT {
      unsigned int size;
      stream >> size;
      vector.resize(size);
-     for(unsigned int i = 0; i < size; ++i)
-         stream >> vector[i];
+     for(unsigned int i = 0; i < size; ++i) {
+         T temp;
+         stream >> temp;
+         vector[i] = temp;
+     }
      return stream;
   }
   

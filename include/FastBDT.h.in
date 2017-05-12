@@ -262,7 +262,7 @@ namespace FastBDT {
          * Hence we require only log(N_bins) operations to find the correct bin of a value instead of O(N_bins)
          */
         std::vector<Value> binning;
-        unsigned int nLevels;
+        unsigned int nLevels = 0;
 
     };
   
@@ -970,7 +970,7 @@ namespace FastBDT {
       const std::vector<Tree<T>>& GetForest() const { return forest; }
       double GetF0() const { return F0; }
       double GetShrinkage() const { return shrinkage; }
-      double GetTransform2Probability() const { return transform2probability; }
+      bool GetTransform2Probability() const { return transform2probability; }
 
       /**
        * Returns the F value calculated from the DecisionForest for a given event.
@@ -1061,11 +1061,11 @@ namespace FastBDT {
       }
 
     private:
-      double shrinkage;
-      double F0;
-      double F0_div_shrink;
+      double shrinkage = 0.0;
+      double F0 = 0.0;
+      double F0_div_shrink = 0.0;
       std::vector<Tree<T>> forest;
-      bool transform2probability;
+      bool transform2probability = false;
 
   };
   
