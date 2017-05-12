@@ -511,7 +511,7 @@ namespace FastBDT {
         signal_event_index_sorted_by_F[iEvent] = {FCache[iEvent], iEvent};
     }
     for(unsigned int iEvent = 0; iEvent < nEvents-nSignals; ++iEvent) {
-        bckgrd_event_index_sorted_by_F[iEvent] = {FCache[iEvent], iEvent};
+        bckgrd_event_index_sorted_by_F[iEvent] = {-FCache[iEvent], iEvent+nSignals};
     }
 
     {

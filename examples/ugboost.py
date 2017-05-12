@@ -86,12 +86,13 @@ if __name__ == '__main__':
         p_prior = prior.get_prior(X_test[:, 0])
         evaluation("Prior", X_test, y_test, p_prior, p_prior)
         
+        p = FastBDT.Classifier(flatnessLoss=10.0).fit(X=np.c_[X_train[:, 1:], X_train[:, 0]], y=y_train, nSpectators=1).predict(X_test[:, 1:])
+        print(p)
+        evaluation("UBoost", X_test, y_test, p, p_prior)
+        
         p = FastBDT.Classifier().fit(X=X_train, y=y_train).predict(X_test)
         evaluation("Full", X_test, y_test, p, p_prior)
 
         p = FastBDT.Classifier().fit(X=X_train[:, 1:], y=y_train).predict(X_test[:, 1:])
         evaluation("Restricted", X_test, y_test, p, p_prior)
         
-        p = FastBDT.Classifier(flatnessLoss=10.0).fit(X=np.c_[X_train[:, 1:], X_train[:, 0]], y=y_train, nSpectators=1).predict(X_test[:, 1:])
-        print(p)
-        evaluation("UBoost", X_test, y_test, p, p_prior)
