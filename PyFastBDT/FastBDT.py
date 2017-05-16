@@ -7,26 +7,55 @@ import ctypes
 import ctypes.util
 c_double_p = ctypes.POINTER(ctypes.c_double)
 c_float_p = ctypes.POINTER(ctypes.c_float)
+c_bool_p = ctypes.POINTER(ctypes.c_bool)
 c_uint_p = ctypes.POINTER(ctypes.c_uint)
 
 FastBDT_library =  ctypes.cdll.LoadLibrary(os.path.join(os.path.dirname(__file__),'libFastBDT_CInterface.so'))
 
 FastBDT_library.Create.restype = ctypes.c_void_p
 FastBDT_library.Delete.argtypes = [ctypes.c_void_p]
+
 FastBDT_library.Load.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
-FastBDT_library.Train.argtypes = [ctypes.c_void_p, c_double_p, c_float_p, c_uint_p, ctypes.c_uint, ctypes.c_uint]
-FastBDT_library.Analyse.argtypes = [ctypes.c_void_p, c_double_p]
-FastBDT_library.Analyse.restype = ctypes.c_double
-FastBDT_library.AnalyseArray.argtypes = [ctypes.c_void_p, c_double_p, c_double_p, ctypes.c_uint, ctypes.c_uint]
-FastBDT_library.SetRandRatio.argtypes = [ctypes.c_void_p, ctypes.c_double]
+FastBDT_library.Save.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+
+FastBDT_library.Fit.argtypes = [ctypes.c_void_p, c_float_p, c_float_p, c_uint_p, ctypes.c_uint]
+
+FastBDT_library.Predict.argtypes = [ctypes.c_void_p, c_float_p]
+FastBDT_library.Predict.restype = ctypes.c_float
+
+FastBDT_library.PredictArray.argtypes = [ctypes.c_void_p, c_float_p, c_float_p, ctypes.c_uint]
+
+FastBDT_library.SetSubsample.argtypes = [ctypes.c_void_p, ctypes.c_double]
+FastBDT_library.GetSubsample.argtypes = [ctypes.c_void_p]
+FastBDT_library.GetSubsample.restypes = ctypes.c_double
+
 FastBDT_library.SetShrinkage.argtypes = [ctypes.c_void_p, ctypes.c_double]
+FastBDT_library.GetShrinkage.argtypes = [ctypes.c_void_p]
+FastBDT_library.GetShrinkage.restypes = ctypes.c_double
+
 FastBDT_library.SetFlatnessLoss.argtypes = [ctypes.c_void_p, ctypes.c_double]
+FastBDT_library.GetFlatnessLoss.argtypes = [ctypes.c_void_p]
+FastBDT_library.GetFlatnessLoss.restypes = ctypes.c_double
+
 FastBDT_library.SetNTrees.argtypes = [ctypes.c_void_p, ctypes.c_uint]
-FastBDT_library.SetNBinningLevels.argtypes = [ctypes.c_void_p, ctypes.c_uint]
-FastBDT_library.SetNLayersPerTree.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+FastBDT_library.GetNTrees.argtypes = [ctypes.c_void_p]
+FastBDT_library.GetNTrees.restypes = ctypes.c_uint
+
+FastBDT_library.SetBinning.argtypes = [ctypes.c_void_p, ctypes.c_uint_p, ctypes.c_uint]
+FastBDT_library.SetPurityTransformation.argtypes = [ctypes.c_void_p, ctypes.c_uint_p, ctypes.c_uint]
+
+FastBDT_library.SetDepth.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+FastBDT_library.GetDepth.argtypes = [ctypes.c_void_p]
+FastBDT_library.GetDepth.restypes = ctypes.c_uint
+
 FastBDT_library.SetTransform2Probability.argtypes = [ctypes.c_void_p, ctypes.c_bool]
+FastBDT_library.GetTransform2Probability.argtypes = [ctypes.c_void_p]
+FastBDT_library.GetTransform2Probability.restypes = ctypes.c_bool
+
 FastBDT_library.SetSPlot.argtypes = [ctypes.c_void_p, ctypes.c_bool]
-FastBDT_library.SetPurityTransformation.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+FastBDT_library.GetSPlot.argtypes = [ctypes.c_void_p]
+FastBDT_library.GetSPlot.restypes = ctypes.c_bool
+
 
 FastBDT_library.GetVariableRanking.argtypes = [ctypes.c_void_p]
 FastBDT_library.GetVariableRanking.restype = ctypes.c_void_p
@@ -63,51 +92,64 @@ def calculate_roc_auc(p, t, w=None):
 
 
 class Classifier(object):
-    def __init__(self, nBinningLevels=4, nTrees=100, nLayersPerTree=3, shrinkage=0.1, randRatio=0.5, transform2probability=True, purityTransformation=0, sPlot=False, flatnessLoss=-1.0):
-        self.nBinningLevels = nBinningLevels
+    def __init__(self, binning=[], nTrees=100, depth=3, shrinkage=0.1, subsample=0.5, transform2probability=True, purityTransformation=[], sPlot=False, flatnessLoss=-1.0, numberOfFlatnessFeatures):
+        """
+        @param binning list of numbers with the power N used for each feature binning e.g. 8 means 2^8 bins
+        @param nTrees number of trees
+        @param shrinkage reduction factor of each tree, lower shrinkage leads to slower but more stable convergence
+        @param subsample the ratio of samples used for each tree
+        @param transform2probability whether to transform the output to a probability
+        @param purityTransformation list of bools, defines for each feature of in addition the purity-transformed of the feature should be used (this will slow down the inference)
+        @param sPlot special treatment of sPlot weights are used
+        @param flatnessLoss if bigger than 0 a flatness boost against all flatnessFeatures
+        @param numberOfFlatnessFeatures the number of flatness features, it is assumed that the last N features are the flatness features
+        """
+        self.binning = binning
         self.nTrees = nTrees
-        self.nLayersPerTree = nLayersPerTree
+        self.depth = depth
         self.shrinkage = shrinkage
-        self.randRatio = randRatio
+        self.subsample = subsample
         self.transform2probability = transform2probability
         self.purityTransformation = purityTransformation
         self.sPlot = sPlot
         self.flatnessLoss = flatnessLoss
+        self.numberOfFlatnessFeatures = numberOfFlatnessFeatures
         self.forest = self.create_forest()
 
     def create_forest(self):
         forest = FastBDT_library.Create()
-        FastBDT_library.SetNBinningLevels(forest, int(self.nBinningLevels))
+        FastBDT_library.SetBinning(forest, np.array(self.binning).ctypes.data_as(c_uint_p), int(len(self.binning)))
         FastBDT_library.SetNTrees(forest, int(self.nTrees))
-        FastBDT_library.SetNLayersPerTree(forest, int(self.nLayersPerTree))
+        FastBDT_library.SetDepth(forest, int(self.depth))
+        FastBDT_library.SetNumberOfFlatnessFeatures(forest, int(self.numberOfFlatnessFeatures))
         FastBDT_library.SetShrinkage(forest, float(self.shrinkage))
-        FastBDT_library.SetRandRatio(forest, float(self.randRatio))
+        FastBDT_library.SetSubsample(forest, float(self.subsample))
         FastBDT_library.SetFlatnessLoss(forest, float(self.flatnessLoss))
         FastBDT_library.SetTransform2Probability(forest, bool(self.transform2probability))
         FastBDT_library.SetSPlot(forest, bool(self.sPlot))
-        FastBDT_library.SetPurityTransformation(forest, int(self.purityTransformation))
+        FastBDT_library.SetPurityTransformation(forest, np.array(self.purityTransformation).ctypes.data_as(c_uint_p), int(len(self.purityTransformation)))
         return forest
 
-    def fit(self, X, y, weights=None, nSpectators=0):
-        X_temp = np.require(X, dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
-        y_temp = np.require(y, dtype=np.uint32, requirements=['A', 'W', 'C', 'O'])
+    def fit(self, X, y, weights=None):
+        X_temp = np.require(X, dtype=np.float32, requirements=['A', 'W', 'C', 'O'])
+        y_temp = np.require(y, dtype=np.bool, requirements=['A', 'W', 'C', 'O'])
         if weights is not None:
             w_temp = np.require(weights, dtype=np.float32, requirements=['A', 'W', 'C', 'O'])
         numberOfEvents, numberOfFeatures = X_temp.shape
-        FastBDT_library.Train(self.forest, X_temp.ctypes.data_as(c_double_p),
+        FastBDT_library.Fit(self.forest, X_temp.ctypes.data_as(c_float_p),
                               w_temp.ctypes.data_as(c_float_p) if weights is not None else None,
-                              y_temp.ctypes.data_as(c_uint_p), int(numberOfEvents), int(numberOfFeatures-nSpectators), int(nSpectators))
+                              y_temp.ctypes.data_as(c_bool_p), int(numberOfEvents), int(numberOfFeatures))
         return self
 
     def predict(self, X):
-        X_temp = np.require(X, dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
+        X_temp = np.require(X, dtype=np.float32, requirements=['A', 'W', 'C', 'O'])
         N = len(X)
-        p = np.require(np.zeros(N), dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
-        FastBDT_library.AnalyseArray(self.forest, X_temp.ctypes.data_as(c_double_p), p.ctypes.data_as(c_double_p), int(X_temp.shape[0]), int(X_temp.shape[1]))
+        p = np.require(np.zeros(N), dtype=np.float32, requirements=['A', 'W', 'C', 'O'])
+        FastBDT_library.PredictArray(self.forest, X_temp.ctypes.data_as(c_float_p), p.ctypes.data_as(c_float_p), int(X_temp.shape[0]))
         return p
     
     def predict_single(self, row):
-        return FastBDT_library.Analyse(self.forest, row.ctypes.data_as(c_double_p))
+        return FastBDT_library.Predict(self.forest, row.ctypes.data_as(c_float_p))
 
     def save(self, weightfile):
         FastBDT_library.Save(self.forest, bytes(weightfile, 'utf-8'))
@@ -116,8 +158,8 @@ class Classifier(object):
         FastBDT_library.Load(self.forest, bytes(weightfile, 'utf-8'))
     
     def individualFeatureImportance(self, X):
-        X_temp = np.require(X, dtype=np.float64, requirements=['A', 'W', 'C', 'O'])
-        _ranking = FastBDT_library.GetIndividualVariableRanking(self.forest, X_temp.ctypes.data_as(c_double_p))
+        X_temp = np.require(X, dtype=np.float32, requirements=['A', 'W', 'C', 'O'])
+        _ranking = FastBDT_library.GetIndividualVariableRanking(self.forest, X_temp.ctypes.data_as(c_float_p))
         ranking = dict()
         for i in range(FastBDT_library.ExtractNumberOfVariablesFromVariableRanking(_ranking)):
             ranking[i] = FastBDT_library.ExtractImportanceOfVariableFromVariableRanking(_ranking, int(i))

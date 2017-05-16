@@ -20,117 +20,112 @@ class CInterfaceTest : public ::testing::Test {
 
 };
 
-TEST_F(CInterfaceTest, CreateDefaultValuesAreCorrect) {
+TEST_F(CInterfaceTest, SetGetBinning ) {
 
-    EXPECT_EQ( expertise->nBinningLevels, 8u);
-    EXPECT_EQ( expertise->nTrees, 100u);
-    EXPECT_EQ( expertise->nLayersPerTree, 3u);
-    EXPECT_EQ( expertise->sPlot, false);
-    EXPECT_DOUBLE_EQ( expertise->shrinkage, 0.1);
-    EXPECT_DOUBLE_EQ( expertise->randRatio, 0.5);
-    EXPECT_DOUBLE_EQ( expertise->flatnessLoss, -1.0);
+    unsigned int binning[] = {10u, 20u};
+    SetBinning(expertise, binning, 2);
+    EXPECT_EQ(expertise->classifier.GetBinning().size(), 2u);
+    EXPECT_EQ(expertise->classifier.GetBinning()[0], 10u);
+    EXPECT_EQ(expertise->classifier.GetBinning()[1], 20u);
 
 }
 
-TEST_F(CInterfaceTest, SetNBinningLevelsWorks ) {
+TEST_F(CInterfaceTest, SetGetPurityTransformation ) {
     
-    SetNBinningLevels(expertise, 10u);
-    EXPECT_EQ( expertise->nBinningLevels, 10u);
-    SetNBinningLevels(expertise, 5u);
-    EXPECT_EQ( expertise->nBinningLevels, 5u);
+    bool purityTransformation[] = {true, false};
+    SetPurityTransformation(expertise, purityTransformation, 2);
+    EXPECT_EQ(expertise->classifier.GetPurityTransformation().size(), 2u);
+    EXPECT_EQ(expertise->classifier.GetPurityTransformation()[0], true);
+    EXPECT_EQ(expertise->classifier.GetPurityTransformation()[1], false);
 
 }
 
-TEST_F(CInterfaceTest, SetNTreesWorks ) {
+TEST_F(CInterfaceTest, SetGetNTrees ) {
     
     SetNTrees(expertise, 200u);
-    EXPECT_EQ( expertise->nTrees, 200u);
-    SetNTrees(expertise, 50u);
-    EXPECT_EQ( expertise->nTrees, 50u);
+    EXPECT_EQ(expertise->classifier.GetNTrees(), 200u);
 
 }
 
-TEST_F(CInterfaceTest, SetSPlot ) {
+TEST_F(CInterfaceTest, SetGetSPlot ) {
     
     SetSPlot(expertise, false);
-    EXPECT_EQ( expertise->sPlot, false);
+    EXPECT_EQ(expertise->classifier.GetSPlot(), false);
     SetSPlot(expertise, true);
-    EXPECT_EQ( expertise->sPlot, true);
+    EXPECT_EQ(expertise->classifier.GetSPlot(), true);
 
 }
 
-TEST_F(CInterfaceTest, SetTransform2Probability ) {
+TEST_F(CInterfaceTest, SetGetTransform2Probability ) {
     
     SetTransform2Probability(expertise, false);
-    EXPECT_EQ( expertise->transform2probability, false);
+    EXPECT_EQ(expertise->classifier.GetTransform2Probability(), false);
     SetTransform2Probability(expertise, true);
-    EXPECT_EQ( expertise->transform2probability, true);
+    EXPECT_EQ(expertise->classifier.GetTransform2Probability(), true);
 
 }
 
-TEST_F(CInterfaceTest, SetNLayersPerTreeWorks ) {
+TEST_F(CInterfaceTest, SetGetDepth ) {
     
-    SetNLayersPerTree(expertise, 5u);
-    EXPECT_EQ( expertise->nLayersPerTree, 5u);
-    SetNLayersPerTree(expertise, 2u);
-    EXPECT_EQ( expertise->nLayersPerTree, 2u);
+    SetDepth(expertise, 5u);
+    EXPECT_EQ(expertise->classifier.GetDepth(), 5u);
+    SetDepth(expertise, 2u);
+    EXPECT_EQ(expertise->classifier.GetDepth(), 2u);
 
 }
 
-TEST_F(CInterfaceTest, SetFlatnessLossWorks ) {
+TEST_F(CInterfaceTest, SetGetFlatnessLossWorks ) {
     
     SetFlatnessLoss(expertise, 0.2);
-    EXPECT_DOUBLE_EQ( expertise->flatnessLoss, 0.2);
+    EXPECT_DOUBLE_EQ(expertise->classifier.GetFlatnessLoss(), 0.2);
     SetFlatnessLoss(expertise, 0.4);
-    EXPECT_DOUBLE_EQ( expertise->flatnessLoss, 0.4);
+    EXPECT_DOUBLE_EQ(expertise->classifier.GetFlatnessLoss(), 0.4);
 
 }
 
-TEST_F(CInterfaceTest, SetShrinkageWorks ) {
+TEST_F(CInterfaceTest, SetGetShrinkageWorks ) {
     
     SetShrinkage(expertise, 0.2);
-    EXPECT_DOUBLE_EQ( expertise->shrinkage, 0.2);
+    EXPECT_DOUBLE_EQ(expertise->classifier.GetShrinkage(), 0.2);
     SetShrinkage(expertise, 0.4);
-    EXPECT_DOUBLE_EQ( expertise->shrinkage, 0.4);
+    EXPECT_DOUBLE_EQ(expertise->classifier.GetShrinkage(), 0.4);
 
 }
     
     
-TEST_F(CInterfaceTest, SetRandRatioWorks ) {
+TEST_F(CInterfaceTest, SetSubsampleWorks ) {
     
-    SetRandRatio(expertise, 0.6);
-    EXPECT_DOUBLE_EQ( expertise->randRatio, 0.6);
-    SetRandRatio(expertise, 0.8);
-    EXPECT_DOUBLE_EQ( expertise->randRatio, 0.8);
+    SetSubsample(expertise, 0.6);
+    EXPECT_DOUBLE_EQ(expertise->classifier.GetSubsample(), 0.6);
+    SetSubsample(expertise, 0.8);
+    EXPECT_DOUBLE_EQ(expertise->classifier.GetSubsample(), 0.8);
 
 }
 
 
-TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithoutWeights ) {
+TEST_F(CInterfaceTest, FitAndPredictWorksWithoutWeights ) {
 
     // Use just one branch instead of a whole forest for testing
     // We only test if the ForestBuilder is called correctly,
     // the builder itself is tested elsewhere.
     SetNTrees(expertise, 10u);
-    SetNLayersPerTree(expertise, 1u);
-    SetRandRatio(expertise, 1.0);
+    SetDepth(expertise, 1u);
+    SetSubsample(expertise, 1.0);
     SetShrinkage(expertise, 1.0);
-    SetNBinningLevels(expertise, 2u);
+    unsigned int binning[] = {2u, 2u};
+    SetBinning(expertise, binning, 2);
     SetTransform2Probability(expertise, true);
+    SetNumberOfFlatnessFeatures(expertise, 0);
 
-    double data_ptr[] = {1.0, 2.6, 1.6, 2.5, 1.1, 2.0, 1.9, 2.1, 1.6, 2.9, 1.9, 2.9, 1.5, 2.0};
-    unsigned int target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
-    Train(expertise, data_ptr, nullptr, target_ptr, 7, 2, 0);
+    float data_ptr[] = {1.0, 2.6, 1.6, 2.5, 1.1, 2.0, 1.9, 2.1, 1.6, 2.9, 1.9, 2.9, 1.5, 2.0};
+    bool target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
+    Fit(expertise, data_ptr, nullptr, target_ptr, 7, 2);
 
-    EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
-    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 1.6f);
-    EXPECT_TRUE(expertise->forest.GetForest()[0].GetCuts()[0].valid);
-    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 1.7142857f);
-
-    double test_ptr[] = {1.0, 2.6};
-    EXPECT_LE(Analyse(expertise, test_ptr), 0.001);
+    float test_ptr[] = {1.0, 2.6};
+    EXPECT_LE(Predict(expertise, test_ptr), 0.01);
+    
+    float test_ptr2[] = {1.6, 2.5};
+    EXPECT_GE(Predict(expertise, test_ptr2), 0.99);
 }
 
 
@@ -139,34 +134,27 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithSpectators ) {
     // Use just one branch instead of a whole forest for testing
     // We only test if the ForestBuilder is called correctly,
     // the builder itself is tested elsewhere.
-    //
-    // Spectators shouldn't influence anything
     SetNTrees(expertise, 10u);
-    SetNLayersPerTree(expertise, 1u);
-    SetRandRatio(expertise, 1.0);
+    SetDepth(expertise, 1u);
+    SetSubsample(expertise, 1.0);
     SetShrinkage(expertise, 1.0);
-    SetNBinningLevels(expertise, 2u);
+    unsigned int binning[] = {2u, 2u, 2u, 3u};
+    SetBinning(expertise, binning, 4);
     SetTransform2Probability(expertise, true);
+    SetNumberOfFlatnessFeatures(expertise, 2);
 
-    double data_ptr[] = {1.0, 2.6, 0.0, -10.0, 
+    float data_ptr[] = {1.0, 2.6, 0.0, -10.0, 
                          1.6, 2.5, 99.0, 0.0,
                          1.1, 2.0, -500.0, 12.1,
                          1.9, 2.1, 0.0, 0.0,
                          1.6, 2.9, 23.0, 42.0,
                          1.9, 2.9, 0.0, 1.0,
                          1.5, 2.0, 1.0, -1.0};
-    unsigned int target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
-    Train(expertise, data_ptr, nullptr, target_ptr, 7, 2, 2);
+    bool target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
+    Fit(expertise, data_ptr, nullptr, target_ptr, 7, 4);
 
-    EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
-    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 1.6f);
-    EXPECT_TRUE(expertise->forest.GetForest()[0].GetCuts()[0].valid);
-    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 1.7142857f);
-
-    double test_ptr[] = {1.0, 2.6};
-    EXPECT_LE(Analyse(expertise, test_ptr), 0.001);
+    float test_ptr[] = {1.0, 2.6};
+    EXPECT_LE(Predict(expertise, test_ptr), 0.03);
 }
 
 TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithWeights ) {
@@ -175,71 +163,27 @@ TEST_F(CInterfaceTest, TrainAndAnalyseForestWorksWithWeights ) {
     // We only test if the ForestBuilder is called correctly,
     // the builder itself is tested elsewhere.
     SetNTrees(expertise, 10u);
-    SetNLayersPerTree(expertise, 1u);
-    SetRandRatio(expertise, 1.0);
+    SetDepth(expertise, 1u);
+    SetSubsample(expertise, 1.0);
     SetShrinkage(expertise, 1.0);
-    SetNBinningLevels(expertise, 2u);
+    unsigned int binning[] = {2u, 2u};
+    SetBinning(expertise, binning, 2);
     SetTransform2Probability(expertise, true);
+    SetNumberOfFlatnessFeatures(expertise, 0);
 
-    double data_ptr[] = {1.0, 2.6, 1.6, 2.5, 1.1, 2.0, 1.9, 2.1, 1.6, 2.9, 1.9, 2.9, 1.5, 2.0};
+    float data_ptr[] = {1.0, 2.6, 1.6, 2.5, 1.1, 2.0, 1.9, 2.1, 1.6, 2.9, 1.9, 2.9, 1.5, 2.0};
     float weight_ptr[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-    unsigned int target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
-    Train(expertise, data_ptr, weight_ptr, target_ptr, 7, 2, 0);
+    bool target_ptr[] = {0, 1, 0, 1, 1, 1, 0};
+    Fit(expertise, data_ptr, weight_ptr, target_ptr, 7, 2);
 
-    EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
-    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 1.6f);
-    EXPECT_TRUE(expertise->forest.GetForest()[0].GetCuts()[0].valid);
-    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 1.7142857f);
-
-    double test_ptr[] = {1.0, 2.6};
-    EXPECT_LE(Analyse(expertise, test_ptr), 0.001);
+    float test_ptr[] = {1.0, 2.6};
+    EXPECT_LE(Predict(expertise, test_ptr), 0.01);
     
     float weight_ptr2[] = {2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
-    Train(expertise, data_ptr, weight_ptr2, target_ptr, 7, 2, 0);
-    EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
-    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 1.6f);
-    EXPECT_TRUE(expertise->forest.GetForest()[0].GetCuts()[0].valid);
-    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 2*1.7142857f);
-
-    EXPECT_LE(Analyse(expertise, test_ptr), 0.001);
+    Fit(expertise, data_ptr, weight_ptr2, target_ptr, 7, 2);
+    EXPECT_LE(Predict(expertise, test_ptr), 0.01);
     
     float weight_ptr3[] = {1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0};
-    Train(expertise, data_ptr, weight_ptr3, target_ptr, 7, 2, 0);
-    EXPECT_EQ(expertise->forest.GetForest().size(), 10u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts().size(), 1u);
-    EXPECT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].feature, 0u);
-    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].index, 1.6f);
-    EXPECT_TRUE(expertise->forest.GetForest()[0].GetCuts()[0].valid);
-    EXPECT_FLOAT_EQ(expertise->forest.GetForest()[0].GetCuts()[0].gain, 2.0999999f);
-
-    EXPECT_LE(Analyse(expertise, test_ptr), 0.001);
+    Fit(expertise, data_ptr, weight_ptr3, target_ptr, 7, 2);
+    EXPECT_LE(Predict(expertise, test_ptr), 0.03);
 }
-
-/* TODO Test this to functions as well using a temporary directory or file
- *
-    void Load(void* ptr, char *weightfile) {
-      Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
-      
-      std::fstream file(weightfile, std::ios_base::in);
-      if(not file)
-    	  return;
-
-      file >> expertise->featureBinnings;
-      expertise->forest = FastBDT::readForestFromStream(file);
-    }
-
-      return expertise->forest.Analyse(bins);
-    }
-
-    void Save(void* ptr, char *weightfile) {
-      Expertise *expertise = reinterpret_cast<Expertise*>(ptr);
-
-      std::fstream file(weightfile, std::ios_base::out | std::ios_base::trunc);
-      file << expertise->featureBinnings << std::endl;
-      file << expertise->forest << std::endl;
-    }
-*/

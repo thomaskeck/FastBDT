@@ -37,6 +37,9 @@ class Classifier {
         stream >> m_transform2probability;
         stream >> m_featureBinning;
         stream >> m_purityBinning;
+        stream >> m_numberOfFeatures;
+        stream >> m_numberOfFinalFeatures;
+        stream >> m_numberOfFlatnessFeatures;
         stream >> m_can_use_fast_forest;
         m_fast_forest = readForestFromStream<float>(stream);
         m_binned_forest = readForestFromStream<unsigned int>(stream);
@@ -46,25 +49,52 @@ class Classifier {
       friend std::ostream& operator<<(std::ostream& stream, const Classifier& classifier);
 
 			Classifier(unsigned int nTrees, unsigned int depth, std::vector<unsigned int> binning, double shrinkage = 0.1, double subsample = 1.0, bool sPlot = false, double flatnessLoss = -1.0, std::vector<bool> purityTransformation = {}, unsigned int numberOfFlatnessFeatures=0, bool transform2probability=true) :
-        m_nTrees(nTrees), m_depth(depth), m_binning(binning), m_shrinkage(shrinkage), m_subsample(subsample), m_sPlot(sPlot), m_flatnessLoss(flatnessLoss), m_purityTransformation(purityTransformation), m_numberOfFlatnessFeatures(numberOfFlatnessFeatures), m_transform2probability(transform2probability), m_can_use_fast_forest(true) {
+        m_nTrees(nTrees), m_depth(depth), m_binning(binning), m_shrinkage(shrinkage), m_subsample(subsample), m_sPlot(sPlot), m_flatnessLoss(flatnessLoss), m_purityTransformation(purityTransformation), m_numberOfFlatnessFeatures(numberOfFlatnessFeatures), m_transform2probability(transform2probability), m_can_use_fast_forest(true) { }
 
-          if(m_binning.size() <= m_numberOfFlatnessFeatures) {
-            throw std::runtime_error("Number of provided binnings must be larger than the number of flat features, because there must be at least one ordinary feature in the training.");
-          }
+      unsigned int GetNTrees() const { return m_nTrees; }
+      void SetNTrees(unsigned int nTrees) { m_nTrees = nTrees; }
+      
+      unsigned int GetDepth() const { return m_depth; }
+      void SetDepth(unsigned int depth) { m_depth = depth; }
+      
+      unsigned int GetNumberOfFlatnessFeatures() const { return m_numberOfFlatnessFeatures; }
+      void SetNumberOfFlatnessFeatures(unsigned int numberOfFlatnessFeatures) { m_numberOfFlatnessFeatures = numberOfFlatnessFeatures; }
 
-          if(m_purityTransformation.size() == 0) {
-            for(unsigned int i = 0; i < m_binning.size() - m_numberOfFlatnessFeatures; ++i)
-              m_purityTransformation.push_back(false);
-          }
+      unsigned int GetNFeatures() const { return m_numberOfFeatures; }
 
-          for(auto p : m_purityTransformation)
-            if(p)
-              m_can_use_fast_forest = false;
-      }
+      double GetShrinkage() const { return m_shrinkage; }
+      void SetShrinkage(double shrinkage) { m_shrinkage = shrinkage; }
+      
+      double GetSubsample() const { return m_subsample; }
+      void SetSubsample(double subsample) { m_subsample = subsample; }
+      
+      bool GetSPlot() const { return m_sPlot; }
+      void SetSPlot(bool sPlot) { m_sPlot = sPlot; }
+      
+      bool GetTransform2Probability() const { return m_transform2probability; }
+      void SetTransform2Probability(bool transform2probability) { m_transform2probability = transform2probability; }
+      
+      std::vector<unsigned int> GetBinning() const { return m_binning; }
+      void SetBinning(std::vector<unsigned int> binning) { m_binning = binning; }
+
+      std::vector<bool> GetPurityTransformation() const { return m_purityTransformation; }
+      void SetPurityTransformation(std::vector<bool> purityTransformation) { m_purityTransformation = purityTransformation; }
+
+      double GetFlatnessLoss() const { return m_flatnessLoss; }
+      void SetFlatnessLoss(double flatnessLoss) { m_flatnessLoss = flatnessLoss; }
 			
       void fit(const std::vector<std::vector<float>> &X, const std::vector<bool> &y, const std::vector<Weight> &w);
 
       float predict(const std::vector<float> &X) const;
+      
+      std::map<unsigned int, double> GetVariableRanking() const {
+        if (m_can_use_fast_forest)
+          return m_fast_forest.GetVariableRanking();
+        else
+          return m_binned_forest.GetVariableRanking();
+      }
+      
+      std::map<unsigned int, double> GetIndividualVariableRanking(const std::vector<float> &X) const;
 
   private:
     unsigned int m_version = 1;

@@ -20,6 +20,15 @@ namespace FastBDT {
       throw std::runtime_error("Number of features must be equal to the number of provided binnings");
     }
     
+    if(m_purityTransformation.size() == 0) {
+      for(unsigned int i = 0; i < m_binning.size() - m_numberOfFlatnessFeatures; ++i)
+        m_purityTransformation.push_back(false);
+    }
+
+    for(auto p : m_purityTransformation)
+      if(p)
+        m_can_use_fast_forest = false;
+    
     if(m_numberOfFeatures != m_purityTransformation.size()) {
       throw std::runtime_error("Number of ordinary features must be equal to the number of provided purityTransformation flags.");
     }
@@ -106,7 +115,7 @@ namespace FastBDT {
         std::vector<unsigned int> bins(m_numberOfFinalFeatures);
         unsigned int bin = 0;
         unsigned int pFeature = 0;
-        for(unsigned int iFeature = 0; iFeature < m_numberOfFinalFeatures; ++iFeature) {
+        for(unsigned int iFeature = 0; iFeature < m_numberOfFeatures; ++iFeature) {
           bins[bin] = m_featureBinning[iFeature].ValueToBin(X[iFeature]);
           bin++;
           if(m_purityTransformation[iFeature]) {
@@ -116,6 +125,27 @@ namespace FastBDT {
           }
         }
         return m_binned_forest.Analyse(bins);
+      }
+  }
+  
+  std::map<unsigned int, double> Classifier::GetIndividualVariableRanking(const std::vector<float> &X) const {
+
+      if(m_can_use_fast_forest) {
+        return m_fast_forest.GetIndividualVariableRanking(X);
+      } else {
+        std::vector<unsigned int> bins(m_numberOfFinalFeatures);
+        unsigned int bin = 0;
+        unsigned int pFeature = 0;
+        for(unsigned int iFeature = 0; iFeature < m_numberOfFeatures; ++iFeature) {
+          bins[bin] = m_featureBinning[iFeature].ValueToBin(X[iFeature]);
+          bin++;
+          if(m_purityTransformation[iFeature]) {
+              bins[bin] = m_purityBinning[pFeature].BinToPurityBin(bins[bin-1]);
+              pFeature++;
+              bin++;
+          }
+        }
+        return m_binned_forest.GetIndividualVariableRanking(bins);
       }
   }
 
@@ -134,6 +164,9 @@ std::ostream& operator<<(std::ostream& stream, const Classifier& classifier) {
     stream << classifier.m_transform2probability << std::endl;
     stream << classifier.m_featureBinning << std::endl;
     stream << classifier.m_purityBinning << std::endl;
+    stream << classifier.m_numberOfFeatures << std::endl;
+    stream << classifier.m_numberOfFinalFeatures << std::endl;
+    stream << classifier.m_numberOfFlatnessFeatures << std::endl;
     stream << classifier.m_can_use_fast_forest << std::endl;
     stream << classifier.m_fast_forest << std::endl;
     stream << classifier.m_binned_forest << std::endl;
