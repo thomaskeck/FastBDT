@@ -278,7 +278,13 @@ namespace FastBDT {
     template<class Value>
     bool compareWithWeightsIncludingNaN (ValueWithWeight<Value> i, ValueWithWeight<Value> j) {
         if( std::isnan(i.value) ) {
+          if(std::isnan(j.value)) {
+            // If both are NAN i is NOT smaller
+            return false;
+          } else {
+            // In all other cases i is smaller
             return true;
+          }
         }
         // If j is NaN the following line will return false,
         // which is fine in our case.
@@ -440,7 +446,13 @@ namespace FastBDT {
     template<class Value>
     bool compareWithIndex (ValueWithIndex<Value> i, ValueWithIndex<Value> j) {
         if( std::isnan(i.value) ) {
+          if(std::isnan(j.value)) {
+            // If both are NAN i is NOT smaller
+            return false;
+          } else {
+            // In all other cases i is smaller
             return true;
+          }
         }
         // If j is NaN the following line will return false,
         // which is fine in our case.

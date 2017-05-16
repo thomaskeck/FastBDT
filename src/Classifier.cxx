@@ -143,9 +143,11 @@ namespace FastBDT {
   }
   
   std::map<unsigned int, double> Classifier::GetIndividualVariableRanking(const std::vector<float> &X) const {
+    
+      std::map<unsigned int, double> ranking;
 
       if(m_can_use_fast_forest) {
-        return m_fast_forest.GetIndividualVariableRanking(X);
+        ranking = m_fast_forest.GetIndividualVariableRanking(X);
       } else {
         std::vector<unsigned int> bins(m_numberOfFinalFeatures);
         unsigned int bin = 0;
@@ -159,8 +161,48 @@ namespace FastBDT {
               bin++;
           }
         }
-        return m_binned_forest.GetIndividualVariableRanking(bins);
+        ranking = m_binned_forest.GetIndividualVariableRanking(bins);
       }
+
+      return MapRankingToOriginalFeatures(ranking);
+  }
+
+  std::map<unsigned int, unsigned int> Classifier::GetFeatureMapping() const {
+    
+    std::map<unsigned int, unsigned int> transformed2original;
+    unsigned int transformedFeature = 0;
+    for(unsigned int originalFeature = 0; originalFeature < m_numberOfFeatures; ++originalFeature) {
+      transformed2original[transformedFeature] = originalFeature;
+      if(m_purityTransformation[originalFeature]) {
+        transformedFeature++;
+        transformed2original[transformedFeature] = originalFeature;
+      }
+      transformedFeature++;
+    }
+
+    return transformed2original;
+
+  }
+
+  std::map<unsigned int, double> Classifier::MapRankingToOriginalFeatures(std::map<unsigned int, double> ranking) const {
+    auto transformed2original = GetFeatureMapping();
+    std::map<unsigned int, double> original_ranking;
+    for(auto &pair : ranking) {
+      if(original_ranking.find(transformed2original[pair.first]) == original_ranking.end())
+        original_ranking[transformed2original[pair.first]] = 0;
+      original_ranking[transformed2original[pair.first]] += pair.second;
+    }
+    return original_ranking;
+  }
+
+
+  std::map<unsigned int, double> Classifier::GetVariableRanking() const {
+    std::map<unsigned int, double> ranking;
+    if (m_can_use_fast_forest)
+      ranking = m_fast_forest.GetVariableRanking();
+    else
+      ranking = m_binned_forest.GetVariableRanking();
+    return MapRankingToOriginalFeatures(ranking);
   }
 
 

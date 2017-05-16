@@ -153,6 +153,22 @@ TEST_F(ClassifierTest, SubsamplingChangesResult) {
 
 }
 
+TEST_F(ClassifierTest, GetFeatureMaping) {
+
+    FastBDT::Classifier classifier(1, 5, {4, 4, 4, 4}, 0.1, 0.5);
+    classifier.SetPurityTransformation({true, false, true, false});
+    classifier.fit(X, y, w);
+
+    auto mapping = classifier.GetFeatureMapping();
+    EXPECT_EQ(mapping[0], 0u);
+    EXPECT_EQ(mapping[1], 0u);
+    EXPECT_EQ(mapping[2], 1u);
+    EXPECT_EQ(mapping[3], 2u);
+    EXPECT_EQ(mapping[4], 2u);
+    EXPECT_EQ(mapping[5], 3u);
+
+}
+
 TEST_F(ClassifierTest, LoadAndSaveWorks) {
 
     FastBDT::Classifier classifier(10, 3, {4, 4, 4, 4});

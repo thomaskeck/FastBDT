@@ -89,14 +89,13 @@ class Classifier {
 
       float predict(const std::vector<float> &X) const;
       
-      std::map<unsigned int, double> GetVariableRanking() const {
-        if (m_can_use_fast_forest)
-          return m_fast_forest.GetVariableRanking();
-        else
-          return m_binned_forest.GetVariableRanking();
-      }
+      std::map<unsigned int, double> GetVariableRanking() const;
       
       std::map<unsigned int, double> GetIndividualVariableRanking(const std::vector<float> &X) const;
+
+      std::map<unsigned int, unsigned int> GetFeatureMapping() const;
+  
+      std::map<unsigned int, double> MapRankingToOriginalFeatures(std::map<unsigned int, double> ranking) const;
 
   private:
     unsigned int m_version = 1;
