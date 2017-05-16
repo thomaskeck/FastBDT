@@ -9,8 +9,8 @@ set (FastBDT_VERSION_MINOR 0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -std=c++11 -Wall -Wextra -g -march=native")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ggdb3 -g -std=c++11 -Wall -Wextra")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -std=c++11 -Wall -Wextra -g -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ggdb3 -g -std=c++11 -Wall -Wextra")
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/include/FastBDT.h.in"
@@ -46,14 +46,12 @@ set(FastBDT_CINTERFACE
 )
 
 add_library(FastBDT_static STATIC ${FastBDT_SOURCES} ${FastBDT_HEADERS})
-add_executable(FastBDTMain "${PROJECT_SOURCE_DIR}/tools/FastBDTMain.cxx" ${FastBDT_HEADERS})
-target_link_libraries(FastBDTMain FastBDT_static)
 add_library(FastBDT_CInterface SHARED ${FastBDT_CINTERFACE} ${FastBDT_SOURCES} ${FastBDT_HEADERS})
 target_link_libraries(FastBDT_CInterface)
 add_library(FastBDT_shared SHARED ${FastBDT_SOURCES} ${FastBDT_HEADERS})
 target_link_libraries(FastBDT_shared)
 
-install(TARGETS FastBDT_static FastBDT_shared FastBDTMain FastBDT_CInterface
+install(TARGETS FastBDT_static FastBDT_shared FastBDT_CInterface
      LIBRARY DESTINATION lib
       ARCHIVE DESTINATION lib
       RUNTIME DESTINATION bin   

@@ -24,8 +24,6 @@ std::vector<std::vector<float>> GetIrisX() {
 
 std::vector<bool> GetIrisY() {
    std::vector<bool> y = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true};
-   // The problem is too easy, so we mix up the labels to make it harder
-   // std::shuffle(y.begin(), y.end(), std::default_random_engine(1));
    return y;
 }
 

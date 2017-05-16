@@ -6,6 +6,7 @@
 
 
 #include "Classifier.h"
+#include <iostream>
 
 namespace FastBDT {
 
@@ -15,7 +16,12 @@ namespace FastBDT {
       throw std::runtime_error("FastBDT requires at least one feature");
     }
     m_numberOfFeatures = X.size() - m_numberOfFlatnessFeatures ;
-    
+
+    if(m_binning.size() == 0) {
+      for(unsigned int i = 0; i < X.size(); ++i)
+        m_binning.push_back(8);
+    }
+
     if(m_numberOfFeatures + m_numberOfFlatnessFeatures != m_binning.size()) {
       throw std::runtime_error("Number of features must be equal to the number of provided binnings");
     }
@@ -104,6 +110,14 @@ namespace FastBDT {
         }
         m_binned_forest = temp_forest;
     }
+
+  }
+
+  void Classifier::Print() {
+
+    std::cout << "NTrees " << m_nTrees << std::endl;
+    std::cout << "Depth " << m_depth << std::endl;
+    std::cout << "NumberOfFeatures " << m_numberOfFeatures << std::endl;
 
   }
       

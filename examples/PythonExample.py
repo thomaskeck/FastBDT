@@ -59,3 +59,16 @@ if __name__ == '__main__':
 
     for event in events:
         print(clf.individualFeatureImportance(event))
+    
+    # Train FastBDT using its PythonInterface, which is based on the SKLearn classifiers
+    clf = FastBDT.Classifier(purityTransformation=[False, False, False, False, False], subsample=1.0)
+    clf.fit(X=X_train, y=y_train)
+    p = clf.predict(X_test)
+    global_auc = sklearn.metrics.roc_auc_score(y_test, p)
+    print("Global AUC without Purity Transformation", global_auc)
+
+    clf = FastBDT.Classifier(purityTransformation=[True, True, True, True, True], subsample=1.0)
+    clf.fit(X=X_train, y=y_train)
+    p = clf.predict(X_test)
+    global_auc = sklearn.metrics.roc_auc_score(y_test, p)
+    print("Global AUC with Purity Transformation", global_auc)

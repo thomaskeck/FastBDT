@@ -18,7 +18,7 @@ FastBDT_library.Delete.argtypes = [ctypes.c_void_p]
 FastBDT_library.Load.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 FastBDT_library.Save.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 
-FastBDT_library.Fit.argtypes = [ctypes.c_void_p, c_float_p, c_float_p, c_uint_p, ctypes.c_uint]
+FastBDT_library.Fit.argtypes = [ctypes.c_void_p, c_float_p, c_float_p, c_bool_p, ctypes.c_uint]
 
 FastBDT_library.Predict.argtypes = [ctypes.c_void_p, c_float_p]
 FastBDT_library.Predict.restype = ctypes.c_float
@@ -41,8 +41,8 @@ FastBDT_library.SetNTrees.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.GetNTrees.argtypes = [ctypes.c_void_p]
 FastBDT_library.GetNTrees.restypes = ctypes.c_uint
 
-FastBDT_library.SetBinning.argtypes = [ctypes.c_void_p, ctypes.c_uint_p, ctypes.c_uint]
-FastBDT_library.SetPurityTransformation.argtypes = [ctypes.c_void_p, ctypes.c_uint_p, ctypes.c_uint]
+FastBDT_library.SetBinning.argtypes = [ctypes.c_void_p, c_uint_p, ctypes.c_uint]
+FastBDT_library.SetPurityTransformation.argtypes = [ctypes.c_void_p, c_uint_p, ctypes.c_uint]
 
 FastBDT_library.SetDepth.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.GetDepth.argtypes = [ctypes.c_void_p]
@@ -65,7 +65,7 @@ FastBDT_library.ExtractNumberOfVariablesFromVariableRanking.restype = ctypes.c_u
 FastBDT_library.ExtractImportanceOfVariableFromVariableRanking.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.ExtractImportanceOfVariableFromVariableRanking.restype = ctypes.c_double
     
-FastBDT_library.GetIndividualVariableRanking.argtypes = [ctypes.c_void_p, c_double_p]
+FastBDT_library.GetIndividualVariableRanking.argtypes = [ctypes.c_void_p, c_float_p]
 FastBDT_library.GetIndividualVariableRanking.restype = ctypes.c_void_p
 
 
@@ -92,7 +92,7 @@ def calculate_roc_auc(p, t, w=None):
 
 
 class Classifier(object):
-    def __init__(self, binning=[], nTrees=100, depth=3, shrinkage=0.1, subsample=0.5, transform2probability=True, purityTransformation=[], sPlot=False, flatnessLoss=-1.0, numberOfFlatnessFeatures):
+    def __init__(self, binning=[], nTrees=100, depth=3, shrinkage=0.1, subsample=0.5, transform2probability=True, purityTransformation=[], sPlot=False, flatnessLoss=-1.0, numberOfFlatnessFeatures=0):
         """
         @param binning list of numbers with the power N used for each feature binning e.g. 8 means 2^8 bins
         @param nTrees number of trees
@@ -184,9 +184,7 @@ class Classifier(object):
         numberOfEvents, numberOfFeatures = X.shape
         global_auc = calculate_roc_auc(self.predict(X_test), y_test, weights_test)
         forest = self.forest
-        self.forest = self.create_forest()
         importances = self._externFeatureImportance(list(range(numberOfFeatures)), global_auc, X, y, weights, X_test, y_test, weights_test)
-        FastBDT_library.Delete(self.forest)
         self.forest = forest
         return importances
 
@@ -196,8 +194,10 @@ class Classifier(object):
             remaining_features = [f for f in features if f != i]
             X_temp = X[:, remaining_features]
             X_test_temp = X_test[:, remaining_features]
+            self.forest = self.create_forest()
             self.fit(X_temp, y, weights)
             auc = calculate_roc_auc(self.predict(X_test_temp), y_test, weights_test)
+            FastBDT_library.Delete(self.forest)
             importances[i] = global_auc - auc
    
         most_important = max(importances.keys(), key=lambda x: importances[x])
