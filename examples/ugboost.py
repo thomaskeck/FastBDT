@@ -1,5 +1,6 @@
 import sys
 from PyFastBDT import FastBDT
+from PyFastBDT import utility
 
 import numpy as np
 import numpy
@@ -50,6 +51,7 @@ def combine_probabilities(p1, p2):
 
 
 def evaluation(label, X_test, y_test, p, p_prior):
+    print(label, utility.auc_roc(p, y_test), utility.flatness(X_test[:, 0], p, y_test))
     print(label, sklearn.metrics.roc_auc_score(y_test, p))
     print(label + " with prior", sklearn.metrics.roc_auc_score(y_test, combine_probabilities(p, p_prior)))
     plt.scatter(X_test[y_test == 1, 0], p[y_test == 1], c='r', label=label + " (Signal)", alpha=0.2)
@@ -86,7 +88,7 @@ if __name__ == '__main__':
         p_prior = prior.get_prior(X_test[:, 0])
         evaluation("Prior", X_test, y_test, p_prior, p_prior)
         
-        p = FastBDT.Classifier(flatnessLoss=10.0).fit(X=np.c_[X_train[:, 1:], X_train[:, 0]], y=y_train, nSpectators=1).predict(X_test[:, 1:])
+        p = FastBDT.Classifier(flatnessLoss=1.0, numberOfFlatnessFeatures=1).fit(X=np.c_[X_train[:, 1:], X_train[:, 0]], y=y_train).predict(X_test[:, 1:])
         print(p)
         evaluation("UBoost", X_test, y_test, p, p_prior)
         

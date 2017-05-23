@@ -41,6 +41,10 @@ FastBDT_library.SetNTrees.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 FastBDT_library.GetNTrees.argtypes = [ctypes.c_void_p]
 FastBDT_library.GetNTrees.restypes = ctypes.c_uint
 
+FastBDT_library.SetNumberOfFlatnessFeatures.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+FastBDT_library.GetNumberOfFlatnessFeatures.argtypes = [ctypes.c_void_p]
+FastBDT_library.GetNumberOfFlatnessFeatures.restypes = ctypes.c_uint
+
 FastBDT_library.SetBinning.argtypes = [ctypes.c_void_p, c_uint_p, ctypes.c_uint]
 FastBDT_library.SetPurityTransformation.argtypes = [ctypes.c_void_p, c_uint_p, ctypes.c_uint]
 
