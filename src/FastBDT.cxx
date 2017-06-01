@@ -368,7 +368,7 @@ namespace FastBDT {
         for(unsigned int iEvent = nSignals; iEvent < nEvents; ++iEvent)
           weights.SetOriginal(iEvent, 2.0 * sums[0] / (sums[0] + sums[1]) * weights.GetOriginal(iEvent));
     }
-    
+        
     // Resize the FCache to the number of events, and initalise it with the inital 0.0 value
     // Not F0 because F0 is already used in the original_weights
     FCache.resize(sample.GetNEvents(), 0.0);
@@ -541,7 +541,7 @@ namespace FastBDT {
         double F = global_weight_below_current_F / sums[0];
         double F_bin = weight_below_current_F_per_uniform_bin[uniformBin] / (uniform_bin_weight_signal[uniformBin] * sums[0]);
 
-        weights.Set(iEvent, weights.GetWithoutOriginal(iEvent) - flatnessLoss * uniform_bin_weight_signal[uniformBin] * (F_bin - F));
+        weights.Set(iEvent, weights.GetWithoutOriginal(iEvent) - flatnessLoss * (F_bin - F));
     }
 
     for(uint64_t iUniformBin = 0; iUniformBin < weight_below_current_F_per_uniform_bin.size(); ++iUniformBin) {
@@ -563,7 +563,7 @@ namespace FastBDT {
         double F = global_weight_below_current_F / sums[1];
         double F_bin = weight_below_current_F_per_uniform_bin[uniformBin] / (uniform_bin_weight_bckgrd[uniformBin] * sums[1]);
 
-        weights.Set(iEvent, weights.GetWithoutOriginal(iEvent) - flatnessLoss * uniform_bin_weight_bckgrd[uniformBin] * (F_bin - F));
+        weights.Set(iEvent, weights.GetWithoutOriginal(iEvent) - flatnessLoss * (F_bin - F));
     }
 
     for(uint64_t iUniformBin = 0; iUniformBin < weight_below_current_F_per_uniform_bin.size(); ++iUniformBin) {

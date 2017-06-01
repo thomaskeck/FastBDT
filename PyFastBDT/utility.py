@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def flatness(feature, probability, target):
     quantiles = list(range(101))
     flatness_score = 0
@@ -9,10 +10,12 @@ def flatness(feature, probability, target):
 
         hist_n, _ = np.histogramdd(np.c_[probability[m], feature[m]],
                                    bins=[binning_probability, binning_feature])
-        hist_n /= hist_n.sum(axis=0)
         hist_inc = hist_n.sum(axis=1)
+        hist_n /= hist_n.sum(axis=0)
+        hist_inc /= hist_inc.sum(axis=0)
         flatness_score += (hist_n.T - hist_inc).std()
     return flatness_score
+
 
 def auc_roc(probability, target):
     N = len(target)
