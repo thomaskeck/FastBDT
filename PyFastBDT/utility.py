@@ -13,8 +13,11 @@ def flatness(feature, probability, target):
         hist_inc = hist_n.sum(axis=1)
         hist_n /= hist_n.sum(axis=0)
         hist_inc /= hist_inc.sum(axis=0)
-        flatness_score += (hist_n.T - hist_inc).std()
-    return flatness_score
+        hist_n = hist_n.cumsum(axis=0)
+        hist_inc = hist_inc.cumsum(axis=0)
+        diff = (hist_n.T - hist_inc)**2
+        flatness_score += diff.sum() / (100*99)
+    return np.sqrt(flatness_score)
 
 
 def auc_roc(probability, target):
