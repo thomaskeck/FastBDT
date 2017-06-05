@@ -511,7 +511,7 @@ namespace FastBDT {
         signal_event_index_sorted_by_F[iEvent] = {FCache[iEvent], iEvent};
     }
     for(unsigned int iEvent = 0; iEvent < nEvents-nSignals; ++iEvent) {
-        bckgrd_event_index_sorted_by_F[iEvent] = {-FCache[iEvent], iEvent+nSignals};
+        bckgrd_event_index_sorted_by_F[iEvent] = {-FCache[iEvent+nSignals], iEvent+nSignals};
     }
 
     {
@@ -541,7 +541,11 @@ namespace FastBDT {
         double F = global_weight_below_current_F / sums[0];
         double F_bin = weight_below_current_F_per_uniform_bin[uniformBin] / (uniform_bin_weight_signal[uniformBin] * sums[0]);
 
-        weights.Set(iEvent, weights.GetWithoutOriginal(iEvent) - flatnessLoss * (F_bin - F));
+        double fw =  1.0/(1.0+std::exp(-2.0*(F_bin - F)));
+        double bw = weights.GetWithoutOriginal(iEvent) / 2.0;
+        double combined_weight = bw * std::pow(fw, flatnessLoss) / ( bw * std::pow(fw, flatnessLoss) + (1 - bw) * std::pow(1 - fw, flatnessLoss) );
+
+        weights.Set(iEvent, 2 * combined_weight);
     }
 
     for(uint64_t iUniformBin = 0; iUniformBin < weight_below_current_F_per_uniform_bin.size(); ++iUniformBin) {
@@ -563,7 +567,11 @@ namespace FastBDT {
         double F = global_weight_below_current_F / sums[1];
         double F_bin = weight_below_current_F_per_uniform_bin[uniformBin] / (uniform_bin_weight_bckgrd[uniformBin] * sums[1]);
 
-        weights.Set(iEvent, weights.GetWithoutOriginal(iEvent) - flatnessLoss * (F_bin - F));
+        double fw =  1.0/(1.0+std::exp(-2.0*(F_bin - F)));
+        double bw = weights.GetWithoutOriginal(iEvent) / 2.0;
+        double combined_weight = bw * std::pow(fw, flatnessLoss) / ( bw * std::pow(fw, flatnessLoss) + (1 - bw) * std::pow(1 - fw, flatnessLoss) );
+        
+        weights.Set(iEvent, 2 * combined_weight);
     }
 
     for(uint64_t iUniformBin = 0; iUniformBin < weight_below_current_F_per_uniform_bin.size(); ++iUniformBin) {
