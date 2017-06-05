@@ -31,7 +31,7 @@ def flatness(probability, feature, target, weights=None, classes=[0, 1]):
         hist_inc = hist_inc.cumsum(axis=0)
         diff = (hist_n.T - hist_inc)**2
         flatness_score += diff.sum() / (100*99)
-    return flatness_score
+    return np.sqrt(flatness_score)
 
 
 
