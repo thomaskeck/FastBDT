@@ -418,7 +418,7 @@ namespace FastBDT {
 
     // Now train config.nTrees!
     for(unsigned int iTree = 0; iTree < nTrees; ++iTree) {
-    
+
       // Update the event weights according to their F value
       updateEventWeights(sample);
 
@@ -532,20 +532,27 @@ namespace FastBDT {
           
         global_weight_below_current_F += weights.GetOriginal(iEvent);
         double F = global_weight_below_current_F / sums[0];
-        double bw = weights.GetWithoutOriginal(iEvent) / 2.0;
-        double fw = 0.5;
+        double bw = weights.GetWithoutOriginal(iEvent);
+        double fw = 0.0;
 
         for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
           const uint64_t uniformBin = values.GetSpectator(iEvent, iSpectator);
           weight_below_current_F_per_uniform_bin[iSpectator][uniformBin] += weights.GetOriginal(iEvent);
           double F_bin = weight_below_current_F_per_uniform_bin[iSpectator][uniformBin] / (uniform_bin_weight_signal[iSpectator][uniformBin] * sums[0]);
 
-          double fw_i =  1.0/(1.0+std::exp(-2.0*(F_bin - F)));
-          fw = fw*fw_i / (fw*fw_i + (1-fw)*(1-fw_i));
+          fw += (F_bin - F);
         }
+        fw *= flatnessLoss;
 
-        double combined_weight = bw * std::pow(fw, flatnessLoss) / ( bw * std::pow(fw, flatnessLoss) + (1 - bw) * std::pow(1 - fw, flatnessLoss) );
-        weights.Set(iEvent, 2 * combined_weight);
+        if (bw + fw <= 1e-3) {
+          weights.Set(iEvent, 1e-3);
+        }
+        else if(bw + fw >= 2.0-1e-3) {
+          weights.Set(iEvent, 2.0-1e-3);
+        }
+        else {
+          weights.Set(iEvent, bw + fw);
+        }
     }
 
     for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
@@ -561,20 +568,28 @@ namespace FastBDT {
           
         global_weight_below_current_F += weights.GetOriginal(iEvent);
         double F = global_weight_below_current_F / sums[1];
-        double bw = weights.GetWithoutOriginal(iEvent) / 2.0;
-        double fw = 0.5;
+        double bw = weights.GetWithoutOriginal(iEvent);
+        double fw = 0.0;
 
         for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
           const uint64_t uniformBin = values.GetSpectator(iEvent, iSpectator);
           weight_below_current_F_per_uniform_bin[iSpectator][uniformBin] += weights.GetOriginal(iEvent);
           double F_bin = weight_below_current_F_per_uniform_bin[iSpectator][uniformBin] / (uniform_bin_weight_bckgrd[iSpectator][uniformBin] * sums[1]);
 
-          double fw_i =  1.0/(1.0+std::exp(-2.0*(F_bin - F)));
-          fw = fw*fw_i / (fw*fw_i + (1-fw)*(1-fw_i));
+          fw += (F_bin - F);
+        }
+        fw *= flatnessLoss;
+
+        if (bw + fw <= 1e-3) {
+          weights.Set(iEvent, 1e-3);
+        }
+        else if(bw + fw >= 2.0-1e-3) {
+          weights.Set(iEvent, 2.0-1e-3);
+        }
+        else {
+          weights.Set(iEvent, bw + fw);
         }
 
-        double combined_weight = bw * std::pow(fw, flatnessLoss) / ( bw * std::pow(fw, flatnessLoss) + (1 - bw) * std::pow(1 - fw, flatnessLoss) );
-        weights.Set(iEvent, 2 * combined_weight);
     }
 
     for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
