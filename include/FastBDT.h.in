@@ -957,9 +957,9 @@ namespace FastBDT {
       std::vector<Weight> sums; /**< Sum of the original weights for signal and background */
       std::vector<double> FCache; /**< Caches the F values for the training events, to spare some time.*/
       std::vector<Tree<unsigned int>> forest; /**< Contains all the trees trained by the stochastic gradient boost algorithm*/
-      std::vector<double> uniform_bin_weight_signal; /**< signal weight of each uniform bin */
-      std::vector<double> uniform_bin_weight_bckgrd; /**< background weight of each uniform bin */
-      std::vector<double> weight_below_current_F_per_uniform_bin; /**< Weight below the current F value in each uniform bin */
+      std::vector<std::vector<double>> uniform_bin_weight_signal; /**< signal weight of each uniform bin */
+      std::vector<std::vector<double>> uniform_bin_weight_bckgrd; /**< background weight of each uniform bin */
+      std::vector<std::vector<double>> weight_below_current_F_per_uniform_bin; /**< Weight below the current F value in each uniform bin */
       std::vector<ValueWithIndex<double>> signal_event_index_sorted_by_F; /**< The signal event indices sorted by F */
       std::vector<ValueWithIndex<double>> bckgrd_event_index_sorted_by_F; /**< The background event indices sorted by F */
   };
