@@ -518,14 +518,15 @@ namespace FastBDT {
   class EventWeights {
 
     public:
-      EventWeights(unsigned int nEvents) : weights(nEvents, 1), original_weights(nEvents, 0) { }
+      EventWeights(unsigned int nEvents) : boost_weights(nEvents, 1), flatness_weights(nEvents, 0), original_weights(nEvents, 0) { }
 
-      inline Weight Get(unsigned int iEvent) const { return weights[iEvent] * original_weights[iEvent]; }
-      inline Weight GetWithoutOriginal(unsigned int iEvent) const { return weights[iEvent]; }
-      void Set(unsigned int iEvent, const Weight& weight) {  weights[iEvent] = weight; } 
-      
-      inline const Weight& GetOriginal(unsigned int iEvent) const { return original_weights[iEvent]; }
-      void SetOriginal(unsigned int iEvent, const Weight& weight) {  original_weights[iEvent] = weight; } 
+      inline Weight Get(unsigned int iEvent) const { return boost_weights[iEvent] * original_weights[iEvent]; }
+      inline const Weight& GetBoostWeight(unsigned int iEvent) const { return boost_weights[iEvent]; }
+      inline const Weight& GetFlatnessWeight(unsigned int iEvent) const { return flatness_weights[iEvent]; }
+      inline const Weight& GetOriginalWeight(unsigned int iEvent) const { return original_weights[iEvent]; }
+      void SetBoostWeight(unsigned int iEvent, const Weight& weight) {  boost_weights[iEvent] = weight; } 
+      void SetFlatnessWeight(unsigned int iEvent, const Weight& weight) { flatness_weights[iEvent] = weight; } 
+      void SetOriginalWeight(unsigned int iEvent, const Weight& weight) { original_weights[iEvent] = weight; } 
 
       /**
        * Returns the sum of all weights. 0: SignalSum, 1: BckgrdSum, 2: SquareSum
@@ -534,7 +535,8 @@ namespace FastBDT {
       std::vector<Weight> GetSums(unsigned int nSignals) const;  
 
     private:
-      std::vector<Weight> weights;
+      std::vector<Weight> boost_weights;
+      std::vector<Weight> flatness_weights;
       std::vector<Weight> original_weights;
   };
 

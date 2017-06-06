@@ -442,8 +442,8 @@ class EventWeightsTest : public ::testing::Test {
         virtual void SetUp() {
             eventWeights = new EventWeights(10);
             for(unsigned int i = 0; i < 10; ++i) {
-                eventWeights->Set(i, static_cast<Weight>(i+1));
-                eventWeights->SetOriginal(i, 2);
+                eventWeights->SetBoostWeight(i, static_cast<Weight>(i+1));
+                eventWeights->SetOriginalWeight(i, 2);
             }
         }
 
@@ -470,10 +470,10 @@ TEST_F(EventWeightsTest, WeightSumsAreNotInfluencedByZeroWeights) {
     EventWeights *newEventWeights = new EventWeights(20);
     for(unsigned int i = 0; i < 10; ++i) {
         // Get delivers the weight*original weight, therefore we need to divide by the original weight afterwards
-        newEventWeights->Set(i*2, eventWeights->Get(i) / eventWeights->GetOriginal(i));
-        newEventWeights->SetOriginal(i*2, eventWeights->GetOriginal(i));
-        newEventWeights->Set(i*2 + 1, 0.0);
-        newEventWeights->SetOriginal(i*2 + 1, 0.0);
+        newEventWeights->SetBoostWeight(i*2, eventWeights->GetBoostWeight(i));
+        newEventWeights->SetOriginalWeight(i*2, eventWeights->GetOriginalWeight(i));
+        newEventWeights->SetBoostWeight(i*2 + 1, 0.0);
+        newEventWeights->SetOriginalWeight(i*2 + 1, 0.0);
     }
     auto newSums = newEventWeights->GetSums(10);
     delete newEventWeights;
@@ -495,7 +495,7 @@ TEST_F(EventWeightsTest, GetterIsCorrect) {
 TEST_F(EventWeightsTest, WeightSumsAndGetterAreCorrectlyUpdated) {
 
     for(unsigned int i = 0; i < 10; ++i) {
-        eventWeights->Set(i, static_cast<Weight>(i+3));
+        eventWeights->SetBoostWeight(i, static_cast<Weight>(i+3));
     }
 
     auto sums = eventWeights->GetSums(5);
@@ -740,7 +740,7 @@ TEST_F(CumulativeDistributionsTest, NaNShouldBeIgnored) {
         v[1] = eventSample->GetValues().Get(i, 1);
         v[2] = eventSample->GetValues().GetSpectator(i, 0);
         v[3] = eventSample->GetValues().GetSpectator(i, 1);
-        newEventSample->AddEvent(v, eventSample->GetWeights().GetOriginal(i), eventSample->IsSignal(i));
+        newEventSample->AddEvent(v, eventSample->GetWeights().GetOriginalWeight(i), eventSample->IsSignal(i));
         newEventSample->AddEvent(std::vector<unsigned int>({0, 0, 1, 2}), 1.0, i < 50);
     }
     CumulativeDistributions newCDFsForLayer0(0, *newEventSample);
@@ -776,7 +776,7 @@ TEST_F(CumulativeDistributionsTest, ZeroWeightShouldBeIgnored) {
         v[1] = eventSample->GetValues().Get(i, 1);
         v[2] = eventSample->GetValues().GetSpectator(i, 0);
         v[3] = eventSample->GetValues().GetSpectator(i, 1);
-        newEventSample->AddEvent(v, eventSample->GetWeights().GetOriginal(i), eventSample->IsSignal(i));
+        newEventSample->AddEvent(v, eventSample->GetWeights().GetOriginalWeight(i), eventSample->IsSignal(i));
         newEventSample->AddEvent(std::vector<unsigned int>({i%2 + 1, i%3 + 1, 1, 2}), 0.0, i < 50);
     }
     CumulativeDistributions newCDFsForLayer0(0, *newEventSample);
@@ -1046,16 +1046,16 @@ TEST_F(NodeTest, NegativeWeightsAreHandledCorrectly) {
 
     Node node(0,0);
     node.SetWeights({0.0, 0.0, 0.0});
-    node.AddSignalWeight(-2.0, -1.0);
-    node.AddSignalWeight(-4.0, -1.0);
-    node.AddBckgrdWeight(-4.0, -1.0);
+    node.AddSignalWeight(2.0, -1.0);
+    node.AddSignalWeight(4.0, -1.0);
+    node.AddBckgrdWeight(4.0, -1.0);
     EXPECT_FLOAT_EQ(node.GetPurity(), 0.6);
     EXPECT_FLOAT_EQ(node.GetBoostWeight(), -0.125);
     
     node.SetWeights({0.0, 0.0, 0.0});
     node.AddSignalWeight(-2.0, 1.0);
-    node.AddSignalWeight(1.0, -2.0);
-    node.AddBckgrdWeight(0.5, -0.5);
+    node.AddSignalWeight(-0.5, -2.0);
+    node.AddBckgrdWeight(-1.0, -0.5);
     // Purity above 1.0 can happen with negative weights
     EXPECT_FLOAT_EQ(node.GetPurity(), 2.0);
     EXPECT_FLOAT_EQ(node.GetBoostWeight(), 0.375);
@@ -1187,14 +1187,14 @@ class TreeBuilderTest : public ::testing::Test {
             eventSample->AddEvent( std::vector<unsigned int>({ 2, 2 }), 1.0, false);
 
             auto &weights = eventSample->GetWeights();
-            weights.Set(0, 4.0);
-            weights.Set(1, 1.0);
-            weights.Set(2, 2.0);
-            weights.Set(3, 3.0);
-            weights.Set(4, 2.0);
-            weights.Set(5, 1.0);
-            weights.Set(6, 3.0);
-            weights.Set(7, 4.0);
+            weights.SetBoostWeight(0, 4.0);
+            weights.SetBoostWeight(1, 1.0);
+            weights.SetBoostWeight(2, 2.0);
+            weights.SetBoostWeight(3, 3.0);
+            weights.SetBoostWeight(4, 2.0);
+            weights.SetBoostWeight(5, 1.0);
+            weights.SetBoostWeight(6, 3.0);
+            weights.SetBoostWeight(7, 4.0);
         }
 
         virtual void TearDown() {
@@ -1657,8 +1657,8 @@ TEST_F(CornerCasesTest, PerfectSeparationWithDifferentWeights) {
         const unsigned int nEvents = sample->GetNEvents();
         for(unsigned int iEvent = 0; iEvent < nEvents; ++iEvent) {
             if(iEvent < nSignals)
-                sig += sample->GetWeights().GetOriginal(iEvent);
-            tot += sample->GetWeights().GetOriginal(iEvent);
+                sig += sample->GetWeights().GetOriginalWeight(iEvent);
+            tot += sample->GetWeights().GetOriginalWeight(iEvent);
         }
 
         // Train without randomness and only with one layer per tree and shrinkage 1

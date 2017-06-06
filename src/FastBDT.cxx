@@ -15,13 +15,13 @@ namespace FastBDT {
     // Vectorizing FTW!
     std::vector<Weight> sums(3,0);
     for(unsigned int i = 0; i < nSignals; ++i) {
-      sums[0] += weights[i] * original_weights[i];
-      sums[2] += weights[i]*weights[i] * original_weights[i];
+      sums[0] += boost_weights[i] * original_weights[i];
+      sums[2] += boost_weights[i]*boost_weights[i] * original_weights[i];
     }
 
-    for(unsigned int i = nSignals; i < weights.size(); ++i) {
-      sums[1] += weights[i] * original_weights[i];
-      sums[2] += weights[i]*weights[i] * original_weights[i];
+    for(unsigned int i = nSignals; i < original_weights.size(); ++i) {
+      sums[1] += boost_weights[i] * original_weights[i];
+      sums[2] += boost_weights[i]*boost_weights[i] * original_weights[i];
     }
     return sums;
 
@@ -89,7 +89,7 @@ namespace FastBDT {
       index = nEvents - 1 - nBckgrds;
       ++nBckgrds;
     }
-    weights.SetOriginal(index, weight);
+    weights.SetOriginalWeight(index, weight);
     values.Set(index, features);
 
   }
@@ -130,7 +130,7 @@ namespace FastBDT {
       const unsigned int index = (flags.Get(iEvent)-nNodes)*nBinSums[nFeatures];
       for(unsigned int iFeature = 0; iFeature < nFeatures; ++iFeature ) {
         const unsigned int subindex = nBinSums[iFeature] + values.Get(iEvent,iFeature);
-        bins[index+subindex] += weights.Get(iEvent);
+        bins[index+subindex] += weights.GetOriginalWeight(iEvent) * (weights.GetBoostWeight(iEvent) + weights.GetFlatnessWeight(iEvent));
       }
     }
 
@@ -183,16 +183,16 @@ namespace FastBDT {
   void Node::AddSignalWeight(Weight weight, Weight original_weight) {
     if(original_weight == 0)
       return;
-    signal += weight;
-    square += weight*weight / original_weight;
+    signal += weight * original_weight;
+    square += weight*weight * original_weight;
   }
 
 
   void Node::AddBckgrdWeight(Weight weight, Weight original_weight) {
     if(original_weight == 0)
       return;
-    bckgrd += weight;
-    square += weight*weight / original_weight;
+    bckgrd += weight * original_weight;
+    square += weight*weight * original_weight;
   }
 
   void Node::SetWeights(std::vector<Weight> weights) {
@@ -324,13 +324,13 @@ namespace FastBDT {
     for(unsigned int iEvent = 0; iEvent < sample.GetNSignals(); ++iEvent) {
       const int flag = flags.Get(iEvent);
       if( flag >= static_cast<int>(nNodes) ) {
-        nodes[flag-1].AddSignalWeight( weights.Get(iEvent), weights.GetOriginal(iEvent) );
+        nodes[flag-1].AddSignalWeight( weights.GetBoostWeight(iEvent), weights.GetOriginalWeight(iEvent) );
       }
     }
     for(unsigned int iEvent = sample.GetNSignals(); iEvent < sample.GetNEvents(); ++iEvent) {
       const int flag = flags.Get(iEvent);
       if( flag >= static_cast<int>(nNodes) ) {
-        nodes[flag-1].AddBckgrdWeight( weights.Get(iEvent), weights.GetOriginal(iEvent) );
+        nodes[flag-1].AddBckgrdWeight( weights.GetBoostWeight(iEvent), weights.GetOriginalWeight(iEvent) );
       }
     }
 
@@ -371,9 +371,9 @@ namespace FastBDT {
         const unsigned int nEvents = sample.GetNEvents();
         const unsigned int nSignals = sample.GetNSignals();
         for(unsigned int iEvent = 0; iEvent < nSignals; ++iEvent)
-          weights.SetOriginal(iEvent, 2.0 * sums[1] / (sums[0] + sums[1]) * weights.GetOriginal(iEvent));
+          weights.SetOriginalWeight(iEvent, 2.0 * sums[1] / (sums[0] + sums[1]) * weights.GetOriginalWeight(iEvent));
         for(unsigned int iEvent = nSignals; iEvent < nEvents; ++iEvent)
-          weights.SetOriginal(iEvent, 2.0 * sums[0] / (sums[0] + sums[1]) * weights.GetOriginal(iEvent));
+          weights.SetOriginalWeight(iEvent, 2.0 * sums[0] / (sums[0] + sums[1]) * weights.GetOriginalWeight(iEvent));
     }
         
     // Resize the FCache to the number of events, and initalise it with the inital 0.0 value
@@ -408,9 +408,9 @@ namespace FastBDT {
           for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
             const uint64_t uniformBin = values.GetSpectator(iEvent, iSpectator);
             if (iEvent < nSignals)
-              uniform_bin_weight_signal[iSpectator][uniformBin] += weights.GetOriginal(iEvent);
+              uniform_bin_weight_signal[iSpectator][uniformBin] += weights.GetOriginalWeight(iEvent);
             else
-              uniform_bin_weight_bckgrd[iSpectator][uniformBin] += weights.GetOriginal(iEvent);
+              uniform_bin_weight_bckgrd[iSpectator][uniformBin] += weights.GetOriginalWeight(iEvent);
           }
         }
         for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
@@ -497,9 +497,9 @@ namespace FastBDT {
     }
 
     for(unsigned int iEvent = 0; iEvent < nSignals; ++iEvent)
-      weights.Set(iEvent, 2.0/(1.0+std::exp(2.0*FCache[iEvent])));
+      weights.SetBoostWeight(iEvent, 2.0/(1.0+std::exp(2.0*FCache[iEvent])));
     for(unsigned int iEvent = nSignals; iEvent < nEvents; ++iEvent)
-      weights.Set(iEvent, 2.0/(1.0+std::exp(-2.0*FCache[iEvent])));
+      weights.SetBoostWeight(iEvent, 2.0/(1.0+std::exp(-2.0*FCache[iEvent])));
 
   }
   
@@ -537,26 +537,20 @@ namespace FastBDT {
     for(unsigned int iIndex = 0; iIndex < signal_event_index_sorted_by_F.size(); ++iIndex) {
         unsigned int iEvent = signal_event_index_sorted_by_F[iIndex].index;
           
-        global_weight_below_current_F += weights.GetOriginal(iEvent);
+        global_weight_below_current_F += weights.GetOriginalWeight(iEvent);
         double F = global_weight_below_current_F / sums[0];
-        double bw = weights.GetWithoutOriginal(iEvent);
         double fw = 0.0;
 
         for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
           const uint64_t uniformBin = values.GetSpectator(iEvent, iSpectator);
-          weight_below_current_F_per_uniform_bin[iSpectator][uniformBin] += weights.GetOriginal(iEvent);
+          weight_below_current_F_per_uniform_bin[iSpectator][uniformBin] += weights.GetOriginalWeight(iEvent);
           double F_bin = weight_below_current_F_per_uniform_bin[iSpectator][uniformBin] / (uniform_bin_weight_signal[iSpectator][uniformBin] * sums[0]);
 
           fw += (F_bin - F);
         }
         fw *= flatnessLoss;
+        weights.SetFlatnessWeight(iEvent, fw);
 
-        if(bw + fw <= 0.0)
-          weights.Set(iEvent, 0.0);
-        else if (bw + fw >= 2.0)
-          weights.Set(iEvent, 2.0);
-        else
-          weights.Set(iEvent, bw + fw);
     }
 
     for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
@@ -570,26 +564,19 @@ namespace FastBDT {
     for(unsigned int iIndex = 0; iIndex < bckgrd_event_index_sorted_by_F.size(); ++iIndex) {
         unsigned int iEvent = bckgrd_event_index_sorted_by_F[iIndex].index;
           
-        global_weight_below_current_F += weights.GetOriginal(iEvent);
+        global_weight_below_current_F += weights.GetOriginalWeight(iEvent);
         double F = global_weight_below_current_F / sums[1];
-        double bw = weights.GetWithoutOriginal(iEvent);
         double fw = 0.0;
 
         for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
           const uint64_t uniformBin = values.GetSpectator(iEvent, iSpectator);
-          weight_below_current_F_per_uniform_bin[iSpectator][uniformBin] += weights.GetOriginal(iEvent);
+          weight_below_current_F_per_uniform_bin[iSpectator][uniformBin] += weights.GetOriginalWeight(iEvent);
           double F_bin = weight_below_current_F_per_uniform_bin[iSpectator][uniformBin] / (uniform_bin_weight_bckgrd[iSpectator][uniformBin] * sums[1]);
 
           fw += (F_bin - F);
         }
         fw *= flatnessLoss;
-        
-        if(bw + fw <= 0.0)
-          weights.Set(iEvent, 0.0);
-        else if (bw + fw >= 2.0)
-          weights.Set(iEvent, 2.0);
-        else
-          weights.Set(iEvent, bw + fw);
+        weights.SetFlatnessWeight(iEvent, fw);
 
     }
 

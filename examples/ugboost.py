@@ -64,12 +64,12 @@ def evaluation(label, X_test, y_test, p, p_prior):
 if __name__ == '__main__':
     # Create some Monte Carlo data using a multidimensional gaussian distribution
     # The 0th row of the coveriance matrix describes the correlation to the target variable
-    mean = [0.5, 0.6, 0.6]
+    mean = [0.5, 0.4, 0.4]
     cov = [[1.0, 0.6, 0.6],
            [0.0, 1.0, 0.0],
            [0.0, 0.0, 1.0]]
     
-    mean2 = [-0.5, -0.6, -0.6]
+    mean2 = [-0.5, -0.4, -0.4]
     cov2 = [[1.0, 0.6, 0.6],
            [0.0, 1.0, 0.0],
            [0.0, 0.0, 1.0]]
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     
     evaluation("Random", X_test, y_test, np.random.uniform(size=N_test), p_prior)
 
-    for i in [0.0, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0]:
+    for i in [0.0, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0]:
         p = FastBDT.Classifier(flatnessLoss=i, numberOfFlatnessFeatures=1).fit(X=np.c_[X_train[:, 1:], X_train[:, 0]], y=y_train).predict(X_test[:, 1:])
         print("Flatness", i)
         evaluation("UBoost", X_test, y_test, p, p_prior)
