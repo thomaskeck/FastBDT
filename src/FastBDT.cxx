@@ -208,11 +208,18 @@ namespace FastBDT {
         if(signal == bckgrd)
             return 0;
         if(signal > bckgrd)
-            return std::numeric_limits<Weight>::infinity();
+            return 999.0;
         else
-            return -std::numeric_limits<Weight>::infinity();
+            return -999.0;
     }
-    return (signal - bckgrd)/denominator;
+    Weight value = (signal - bckgrd)/denominator;
+    if( value > 999.0 or value < -999.0 ) {
+        if(signal > bckgrd)
+            return 999.0;
+        else
+            return -999.0;
+    }
+    return value;
 
   }
 
@@ -423,7 +430,7 @@ namespace FastBDT {
       updateEventWeights(sample);
 
       // Add flatness loss terms
-      if(flatnessLoss > 0) 
+      if(flatnessLoss > 0 and iTree > 0) 
           updateEventWeightsWithFlatnessPenalty(sample);
 
       // Prepare the flags of the events
@@ -544,15 +551,12 @@ namespace FastBDT {
         }
         fw *= flatnessLoss;
 
-        if (bw + fw <= 1e-3) {
-          weights.Set(iEvent, 1e-3);
-        }
-        else if(bw + fw >= 2.0-1e-3) {
-          weights.Set(iEvent, 2.0-1e-3);
-        }
-        else {
+        if(bw + fw <= 0.0)
+          weights.Set(iEvent, 0.0);
+        else if (bw + fw >= 2.0)
+          weights.Set(iEvent, 2.0);
+        else
           weights.Set(iEvent, bw + fw);
-        }
     }
 
     for(unsigned int iSpectator = 0; iSpectator < nSpectators; ++iSpectator) {
@@ -579,16 +583,13 @@ namespace FastBDT {
           fw += (F_bin - F);
         }
         fw *= flatnessLoss;
-
-        if (bw + fw <= 1e-3) {
-          weights.Set(iEvent, 1e-3);
-        }
-        else if(bw + fw >= 2.0-1e-3) {
-          weights.Set(iEvent, 2.0-1e-3);
-        }
-        else {
+        
+        if(bw + fw <= 0.0)
+          weights.Set(iEvent, 0.0);
+        else if (bw + fw >= 2.0)
+          weights.Set(iEvent, 2.0);
+        else
           weights.Set(iEvent, bw + fw);
-        }
 
     }
 
