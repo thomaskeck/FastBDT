@@ -30,7 +30,7 @@ namespace FastBDT {
   EventValues::EventValues(unsigned int nEvents, unsigned int nFeatures, unsigned int nSpectators, const std::vector<unsigned int> &nLevels) : values(nEvents*(nFeatures+nSpectators), 0), nFeatures(nFeatures), nSpectators(nSpectators) {
 
     if(nFeatures + nSpectators != nLevels.size()) {
-      throw std::runtime_error("Number of features must be the same as the number of provided binning levels!");
+      throw std::runtime_error("Number of features must be the same as the number of provided binning levels! " + std::to_string(nFeatures) + " + " + std::to_string(nSpectators) + " vs " + std::to_string(nLevels.size()));
     }
 
     nBins.reserve(nLevels.size());
@@ -48,13 +48,13 @@ namespace FastBDT {
 
     // Check if the feature vector has the correct size
     if(features.size() != nFeatures + nSpectators) {
-      throw std::runtime_error("Promised number of features are not provided.");
+      throw std::runtime_error(std::string("Promised number of features are not provided. ") + std::to_string(features.size()) + " vs " + std::to_string(nFeatures) + " + " + std::to_string(nSpectators));
     }
 
     // Check if the feature values are in the correct range
     for(unsigned int iFeature = 0; iFeature < nFeatures+nSpectators; ++iFeature) {
       if( features[iFeature] > nBins[iFeature] )
-        throw std::runtime_error("Promised number of bins is violated.");
+        throw std::runtime_error(std::string("Promised number of bins is violated. ") + std::to_string(features[iFeature]) + " vs " + std::to_string(nBins[iFeature]));
     }
 
     // Now add the new values to the values vector.
@@ -69,7 +69,7 @@ namespace FastBDT {
     // First check of we have enough space for an additional event. As the number of
     // events is fixed in the constructor (to avoid time consuming reallocations)
     if(nSignals + nBckgrds == nEvents) {
-      throw std::runtime_error("Promised maximum number of events exceeded.");
+      throw std::runtime_error(std::string("Promised maximum number of events exceeded. ") + std::to_string(nSignals) + " + " + std::to_string(nBckgrds) + " vs " + std::to_string(nEvents) );
     }
     
     if(std::isnan(weight)) {
