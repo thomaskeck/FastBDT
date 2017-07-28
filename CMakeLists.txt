@@ -5,12 +5,11 @@ set(CMAKE_CXX_COMPILER g++)
 
 project (FastBDT)
 set (FastBDT_VERSION_MAJOR 5)
-set (FastBDT_VERSION_MINOR 1)
+set (FastBDT_VERSION_MINOR 2)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -std=c++11 -Wall -Wextra -g -msse2")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -std=c++11 -Wall -Wextra -g -march=native")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ggdb3 -g -std=c++11 -Wall -Wextra")
 
 configure_file (
@@ -37,13 +36,19 @@ set(FastBDT_TESTS
 
 set(FastBDT_HEADERS
   "${PROJECT_BINARY_DIR}/include/FastBDT.h"
-  "${PROJECT_BINARY_DIR}/include/Classifier.h"
+  "${PROJECT_SOURCE_DIR}/include/Classifier.h"
   "${PROJECT_SOURCE_DIR}/include/FastBDT_IO.h"
 )
 
 set(FastBDT_CINTERFACE
     "${PROJECT_SOURCE_DIR}/src/FastBDT_C_API.cxx"
     "${PROJECT_SOURCE_DIR}/include/FastBDT_C_API.h" 
+)
+
+set(FastBDT_Python
+  "${PROJECT_SOURCE_DIR}/PyFastBDT/__init__.py"
+  "${PROJECT_SOURCE_DIR}/PyFastBDT/FastBDT.py"
+  "${PROJECT_SOURCE_DIR}/PyFastBDT/utility.py"
 )
 
 add_library(FastBDT_static STATIC ${FastBDT_SOURCES} ${FastBDT_HEADERS})
@@ -76,19 +81,19 @@ find_program(PYTHON "python3")
 if (PYTHON)
     configure_file(
         "${PROJECT_SOURCE_DIR}/setup.py.in"
-        "${PROJECT_SOURCE_DIR}/setup.py"
+        "${PROJECT_BINARY_DIR}/setup.py"
+    )
+    add_custom_target(PyFastBDT ALL DEPENDS ${FastBDT_Python} FastBDT_shared FastBDT_CInterface)
+
+    add_custom_command(TARGET PyFastBDT PRE_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/PyFastBDT" "${CMAKE_BINARY_DIR}/PyFastBDT"
+                       COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:FastBDT_shared> "${PROJECT_BINARY_DIR}/PyFastBDT/"
+                       COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:FastBDT_CInterface> "${PROJECT_BINARY_DIR}/PyFastBDT/"
+                       COMMAND ${PYTHON} "${CMAKE_BINARY_DIR}/setup.py" build
+                       COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp"
     )
 
-    add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp"
-                       COMMAND ${PYTHON} "${CMAKE_CURRENT_BINARY_DIR}/setup.py" build
-                       COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_CURRENT_BINARY_DIR}/build/timestamp"
-                       DEPENDS ${DEPS})
-
-    add_custom_target(target ALL DEPENDS ${OUTPUT})
-    add_custom_command(TARGET FastBDT_shared POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:FastBDT_shared> "${PROJECT_SOURCE_DIR}/PyFastBDT/")
-    add_custom_command(TARGET FastBDT_CInterface POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:FastBDT_CInterface> "${PROJECT_SOURCE_DIR}/PyFastBDT/")
-
-    install(CODE "execute_process(COMMAND ${PYTHON} ${PROJECT_SOURCE_DIR}/setup.py install --prefix=${CMAKE_INSTALL_PREFIX})")
+    install(CODE "execute_process(COMMAND ${PYTHON} ${PROJECT_BINARY_DIR}/setup.py install --prefix=${CMAKE_INSTALL_PREFIX})")
 endif()
 
 set(CPACK_PACKAGE_VERSION "${FastBDT_VERSION_MAJOR}.${FastBDT_VERSION_MINOR}")
