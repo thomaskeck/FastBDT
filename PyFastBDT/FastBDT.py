@@ -12,7 +12,7 @@ c_double_p = ctypes.POINTER(ctypes.c_double)
 c_float_p = ctypes.POINTER(ctypes.c_float)
 c_bool_p = ctypes.POINTER(ctypes.c_bool)
 c_uint_p = ctypes.POINTER(ctypes.c_uint)
-print(os.path.join(os.path.dirname(__file__)))
+
 FastBDT_library = ctypes.cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), 'libFastBDT_CInterface.so'))
 
 FastBDT_library.Create.restype = ctypes.c_void_p
@@ -162,11 +162,7 @@ class Classifier(BaseEstimator, ClassifierMixin):
         In-order to be able to compose this classifier inside a OneVsRestClassifier (sklearn),
         it is needed to return the probabilities for each prediction.
         """
-        X_temp = np.require(X, dtype=np.float32, requirements=['A', 'W', 'C', 'O'])
-        N = len(X)
-        p = np.require(np.zeros(N), dtype=np.float32, requirements=['A', 'W', 'C', 'O'])
-        FastBDT_library.PredictArray(self.forest, X_temp.ctypes.data_as(c_float_p), p.ctypes.data_as(c_float_p),
-                                     int(X_temp.shape[0]))
+        p = self.predict(X)
         return np.stack((p, 1 - p), axis=1)
 
     def predict_single(self, row):
